@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -41,17 +41,20 @@ typedef mglParser* HMPR;
 typedef mglFormula* HMEX;
 typedef mglFormulaC* HAEX;
 typedef const mglDataA* HCDT;
-
+//-----------------------------------------------------------------------------
 std::string MGL_EXPORT mgl_data_to_string(HCDT d, long ns);
 std::string MGL_EXPORT mgl_datac_to_string(HCDT d, long ns);
 /// Get section separated by symbol ch. This is analog of QString::section().
 std::string MGL_EXPORT mgl_str_arg(const std::string &str, char ch, int n1, int n2=-1);
+std::wstring MGL_EXPORT mgl_wcs_arg(const std::wstring &str, wchar_t ch, int n1, int n2);
 /// Get sections separated by symbol ch
 std::vector<std::string> MGL_EXPORT mgl_str_args(const std::string &str, char ch);
+std::vector<std::wstring> MGL_EXPORT mgl_wcs_args(const std::wstring &str, wchar_t ch);
 /// Get string from real number
 std::string MGL_EXPORT mgl_str_num(double val);
 /// Get string from complex number
 std::string MGL_EXPORT mgl_str_num(dual val);
+//-----------------------------------------------------------------------------
 
 extern "C" {
 
@@ -67,6 +70,11 @@ typedef void *HMPR;
 typedef const void *HCDT;
 #endif
 
+/// Set buffer size for number of primitives as (1<<bsize)^2.
+/** I.e. as 10^12 for bsize=20 or 4*10^9 for bsize=16 (default). NOTE: you set it only once. The current value is returned. */
+unsigned MGL_EXPORT mgl_bsize(unsigned bsize);
+unsigned MGL_EXPORT mgl_bsize_(unsigned *bsize);
+
 /// Set seed for random numbers
 void MGL_EXPORT mgl_srnd(long seed);
 void MGL_EXPORT mgl_srnd_(int *seed);
@@ -78,18 +86,34 @@ double MGL_EXPORT mgl_rnd_();
 void MGL_EXPORT mgl_data_set_name(mglDataA *dat, const char *name);
 void MGL_EXPORT mgl_data_set_name_(uintptr_t *dat, const char *name,int);
 void MGL_EXPORT mgl_data_set_name_w(mglDataA *dat, const wchar_t *name);
+/// Get name of data variable
+MGL_EXPORT_PURE const wchar_t *mgl_data_get_name_w(HCDT dat);
 /// Set callback function which is called at deleting variable
 void MGL_EXPORT mgl_data_set_func(mglDataA *dat, void (*func)(void *), void *par);
+
+#define mgl_datac_set_id	mgl_data_set_id
+#define mgl_datac_set_id_	mgl_data_set_id_
+/// Set names for columns (slices)
+void MGL_EXPORT mgl_data_set_id(mglDataA *d, const char *ids);
+void MGL_EXPORT mgl_datac_set_id_(uintptr_t *d, const char *eq,int );
+/// Get names for columns (slices)
+MGL_EXPORT_PURE const char *mgl_data_get_id(HCDT d);
 
 /// Save whole data array (for ns=-1) or only ns-th slice to text file
 void MGL_EXPORT mgl_data_save(HCDT dat, const char *fname,long ns);
 void MGL_EXPORT mgl_data_save_(uintptr_t *dat, const char *fname,int *ns,int);
 /// Export data array (for ns=-1) or only ns-th slice to PNG file according color scheme
-void MGL_EXPORT mgl_data_export(HCDT dat, const char *fname, const char *scheme,mreal v1,mreal v2,long ns);
-void MGL_EXPORT mgl_data_export_(uintptr_t *dat, const char *fname, const char *scheme,mreal *v1,mreal *v2,int *ns,int,int);
+void MGL_EXPORT mgl_data_export(HCDT dat, const char *fname, const char *scheme, double v1, double v2, long ns);
+void MGL_EXPORT mgl_data_export_(uintptr_t *dat, const char *fname, const char *scheme, mreal *v1, mreal *v2, int *ns,int,int);
 /// Save data to HDF file
 void MGL_EXPORT mgl_data_save_hdf(HCDT d,const char *fname,const char *data,int rewrite);
 void MGL_EXPORT mgl_data_save_hdf_(uintptr_t *d, const char *fname, const char *data, int *rewrite,int l,int n);
+/// Save value to HDF file
+void MGL_EXPORT mgl_dual_save_hdf(mdual val,const char *fname,const char *data,int rewrite);
+void MGL_EXPORT mgl_real_save_hdf(double val,const char *fname,const char *data,int rewrite);
+void MGL_EXPORT mgl_int_save_hdf(long val,const char *fname,const char *data,int rewrite);
+void MGL_EXPORT mgl_real_save_hdf_(double *val,const char *fname,const char *data,int *rewrite,int,int);
+void MGL_EXPORT mgl_int_save_hdf_(long *val, const char *fname, const char *data, int *rewrite, int, int);
 /// Get information about the data (sizes and momentum) to string
 MGL_EXPORT const char *mgl_data_info(HCDT dat);
 int MGL_EXPORT mgl_data_info_(uintptr_t *dat, char *out, int len);
@@ -154,8 +178,46 @@ void MGL_EXPORT mgl_mutex_lock(void *);
 void MGL_EXPORT mgl_mutex_unlock(void *);
 
 //-----------------------------------------------------------------------------
+/// Create HMEX object for expression evaluating
+HMEX MGL_EXPORT mgl_create_expr(const char *expr);
+uintptr_t MGL_EXPORT mgl_create_expr_(const char *expr, int);
+/// Delete HMEX object
+void MGL_EXPORT mgl_delete_expr(HMEX ex);
+void MGL_EXPORT mgl_delete_expr_(uintptr_t *ex);
+/// Return value of expression for given x,y,z variables
+double MGL_EXPORT_PURE mgl_expr_eval(HMEX ex, double x, double y,double z);
+double MGL_EXPORT_PURE mgl_expr_eval_(uintptr_t *ex, mreal *x, mreal *y, mreal *z);
+/// Return value of expression for given variables
+double MGL_EXPORT_PURE mgl_expr_eval_v(HMEX ex, mreal *vars);
+/// Return value of expression differentiation over variable dir for given x,y,z variables
+double MGL_EXPORT_PURE mgl_expr_diff(HMEX ex, char dir, double x, double y,double z);
+double MGL_EXPORT_PURE mgl_expr_diff_(uintptr_t *ex, const char *dir, mreal *x, mreal *y, mreal *z, int);
+/// Return value of expression differentiation over variable dir for given variables
+double MGL_EXPORT_PURE mgl_expr_diff_v(HMEX ex, char dir, mreal *vars);
+//-----------------------------------------------------------------------------
+/// Create HAEX object for expression evaluating
+HAEX MGL_EXPORT mgl_create_cexpr(const char *expr);
+uintptr_t MGL_EXPORT mgl_create_cexpr_(const char *expr, int);
+/// Delete HAEX object
+void MGL_EXPORT mgl_delete_cexpr(HAEX ex);
+void MGL_EXPORT mgl_delete_cexpr_(uintptr_t *ex);
+/// Return value of expression for given x,y,z variables
+cmdual MGL_EXPORT mgl_cexpr_eval(HAEX ex, mdual x, mdual y, mdual z);
+cmdual MGL_EXPORT mgl_cexpr_eval_(uintptr_t *ex, mdual *x, mdual *y, mdual *z);
+/// Return value of expression for given variables
+cmdual MGL_EXPORT mgl_cexpr_eval_v(HAEX ex, mdual *vars);
+
+//-----------------------------------------------------------------------------
 /// Callback function for asking user a question. Result shouldn't exceed 1024.
 extern MGL_EXPORT void (*mgl_ask_func)(const wchar_t *quest, wchar_t *res);
+/// Console function for asking user a question. Result shouldn't exceed 1024.
+void MGL_EXPORT mgl_ask_gets(const wchar_t *quest, wchar_t *res);
+/// Callback function for displaying progress of something.
+extern MGL_EXPORT void (*mgl_progress_func)(int value, int maximal, HMGL gr);
+/// Console function for displaying progress of something.
+void MGL_EXPORT mgl_progress_txt(int value, int maximal, HMGL gr);
+/// Display progress of something.
+void MGL_EXPORT mgl_progress(int value, int maximal, HMGL gr);
 //-----------------------------------------------------------------------------
 #ifdef __cplusplus
 }
@@ -165,24 +227,52 @@ struct MGL_EXPORT mglNum
 {
 	mreal d;		///< Number itself
 	dual c;
-	std::wstring s;	///< Number name
+	mglString s;	///< Number name
 	mglNum(mreal val=0):d(val),c(val)	{}
 	mglNum(const mglNum &n):d(n.d),c(n.c),s(n.s) {}
 	const mglNum &operator=(const mglNum &n)
 	{	d=n.d;	c=n.c;	s=n.s;	return n;	}
 };
 //-----------------------------------------------------------------------------
+/// List of user-defined data arrays
+#ifndef MGL_WIDGETS_DLL
+MGL_EXPORT extern std::vector<mglDataA*> mglDataList;
+#else
+__declspec(dllimport) extern std::vector<mglDataA*> mglDataList;
+#endif
+//-----------------------------------------------------------------------------
 /// Abstract class for data array
 class MGL_EXPORT mglDataA
 {
 public:
-	std::wstring s;	///< Data name
+	mglString s;	///< Data name
+	mglString id;	///< column (or slice) names
+
 	bool temp;		///< This is temporary variable
 	void (*func)(void *);	///< Callback function for destroying
 	void *o; 		///< Pointer to external object
 
-	mglDataA()	{	temp=false;	func=0;	o=0;	}
-	virtual ~mglDataA()	{	if(func)	func(o);	}
+	mglDataA()	{	mgl_init();	mglDataList.push_back(this);	temp=false;	func=0;	o=0;	}
+	virtual ~mglDataA()
+	{
+		for(long i = mglDataList.size()-1; i>=0; i--)
+			if(mglDataList[i] == this)
+			{	mglDataList.erase(mglDataList.begin()+i);	break;	}
+		if(func)	func(o);
+	}
+	/// Set name for data variable (can be used in mgl_formula_calc() or in MGL scripts)
+	inline void Name(const char *name)		{	s = name;	}
+	inline void Name(const wchar_t *name)	{	s = name;	}
+	/// Get name of data variable
+	inline const wchar_t *Name()	const	{	return s.w;	}
+
+	/// Set names for columns (slices)
+	inline void SetColumnId(const char *ids)	{	id = ids;	}
+	/// Make new id
+	inline void NewId()	{	id = "";	}
+	/// Get names for columns (slices)
+	inline const char *GetColumnId() const	{	return id.s;	}
+	
 	virtual void set_v(mreal /*val*/, long /*i*/,long /*j*/=0,long /*k*/=0)	{}
 	/// Get the interpolated value and its derivatives in given data cell without border checking
 	virtual mreal valueD(mreal x,mreal y=0,mreal z=0,mreal *dx=0,mreal *dy=0,mreal *dz=0) const =0;
@@ -315,7 +405,7 @@ struct MGL_EXPORT mglColorID
 	mglColor col;
 };
 MGL_EXPORT extern mglColorID mglColorIds[31];
-MGL_EXPORT extern std::string mglGlobalMess;	///< Buffer for receiving global messages
+// MGL_EXPORT extern std::string mglGlobalMess;	///< Buffer for receiving global messages
 //-----------------------------------------------------------------------------
 #endif
 

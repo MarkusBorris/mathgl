@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -28,7 +28,7 @@
 #define _Gr_	((mglCanvas *)(gr))
 void mgl_printf(void *fp, bool gz, const char *str, ...);
 //-----------------------------------------------------------------------------
-MGL_NO_EXPORT const char *mgl_get_dash(unsigned short d, mreal w,char dlm)
+static const char *mgl_get_dash(unsigned short d, mreal w,char dlm)
 {
 	static std::string s;
 	if(d==0xffff)	return "";
@@ -58,7 +58,7 @@ bool MGL_LOCAL_PURE mgl_is_same(HMGL gr, long i, mreal wp,uint32_t cp, int st)
 	return (cp==_Gr_->GetPrmCol(i));
 }
 //-----------------------------------------------------------------------------
-std::vector<long> MGL_NO_EXPORT put_line(HMGL gr, long i, mreal wp, uint32_t cp,int st)
+std::vector<long> static put_line(HMGL gr, long i, mreal wp, uint32_t cp,int st)
 {
 	std::vector<long> ids;
 	long n1=gr->GetPrm(i).n1, n2=gr->GetPrm(i).n2;
@@ -122,7 +122,7 @@ std::vector<long> MGL_NO_EXPORT put_line(HMGL gr, long i, mreal wp, uint32_t cp,
 //-----------------------------------------------------------------------------
 //put_desc(fp,"%c%c%c_%04x {", "np %d %d mt %d %d ll %d %d ll cp fill\n",
 //"np %d %d mt ", "%d %d ll ", "cp dr\n", "} def")
-void MGL_NO_EXPORT put_desc(HMGL gr, void *fp, bool gz, const char *pre, const char *ln1, const char *ln2, const char *ln3, const char *suf)
+void static put_desc(HMGL gr, void *fp, bool gz, const char *pre, const char *ln1, const char *ln2, const char *ln3, const char *suf)
 {
 	long n=0;
 	for(long i=0;i<gr->GetPrmNum();i++)	if(gr->GetPrm(i).type==4)	n++;
@@ -131,7 +131,7 @@ void MGL_NO_EXPORT put_desc(HMGL gr, void *fp, bool gz, const char *pre, const c
 	int *s = new int[n];	n=0;
 	for(long i=0;i<gr->GetPrmNum();i++)
 	{
-		const mglPrim q = gr->GetPrm(i);
+		const mglPrim &q = gr->GetPrm(i);
 		if(q.type!=4 || (q.n3&8))	continue;	// not a glyph
 		bool is=false;
 		for(long j=0;j<n;j++)	if(g[j]==q.n4 && s[j]==(q.n3&7))	is = true;
@@ -158,6 +158,43 @@ void MGL_NO_EXPORT put_desc(HMGL gr, void *fp, bool gz, const char *pre, const c
 	delete []g;		delete []s;
 }
 //-----------------------------------------------------------------------------
+bool MGL_NO_EXPORT mgl_eps_pattern(void *fp, bool gz, const mglPrim &q)
+{
+	static uint64_t pd=MGL_SOLID_MASK;	// mask if !=MGL_SOLID_MASK
+	static mreal pw=0;		// width (like pen width) if !=0
+	static int ang=0;		// angle (default is 0,45,90,315)
+	int aa = 45*int(0.5+q.angl/45.);
+	if(q.m==MGL_SOLID_MASK || q.w<=0)	return false;
+	if(q.m==pd && q.w==pw && aa==ang)	return true;
+	pd = q.m;	pw=q.w;	ang=aa;
+	mreal d = ang%90 ? 4*M_SQRT2*pw : 4*pw;
+	mgl_printf(fp, gz, "<<\n/PaintType 2 /PatternType 1 /TilingType 1\n");
+	mgl_printf(fp, gz, "/BBox [-%g -%g %g %g] /XStep %g /YStep %g\n", d,d,d,d, 2*d,2*d);
+	if(ang%90)
+	{
+		mgl_printf(fp, gz, "/PaintProc { gsave %d rotate\n",-ang);
+		for(int i=-8;i<8;i++)	for(int j=-8;j<8;j++)
+		{
+			int ii = (8+i)&7, jj = (8+j)&7;	// TODO reduce number of used rectangles
+			if(pd & (1L<<(ii+8*jj)))
+				mgl_printf(fp, gz, "%g %g %g %g rf\n",i*pw,j*pw,pw,pw);
+		}
+		mgl_printf(fp, gz, "grestore}\n>> pat\n");
+	}
+	else
+	{
+		mgl_printf(fp, gz, "/PaintProc { gsave %d rotate\n",-ang);
+		for(int i=-4;i<4;i++)	for(int j=-4;j<4;j++)
+		{
+			int ii = (8+i)&7, jj = (8+j)&7;
+			if(pd & (1L<<(ii+8*jj)))
+				mgl_printf(fp, gz, "%g %g %g %g rf\n",i*pw,j*pw,pw,pw);
+		}
+		mgl_printf(fp, gz, "grestore}\n>> pat\n");
+	}
+	return true;
+}
+//-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_write_eps(HMGL gr, const char *fname,const char *descr)
 {
 	if(!fname || *fname==0)	return;
@@ -167,13 +204,16 @@ void MGL_EXPORT mgl_write_eps(HMGL gr, const char *fname,const char *descr)
 
 	bool gz = fname[strlen(fname)-1]=='z';
 	void *fp;
-	if(!strcmp(fname,"-"))	fp = stdout;		// allow to write in stdout
+	if(!strcmp(fname,"-"))	fp = stdout;		// allow one to write in stdout
 	else		fp = gz ? (void*)gzopen(fname,"wt") : (void*)fopen(fname,"wt");
 	if(!fp)		{	gr->SetWarn(mglWarnOpen,fname);	return;	}
 	int w = _Gr_->GetWidth(), h = _Gr_->GetHeight();
 
 	int x1=gr->BBoxX1, x2=gr->BBoxX2<0?w:gr->BBoxX2, y1=gr->BBoxY1, y2=gr->BBoxY2<0?h:gr->BBoxY2;
-	if(x1<0 || x1>=x2 || y1<0 || y1>=y2)	{	x1=y1=0;	x2=w;	y2=h;	}
+	if(x2>w)	x2=w;
+	if(y2>h)	y2=h;
+	if(x1<0 || x1>=x2)	{	x1=0;	x2=w;	}
+	if(y1<0 || y1>=y2)	{	y1=0;	y2=h;	}
 
 	if(gz)
 	{
@@ -193,6 +233,7 @@ void MGL_EXPORT mgl_write_eps(HMGL gr, const char *fname,const char *descr)
 	mgl_printf(fp, gz, "%%!PS-Adobe-3.0 EPSF-3.0\n%%%%BoundingBox: %d %d %d %d\n", x1, h-y2, x2, h-y1);
 	mgl_printf(fp, gz, "%%%%Created by MathGL library\n%%%%Title: %s\n",descr ? descr : fname);
 	mgl_printf(fp, gz, "%%%%CreationDate: %s\n",ctime(&now));
+	mgl_printf(fp, gz, "%%%%LanguageLevel: 2\n50 dict begin");
 	mgl_printf(fp, gz, "/lw {setlinewidth} def\n/rgb {setrgbcolor} def\n");
 	mgl_printf(fp, gz, "/np {newpath} def\n/cp {closepath} def\n");
 	mgl_printf(fp, gz, "/ll {lineto} def\n/mt {moveto} def\n");
@@ -202,6 +243,8 @@ void MGL_EXPORT mgl_write_eps(HMGL gr, const char *fname,const char *descr)
 	mgl_printf(fp, gz, "/sm {-%g} def\n",0.35*gr->mark_size());
 	mgl_printf(fp, gz, "/m_c {ss 0.3 mul 0 360 arc} def\n");
 	mgl_printf(fp, gz, "/d0 {[] 0 setdash} def\n/sd {setdash} def\n");
+	mgl_printf(fp, gz, "/pat {[1 0 0 1 0 0] makepattern /Mask exch def [/Pattern /DeviceRGB] setcolorspace} def\n");
+	mgl_printf(fp, gz, "/mask {Mask setpattern} def\n/rf {rectfill} def\n");
 
 	bool m_p=false,m_x=false,m_d=false,m_v=false,m_t=false,
 	m_s=false,m_a=false,m_o=false,m_T=false,
@@ -210,7 +253,7 @@ void MGL_EXPORT mgl_write_eps(HMGL gr, const char *fname,const char *descr)
 	// add mark definition if present
 	for(long i=0;i<gr->GetPrmNum();i++)
 	{
-		const mglPrim q = gr->GetPrm(i);
+		const mglPrim &q = gr->GetPrm(i);
 		if(q.type>0)	continue;
 		if(q.n4=='+')	m_p = true;
 		if(q.n4=='x')	m_x = true;
@@ -254,7 +297,7 @@ void MGL_EXPORT mgl_write_eps(HMGL gr, const char *fname,const char *descr)
 	if(m_P)	mgl_printf(fp, gz, "/m_P {m_p 0 sm rm m_s} def\n");
 	if(m_X)	mgl_printf(fp, gz, "/m_X {m_x ss sm rm m_s} def\n");
 	//	if(m_C)	mgl_printf(fp, gz, "/m_C {m_c m_o} def\n");
-	mgl_printf(fp, gz, "1 setlinecap\n1 setlinejoin\n\n");	// manual setting round line cap
+	mgl_printf(fp, gz, "0 setlinecap\n1 setlinejoin\n\n");	// manual setting round line cap
 
 	// Write background image first
 	const unsigned char *img = mgl_get_background(gr);
@@ -283,20 +326,24 @@ void MGL_EXPORT mgl_write_eps(HMGL gr, const char *fname,const char *descr)
 	float qs_old=gr->mark_size()/gr->FontFactor();
 	mglRGBA cp;
 	int st=0;
-	char str[256]="";
+	char str[256]="", msk[256]="";
 	for(long i=0;i<gr->GetPrmNum();i++)
 	{
 		const mglPrim &q = gr->GetPrm(i);
 		if(q.type<0)	continue;	// q.n1>=0 always
 		cp.c = _Gr_->GetPrmCol(i);
-		const mglPnt p1 = gr->GetPnt(q.n1);
+		const mglPnt &p1 = gr->GetPnt(q.n1);
 		if(q.type>1)
-		{	snprintf(str,256,"%.2g %.2g %.2g rgb ", cp.r[0]/255.,cp.r[1]/255.,cp.r[2]/255.);	str[255]=0;	}
+		{
+			snprintf(str,256,"%.2g %.2g %.2g rgb ", cp.r[0]/255.,cp.r[1]/255.,cp.r[2]/255.);	str[255]=0;
+			snprintf(msk,256,"%.2g %.2g %.2g mask ", cp.r[0]/255.,cp.r[1]/255.,cp.r[2]/255.);	msk[255]=0;
+		}
 
 		if(q.type==0)	// mark
 		{
 			mreal x0 = p1.x,y0 = p1.y;
-			snprintf(str,256,"%.2g lw %.2g %.2g %.2g rgb ", 50*q.s*q.w>1?50*q.s*q.w:1, cp.r[0]/255.,cp.r[1]/255.,cp.r[2]/255.);
+//			snprintf(str,256,"%.2g lw %.2g %.2g %.2g rgb ", 50*q.s*q.w>1?50*q.s*q.w:1, cp.r[0]/255.,cp.r[1]/255.,cp.r[2]/255.);
+			snprintf(str,256,"%.2g lw %.2g %.2g %.2g rgb ", q.w>1?q.w:1, cp.r[0]/255.,cp.r[1]/255.,cp.r[2]/255.);
 			str[255]=0;	wp=1;	// NOTE: this may renew line style if a mark inside!
 			if(q.s!=qs_old)
 			{
@@ -335,13 +382,19 @@ void MGL_EXPORT mgl_write_eps(HMGL gr, const char *fname,const char *descr)
 		{
 			const mglPnt &p2=gr->GetPnt(q.n2), &p3=gr->GetPnt(q.n3), &p4=gr->GetPnt(q.n4);
 			if(cp.r[3])	// TODO && gr->quad_vis(p1,p2,p3,p4))
-				mgl_printf(fp, gz, "np %g %g mt %g %g ll %g %g ll %g %g ll cp %sfill\n", p1.x, p1.y, p2.x, p2.y, p4.x, p4.y, p3.x, p3.y, str);
+			{
+				bool mask = mgl_eps_pattern(fp,gz,q);
+				mgl_printf(fp, gz, "np %g %g mt %g %g ll %g %g ll %g %g ll cp %sfill\n", p1.x, p1.y, p2.x, p2.y, p4.x, p4.y, p3.x, p3.y, mask?msk:str);
+			}
 		}
 		else if(q.type==2)	// trig
 		{
 			const mglPnt &p2=gr->GetPnt(q.n2), &p3=gr->GetPnt(q.n3);
 			if(cp.r[3])	// TODO && gr->trig_vis(p1,p2,p3))
-				mgl_printf(fp, gz, "np %g %g mt %g %g ll %g %g ll cp %sfill\n", p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, str);
+			{
+				bool mask = mgl_eps_pattern(fp,gz,q);
+				mgl_printf(fp, gz, "np %g %g mt %g %g ll %g %g ll cp %sfill\n", p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, mask?msk:str);
+			}
 		}
 		else if(q.type==1)	// line
 		{
@@ -402,26 +455,37 @@ void MGL_EXPORT mgl_write_svg(HMGL gr, const char *fname,const char *descr)
 
 	bool gz = fname[strlen(fname)-1]=='z';
 	long hh = _Gr_->GetHeight(), ww = _Gr_->GetWidth();
-	void *fp = stdout;		// allow to write in stdout
+	void *fp = stdout;		// allow one to write in stdout
+	bool head = true;
 	if(strcmp(fname,"-"))	fp = gz ? (void*)gzopen(fname,"wt") : (void*)fopen(fname,"wt");
+	else	head = false;
 	if(!fp)		{	gr->SetWarn(mglWarnOpen,fname);	return;	}
 
 	int x1=gr->BBoxX1, x2=gr->BBoxX2<0?ww:gr->BBoxX2, y1=gr->BBoxY1, y2=gr->BBoxY2<0?hh:gr->BBoxY2;
-	if(x1<0 || x1>=x2 || y1<0 || y1>=y2)	{	x1=y1=0;	x2=ww;	y2=hh;	}
+	if(x2>ww)	x2=ww;
+	if(y2>hh)	y2=hh;
+	if(x1<0 || x1>=x2)	{	x1=0;	x2=ww;	}
+	if(y1<0 || y1>=y2)	{	y1=0;	y2=hh;	}
 	ww = x2-x1;	hh = y2-y1;
 
 	const std::string loc = setlocale(LC_NUMERIC, "C");
-	mgl_printf(fp, gz, "<?xml version=\"1.0\" standalone=\"no\"?>\n");
-	mgl_printf(fp, gz, "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20000303 Stylable//EN\" \"http://www.w3.org/TR/2000/03/WD-SVG-20000303/DTD/svg-20000303-stylable.dtd\">\n");
-	mgl_printf(fp, gz, "<svg width=\"%d\" height=\"%d\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n", ww, hh);
-
-	mgl_printf(fp, gz, "<!--Created by MathGL library-->\n");
-	mgl_printf(fp, gz, "<!--Title: %s-->\n<!--CreationDate: %s-->\n\n",descr?descr:fname,ctime(&now));
+	if(head)
+	{
+		mgl_printf(fp, gz, "<?xml version=\"1.0\" standalone=\"no\"?>\n");
+		mgl_printf(fp, gz, "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20000303 Stylable//EN\" \"http://www.w3.org/TR/2000/03/WD-SVG-20000303/DTD/svg-20000303-stylable.dtd\">\n");
+		mgl_printf(fp, gz, "<svg width=\"%d\" height=\"%d\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n", ww, hh);
+		mgl_printf(fp, gz, "<!--Created by MathGL library-->\n");
+		mgl_printf(fp, gz, "<!--Title: %s-->\n<!--CreationDate: %s-->\n\n",descr?descr:fname,ctime(&now));
+	}
+	else
+	{
+		mgl_printf(fp, gz, "<!--Created by MathGL library-->\n");
+		mgl_printf(fp, gz, "<svg width=\"%d\" height=\"%d\">\n", ww, hh);
+	}
 
 	// write definition for all glyphs
 	put_desc(gr,fp,gz,"<defs><g id=\"%c%c_%04x\"><path d=\"", "\tM %d %d ",
 			 "L %d %d ", "Z\n", "\"/></g></defs>\n");
-
 
 	// Write background image first
 	const unsigned char *img = mgl_get_background(gr);
@@ -447,19 +511,19 @@ void MGL_EXPORT mgl_write_svg(HMGL gr, const char *fname,const char *descr)
 
 
 	// currentColor -> inherit ???
-	mgl_printf(fp, gz, "<g fill=\"none\" stroke=\"none\" stroke-width=\"0.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n");
+	mgl_printf(fp, gz, "<g fill=\"none\" stroke=\"none\" stroke-width=\"0.5\" stroke-linecap=\"butt\" stroke-linejoin=\"round\">\n");
 	// write primitives
 	mreal wp=-1;
 	int st=0;
 	mglRGBA cp;
 
-	hh += (y2+y1)/2;
+//	hh += (y2+y1)/2;
 	for(long i=0;i<gr->GetPrmNum();i++)
 	{
 		const mglPrim &q = gr->GetPrm(i);
 		if(q.type<0)	continue;	// q.n1>=0 always
 		cp.c = _Gr_->GetPrmCol(i);
-		const mglPnt p1=gr->GetPnt(q.n1);
+		const mglPnt &p1=gr->GetPnt(q.n1);
 		if(q.type==0)
 		{
 			mreal x=p1.x-x1,y=hh-p1.y,s=q.s;
@@ -468,7 +532,8 @@ void MGL_EXPORT mgl_write_svg(HMGL gr, const char *fname,const char *descr)
 			if(strchr("SDVTLR",q.n4))
 				mgl_printf(fp, gz, "<g fill=\"#%02x%02x%02x\">\n", int(cp.r[0]),int(cp.r[1]),int(cp.r[2]));
 			else
-				mgl_printf(fp, gz, "<g stroke=\"#%02x%02x%02x\"  stroke-width=\"%g\">\n", int(cp.r[0]),int(cp.r[1]),int(cp.r[2]), 50*q.s*q.w>1?50*q.s*q.w:1);
+				mgl_printf(fp, gz, "<g stroke=\"#%02x%02x%02x\"  stroke-width=\"%g\">\n", int(cp.r[0]),int(cp.r[1]),int(cp.r[2]), q.w>1?q.w:1);
+//				mgl_printf(fp, gz, "<g stroke=\"#%02x%02x%02x\"  stroke-width=\"%g\">\n", int(cp.r[0]),int(cp.r[1]),int(cp.r[2]), 50*q.s*q.w>1?50*q.s*q.w:1);
 			switch(q.n4)
 			{
 			case 'P':
@@ -524,7 +589,8 @@ void MGL_EXPORT mgl_write_svg(HMGL gr, const char *fname,const char *descr)
 			if(q.n3)
 			{
 				mgl_printf(fp, gz, " stroke-dasharray=\"%s\"", mgl_get_dash(q.n3,q.w,','));
-				mgl_printf(fp, gz, " stroke-dashoffset=\"%g\"", q.s*q.w);
+//				mgl_printf(fp, gz, " stroke-dashoffset=\"%g\"", q.s*q.w);
+				mgl_printf(fp, gz, " stroke-dashoffset=\"%g\"", q.w);
 			}
 			if(q.w>1)	mgl_printf(fp, gz, " stroke-width=\"%g\"", q.w);
 			wp = q.w>1  ? q.w:1;	st = q.n3;
@@ -632,7 +698,7 @@ void MGL_EXPORT mgl_write_tex(HMGL gr, const char *fname,const char *descr)
 		cp.c = _Gr_->GetPrmCol(i);
 		snprintf(cname,128,"color={rgb,255:red,%d;green,%d;blue,%d}",cp.r[0],cp.r[1],cp.r[2]);	cname[127]=0;
 
-		const mglPnt p1=gr->GetPnt(q.n1);
+		const mglPnt &p1=gr->GetPnt(q.n1);
 		mreal x=p1.x/100,y=p1.y/100,s=q.s/100;
 		if(q.type==0)
 		{
@@ -669,7 +735,7 @@ void MGL_EXPORT mgl_write_tex(HMGL gr, const char *fname,const char *descr)
 		}
 		else if(q.type==2 && cp.r[3])
 		{
-			const mglPnt p2=gr->GetPnt(q.n2), p3=gr->GetPnt(q.n3);
+			const mglPnt &p2=gr->GetPnt(q.n2), &p3=gr->GetPnt(q.n3);
 			if(cp.r[3]<255)
 				fwprintf(fp, L"\\fill[%s, fill opacity=%.4g] (%.4g,%.4g) -- (%.4g,%.4g) -- (%.4g,%.4g) -- cycle;\n", cname,cp.r[3]/255., x,y, p2.x/100,p2.y/100, p3.x/100,p3.y/100);
 			else
@@ -677,7 +743,7 @@ void MGL_EXPORT mgl_write_tex(HMGL gr, const char *fname,const char *descr)
 		}
 		else if(q.type==3 && cp.r[3])
 		{
-			const mglPnt p2=gr->GetPnt(q.n2), p3=gr->GetPnt(q.n3), p4=gr->GetPnt(q.n4);
+			const mglPnt &p2=gr->GetPnt(q.n2), &p3=gr->GetPnt(q.n3), &p4=gr->GetPnt(q.n4);
 			if(cp.r[3]<255)
 				fwprintf(fp, L"\\fill[%s, fill opacity=%.4g] (%.4g,%.4g) -- (%.4g,%.4g) -- (%.4g,%.4g) -- (%.4g,%.4g) -- cycle;\n", cname,cp.r[3]/255., x,y, p2.x/100,p2.y/100, p4.x/100,p4.y/100, p3.x/100,p3.y/100);
 			else

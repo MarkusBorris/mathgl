@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -31,8 +31,7 @@ struct mglArg
 {
 	int type;		///< Type of argument {0-data,1-string,2-number}
 	mglDataA *d;	///< Pointer to data (used if type==0)
-	std::wstring w;	///< String with parameters
-	std::string s;	///< String with parameters
+	mglString s;	///< String with parameters
 	mreal v;		///< Numerical value (used if type==2)
 	dual c;			///< Numerical complex value (used if type==2)
 	mglArg():type(-1),d(0),v(0),c(0.)	{}
@@ -52,14 +51,14 @@ struct mglCommand
 	///	12 - axis, 13 - primitives, 14 - axis setup, 15 - text/legend, 16 - data transform
 	int type;
 };
-extern mglCommand mgls_prg_cmd[], mgls_dat_cmd[], mgls_grf_cmd[], mgls_set_cmd[], mgls_prm_cmd[];
+extern mglCommand mgls_prg_cmd[], mgls_dat_cmd[], mgls_grf_cmd[], mgls_set_cmd[], mgls_prm_cmd[], mgls_rnd_cmd[];
 //-----------------------------------------------------------------------------
 /// Structure for function name and position.
 struct mglFunc
 {
 	long pos;
 	int narg;
-	std::wstring func;
+	mglString func;
 	mglFunc(long p, const wchar_t *f);
 	mglFunc(const mglFunc &f):pos(f.pos),narg(f.narg),func(f.func)	{}
 	mglFunc():pos(-1),narg(-1)	{}
@@ -70,9 +69,28 @@ struct mglFunc
 /// Structure for stack of functions and its arguments.
 struct mglFnStack
 {
-	long pos;
-	std::wstring par[10];
-	mglFnStack():pos(0)	{}
+	long pos;	///< position to return
+	size_t stk;	///< stack at 'call'
+	mglString par[10];	///< input parameters
+	mglFnStack():pos(0),stk(0)	{}
+};
+//-----------------------------------------------------------------------------
+/// Structure for stack of if|for|while.
+#define MGL_ST_TRUE		0	// condition true
+#define MGL_ST_FALSE	1	// condition false
+#define MGL_ST_DONE		2	// condition done
+#define MGL_ST_LOOP		4	// normal loop
+#define MGL_ST_BREAK	8	// loop break
+#define MGL_ST_STOP		(MGL_ST_FALSE|MGL_ST_DONE|MGL_ST_BREAK)
+#define MGL_ST_SKIP		(MGL_ST_FALSE|MGL_ST_DONE)
+struct mglPosStack
+{
+	int pos;	///< position to return
+	mglData v;	///< data to iterate
+	long ind;	///< index in data array
+	int par;	///< for-parameter
+	unsigned state;	///< state of stack item
+	mglPosStack(int st=MGL_ST_LOOP):pos(-1),ind(0),par(-1),state(st)	{}
 };
 //-----------------------------------------------------------------------------
 /// Function for asking question in console mode
@@ -94,7 +112,7 @@ public:
 	volatile bool Stop;	///< Stop command was. Flag prevent further execution
 	mglCommand *Cmd;	///< Table of MGL commands (can be changed by user). It MUST be sorted by 'name'!!!
 	long InUse;			///< Smart pointer (number of users)
-	const mglBase *curGr;	///< Current grapher
+	HMGL curGr;			///< Current grapher
 	int StarObhID;		///< staring object id
 
 	mglParser(bool setsize=false);
@@ -129,7 +147,7 @@ public:
 	/// Scan for functions (use NULL for reset)
 	void ScanFunc(const wchar_t *line);
 	/// Check if name is function and return its address (or 0 if no)
-	long IsFunc(const std::wstring &name, int *narg=0);
+	long IsFunc(const wchar_t *name, int *narg=0);
 	/// Find variable or return 0 if absent
 	mglDataA *FindVar(const char *name) MGL_FUNC_PURE;
 	mglDataA *FindVar(const wchar_t *name) MGL_FUNC_PURE;
@@ -154,26 +172,33 @@ public:
 	void DeleteVar(const wchar_t *name);
 	/// Delete all data variables
 	void DeleteAll();
+	/// Delete temporary data arrays
+	inline void DeleteTemp()
+	{	for(size_t i=0;i<DataList.size();i++)	if(DataList[i] && DataList[i]->temp)
+		{	mglDataA *u=DataList[i];	DataList[i]=0;	delete u;	}	}
 	/// Set variant of argument(s) separated by '?' to be used
 	inline void SetVariant(int var=0)	{	Variant = var<=0?0:var;	}
 protected:
 	static mglCommand *BaseCmd;	///< Base table of MGL commands. It MUST be sorted by 'name'!!!
 	static void FillBaseCmd();	///< Fill BaseCmd at initialization stage
+
+	///< Test if condition is not-valid (n=1) or false (0) or true (1)
+	int TestCond(long m, const mglArg &a0, mglArg &a1, bool &cond)
+	{
+		int n = 1;
+		if(a0.type==2)	{	cond = a0.v!=0;	n=0;	}
+		else if(a0.type==0)
+		{	n=0;	cond = a0.d->FindAny((m>1 && a1.type==1) ? a1.s.s:"u");	}
+		return n;
+	}
 private:
 //	long parlen;		///< Length of parameter strings
-	std::wstring par[40];	///< Parameter for substituting instead of $1, ..., $9
+	mglString par[40];	///< Parameter for substituting instead of $1, ..., $9
 	bool Once;			///< Flag for command which should be executed only once
 	bool Skip;			///< Flag that commands should be skiped (inside 'once' block)
-	int if_stack[40];	///< Stack for if-else-endif commands
-	int if_pos;			///< position in if_stack
+	std::vector<mglPosStack> stack;	///< Stack of if|for|while commands
 	std::vector<mglFunc> func;	///< function names and position
 	std::vector<mglFnStack> fn_stack;	///< function calls stack
-//	int fn_pos;			///< position in function stack
-	int if_for[40];		///< position in if_stack for for-cycle start
-	mglData *fval;		///< Values for for-cycle. Note that nx - number of elements, ny - next element, nz - address (or string number) of first cycle command
-	int for_stack[40];	///< The order of for-variables
-	int for_addr;		///< Flag for saving address in variable (for_addr-1)
-	bool for_br;		///< Break is switched on (skip all commands until 'next')
 	unsigned Variant;	///< Select variant of argument(s) separated by '?'
 
 	/// Parse command
@@ -191,8 +216,10 @@ private:
 	/// Parse $N arguments
 	void PutArg(std::wstring &str, bool def);
 	/// In skip mode
-	bool inline ifskip()	{	return (if_pos>0 && !(if_stack[if_pos-1]&1));	}
-	bool inline skip()		{	return (Skip || ifskip() || for_br);	}
+	bool inline ifskip()
+	{	return ( stack.size() && (stack.back().state & MGL_ST_SKIP) );	}
+	bool inline skip()
+	{	return (Skip || (stack.size() && (stack.back().state & MGL_ST_STOP) ));	}
 	bool CheckForName(const std::wstring &s);	// check if name is valid for new data
 };
 //-----------------------------------------------------------------------------

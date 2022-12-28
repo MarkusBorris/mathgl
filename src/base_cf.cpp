@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -30,15 +30,15 @@ void MGL_EXPORT mgl_suppress_warn(int on)	{	mglPrintWarn = !on;	}
 void MGL_EXPORT mgl_suppress_warn_(int *on)	{	mgl_suppress_warn(*on);	}
 void MGL_EXPORT mgl_set_quality(HMGL gr, int qual)	{	gr->SetQuality(qual);	}
 void MGL_EXPORT mgl_set_quality_(uintptr_t *gr, int *qual)	{	_GR_->SetQuality(*qual);	}
-int MGL_EXPORT mgl_get_quality(HMGL gr)	{	return gr->GetQuality();	}
-int MGL_EXPORT mgl_get_quality_(uintptr_t *gr)	{	return _GR_->GetQuality();	}
-int MGL_EXPORT mgl_is_frames(HMGL gr)
+int MGL_EXPORT_PURE mgl_get_quality(HMGL gr)	{	return gr->GetQuality();	}
+int MGL_EXPORT_PURE mgl_get_quality_(uintptr_t *gr)	{	return _GR_->GetQuality();	}
+int MGL_EXPORT_PURE mgl_is_frames(HMGL gr)
 {	return gr->get(MGL_VECT_FRAME) && !(gr->GetQuality()&MGL_DRAW_LMEM);	}
 void MGL_EXPORT mgl_set_draw_reg(HMGL gr, long nx, long ny, long m)	{	gr->SetDrawReg(nx,ny,m);	}
 void MGL_EXPORT mgl_set_draw_reg_(uintptr_t *gr, int *nx, int *ny, int *m)	{	_GR_->SetDrawReg(*nx,*ny,*m);	}
 //-----------------------------------------------------------------------------
-int MGL_EXPORT mgl_get_flag(HMGL gr, uint32_t flag)	{	return gr->get(flag);	}
-int MGL_EXPORT mgl_get_flag_(uintptr_t *gr, unsigned long *flag)	{	return _GR_->get(*flag);	}
+int MGL_EXPORT_PURE mgl_get_flag(HMGL gr, uint32_t flag)	{	return gr->get(flag);	}
+int MGL_EXPORT_PURE mgl_get_flag_(uintptr_t *gr, unsigned long *flag)	{	return _GR_->get(*flag);	}
 void MGL_EXPORT mgl_set_flag(HMGL gr, int val, uint32_t flag)		{	gr->set(val,flag);	}
 void MGL_EXPORT mgl_set_flag_(uintptr_t *gr, int *val, unsigned long *flag)	{	_GR_->set(*val,*flag);	}
 //-----------------------------------------------------------------------------
@@ -58,7 +58,7 @@ void MGL_EXPORT mgl_set_plotid(HMGL gr, const char *id)	{	gr->PlotId = id;	}
 void MGL_EXPORT mgl_set_plotid_(uintptr_t *gr, const char *id,int l)
 {	char *s=new char[l+1];	memcpy(s,id,l);	s[l]=0;
 	_GR_->PlotId = s;	delete []s;	}
-MGL_EXPORT const char *mgl_get_plotid(HMGL gr)	{	return gr->PlotId.c_str();	}
+MGL_EXPORT_PURE const char *mgl_get_plotid(HMGL gr)	{	return gr->PlotId.c_str();	}
 int MGL_EXPORT mgl_get_plotid_(uintptr_t *gr, char *out, int len)
 {
 	const char *res = mgl_get_plotid(_GR_);
@@ -66,28 +66,34 @@ int MGL_EXPORT mgl_get_plotid_(uintptr_t *gr, char *out, int len)
 	return strlen(res);
 }
 //-----------------------------------------------------------------------------
-MGL_EXPORT const char *mgl_get_mess(HMGL gr)	{	return gr->Mess.c_str();	}
+MGL_EXPORT_PURE const char *mgl_get_mess(HMGL gr)	{	return gr->Mess.c_str();	}
 int MGL_EXPORT mgl_get_mess_(uintptr_t *gr, char *out, int len)
 {
 	const char *res = mgl_get_mess(_GR_);
 	if(out)	mgl_strncpy(out,res,len);
 	return strlen(res);
 }
-int MGL_EXPORT mgl_get_warn(HMGL gr)	{	return gr->GetWarn();	}
+int MGL_EXPORT_PURE mgl_get_warn(HMGL gr)	{	return gr->GetWarn();	}
 void MGL_EXPORT mgl_set_warn(HMGL gr, int code, const char *txt)
 {	gr->SetWarn(code,txt);	}
 extern bool mglPrintWarn;
+extern MGL_EXPORT std::string *mglGlobalMess;	///< Buffer for receiving global messages
 void MGL_EXPORT mgl_set_global_warn(const char *txt)
 {
 	if(txt && *txt)
 	{
-		mglGlobalMess += txt;	mglGlobalMess += '\n';
+		*mglGlobalMess += txt;	*mglGlobalMess += '\n';
 		if(mglPrintWarn)	fprintf(stderr,_("Global message - %s\n"),txt);
 	}
 }
 void MGL_EXPORT mgl_set_global_warn_(const char *txt, int l)
 {	char *s=new char[l+1];	memcpy(s,txt,l);	s[l]=0;	mgl_set_global_warn(s);	delete []s;	}
-MGL_EXPORT const char *mgl_get_global_warn()	{	return mglGlobalMess.c_str();	}
+void MGL_EXPORT mgl_clear_global_warn()
+{	*mglGlobalMess = "";	}
+void MGL_EXPORT mgl_clear_global_warn_()
+{	mgl_clear_global_warn();	}
+MGL_EXPORT_PURE const char *mgl_get_global_warn()
+{	return mglGlobalMess->empty()?"":mglGlobalMess->c_str();	}
 int MGL_EXPORT mgl_get_global_warn_(char *out, int len)
 {
 	const char *res = mgl_get_global_warn();
@@ -153,7 +159,7 @@ void MGL_EXPORT mgl_set_rdc_acc_(uintptr_t *gr, int *reduce)
 void MGL_EXPORT mgl_highlight_(uintptr_t *gr, int *id)	{	_GR_->Highlight(*id);	}
 void MGL_EXPORT mgl_set_origin_(uintptr_t *gr, mreal *x0, mreal *y0, mreal *z0)
 {	_GR_->SetOrigin(*x0,*y0,*z0);	}
-int MGL_EXPORT mgl_get_warn_(uintptr_t *gr)	{	return _GR_->GetWarn();	}
+int MGL_EXPORT_PURE mgl_get_warn_(uintptr_t *gr)	{	return _GR_->GetWarn();	}
 void MGL_EXPORT mgl_set_warn_(uintptr_t *gr, int *code, const char *txt, int l)
 {	char *s=new char[l+1];	memcpy(s,txt,l);	s[l]=0;
 	_GR_->SetWarn(*code, s);	delete []s;	}
@@ -202,9 +208,11 @@ void MGL_EXPORT mgl_set_tick_rotate_(uintptr_t *gr,int *enable){	_GR_->SetTickRo
 void MGL_EXPORT mgl_set_tick_skip_(uintptr_t *gr, int *enable)	{	_GR_->SetTickSkip(*enable);	}
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_set_rotated_text(HMGL gr, int enable)	{	gr->SetRotatedText(enable);	}
+void MGL_EXPORT mgl_set_scale_text(HMGL gr, int enable)		{	gr->set(!enable, MGL_NO_SCALE_REL);	}
 void MGL_EXPORT mgl_set_mark_size(HMGL gr, double size)		{	gr->SetMarkSize(size);	}
 void MGL_EXPORT mgl_set_arrow_size(HMGL gr, double size)	{	gr->SetArrowSize(size);	}
 void MGL_EXPORT mgl_set_font_size(HMGL gr, double size)		{	gr->SetFontSize(size);	}
+void MGL_EXPORT mgl_set_font_hscale(HMGL gr, double scale)	{	gr->SetFontHscale(scale);	}
 void MGL_EXPORT mgl_set_font_def(HMGL gr, const char *fnt)	{	gr->SetFontDef(fnt);	}
 void MGL_EXPORT mgl_load_font(HMGL gr, const char *name, const char *path)
 {	gr->LoadFont(name,path);	}
@@ -213,10 +221,12 @@ void MGL_EXPORT mgl_restore_font(HMGL gr)	{	gr->RestoreFont();	}
 void MGL_EXPORT mgl_define_symbol(HMGL gr, char id, HCDT x, HCDT y)	{	gr->DefineGlyph(x,y,id);	}
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_set_bar_width_(uintptr_t *gr, mreal *width)	{	_GR_->SetBarWidth(*width);	}
-void MGL_EXPORT mgl_set_rotated_text_(uintptr_t *gr, int *rotated)	{	_GR_->SetRotatedText(*rotated);	}
+void MGL_EXPORT mgl_set_rotated_text_(uintptr_t *gr, int *enable)	{	_GR_->SetRotatedText(*enable);	}
+void MGL_EXPORT mgl_set_scale_text_(uintptr_t *gr, int *enable)	{	mgl_set_scale_text(_GR_,*enable);	}
 void MGL_EXPORT mgl_set_mark_size_(uintptr_t *gr, mreal *size)		{	_GR_->SetMarkSize(*size);	}
 void MGL_EXPORT mgl_set_arrow_size_(uintptr_t *gr, mreal *size)	{	_GR_->SetArrowSize(*size);	}
 void MGL_EXPORT mgl_set_font_size_(uintptr_t *gr, mreal *size)		{	_GR_->SetFontSize(*size);	}
+void MGL_EXPORT mgl_set_font_hscale_(uintptr_t *gr, double *scale)	{	_GR_->SetFontHscale(*scale);	}
 void MGL_EXPORT mgl_set_font_def_(uintptr_t *gr, const char *name, int l)
 {	char *s=new char[l+1];		memcpy(s,name,l);	s[l]=0;
 	_GR_->SetFontDef(s);	delete []s;	}
@@ -230,20 +240,27 @@ void MGL_EXPORT mgl_restore_font_(uintptr_t *gr)	{	_GR_->RestoreFont();	}
 void MGL_EXPORT mgl_define_symbol_(uintptr_t *gr, char *id, uintptr_t *x, uintptr_t *y, int)
 {	_GR_->DefineGlyph(_DA_(x),_DA_(y),id?*id:0);	}
 //-----------------------------------------------------------------------------
-extern mglFont mglDefFont;
+extern mglFont *mglDefFont;
 void MGL_EXPORT mgl_def_font(const char *name, const char *path)
-{	mglDefFont.Load(name,path);	}
+{	mglDefFont->Load(name,path);	}
 void MGL_EXPORT mgl_def_font_(const char *name, const char *path,int l,int n)
 {	char *s=new char[l+1];		memcpy(s,name,l);	s[l]=0;
 	char *d=new char[n+1];		memcpy(d,path,n);	d[n]=0;
-	mglDefFont.Load(name,path);	delete []s;		delete []d;	}
+	mglDefFont->Load(name,path);	delete []s;		delete []d;	}
 //-----------------------------------------------------------------------------
 int MGL_EXPORT mgl_check_version(const char *ver)
-{	double v=0;	int r = sscanf(ver,"2.%lg",&v);
-	return r<1 || v>MGL_VER2;	}
+{	int m1,m2,res=1, r = sscanf(ver,"%d.%d",&m1,&m2);
+	if(r==1 && m1<=MGL_VER_MAJOR && m1>1)	res=0;
+	if(r==2 && m1<=MGL_VER_MAJOR && m1>1 && (m1<MGL_VER_MAJOR || m2<=MGL_VER_MINOR))	res=0;
+	return res;	}
 int MGL_EXPORT mgl_check_version_(const char *ver, int l)
 {	char *s=new char[l+1];		memcpy(s,ver,l);	s[l]=0;
 	int r=mgl_check_version(s);	delete []s;	return r;	}
+//-----------------------------------------------------------------------------
+void MGL_EXPORT mgl_set_tex_parse(HMGL gr, int val)
+{	gr->GetFont()->parse=val;	}
+void MGL_EXPORT mgl_set_tex_parse_(uintptr_t *gr, int *val)
+{	_GR_->GetFont()->parse=*val;	}
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_start_group(HMGL gr, const char *s)	{	gr->StartAutoGroup(s);	}
 void MGL_EXPORT mgl_end_group(HMGL gr)	{	gr->EndGroup();	}

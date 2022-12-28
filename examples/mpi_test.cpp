@@ -4,7 +4,7 @@
 
 int main(int argc, char *argv[])
 {
-	mgl_textdomain(argv?argv[0]:NULL);
+	mgl_textdomain(argv?argv[0]:NULL,"");
 	// initialize MPI
 	int rank=0, numproc=1;
 	MPI_Init(&argc, &argv);

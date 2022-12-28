@@ -1,4 +1,5 @@
 configure_file(${MathGL2_SOURCE_DIR}/include/config.h.in ${MathGL2_BINARY_DIR}/include/mgl2/config.h)
+configure_file(${MathGL2_SOURCE_DIR}/include/build.h.in ${MathGL2_BINARY_DIR}/include/mgl2/build.h)
 
 install(DIRECTORY mgl2/ DESTINATION ${MGL_INCLUDE_PATH}
                         PATTERN ".svn" EXCLUDE

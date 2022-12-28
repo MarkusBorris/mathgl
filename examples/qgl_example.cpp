@@ -19,30 +19,27 @@
  ***************************************************************************/
 #include "qgl_example.h"
 #include <QApplication>
-//#include <GL/gl.h>
-//-----------------------------------------------------------------------------
-int main(int argc, char *argv[])
-{
-	mgl_textdomain(argv?argv[0]:NULL,"");
-	QApplication a(argc, argv);
-	MainWindow w;
-	w.show();
-	return a.exec();
-}
+//#include <QtOpenGL>
 //-----------------------------------------------------------------------------
 MainWindow::MainWindow(QWidget *parent) : QGLWidget(parent)	{	gr=0;	}
 //-----------------------------------------------------------------------------
 MainWindow::~MainWindow()	{	if(gr)	delete gr;	}
 //-----------------------------------------------------------------------------
-void MainWindow::initializeGL()
+void MainWindow::initializeGL()	// recreate instance of MathGL core
 {
 	if(gr)	delete gr;
-	gr = new mglGraph(1);
+	gr = new mglGraph(1);	// use '1' for argument to force OpenGL output in MathGL
 }
 //-----------------------------------------------------------------------------
-void MainWindow::paintGL()
+void MainWindow::resizeGL(int w, int h) // standard resize replace
 {
-	gr->Clf();
+	QGLWidget::resizeGL(w, h);
+	glViewport (0, 0, w, h);
+}
+//-----------------------------------------------------------------------------
+void MainWindow::paintGL()	// main drawing function
+{
+	gr->Clf();	// clear previous OpenGL primitives
 	gr->SubPlot(1,1,0);
 	gr->Rotate(40,60);
 	gr->Light(true);
@@ -53,12 +50,15 @@ void MainWindow::paintGL()
 	gr->FPlot("cos(pi*x)","|");
 	gr->FSurf("cos(2*pi*(x^2+y^2))");
 	gr->Finish();
-	swapBuffers();
+	swapBuffers();	// show output on the screen
 }
 //-----------------------------------------------------------------------------
-void MainWindow::resizeGL(int w, int h)
+int main(int argc, char *argv[])	// create application
 {
-	QGLWidget::resizeGL(w, h);
-	glViewport (0, 0, w, h);
+	mgl_textdomain(argv?argv[0]:NULL,"");
+	QApplication a(argc, argv);
+	MainWindow w;
+	w.show();
+	return a.exec();
 }
 //-----------------------------------------------------------------------------

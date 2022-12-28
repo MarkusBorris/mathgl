@@ -184,7 +184,7 @@ Add pipes support in utilities (@code{mglconv, mglview}).
 @section Utilities for parsing MGL
 @nav{}
 
-MathGL library provides several tools for parsing MGL scripts. There is tools saving it to bitmap or vectorial images (@code{mglconv}). Tool @code{mglview} show MGL script and allow to rotate and setup the image. Another feature of @code{mglview} is loading *.mgld files (see @code{ExportMGLD()}) for quick viewing 3d pictures.
+MathGL library provides several tools for parsing MGL scripts. There is tools saving it to bitmap or vectorial images (@code{mglconv}). Tool @code{mglview} show MGL script and allow one to rotate and setup the image. Another feature of @code{mglview} is loading *.mgld files (see @code{ExportMGLD()}) for quick viewing 3d pictures.
 
 Both tools have similar set of arguments. They can be name of script file or options. You can use @samp{-} as script name for using standard input (i.e. pipes). Options are:
 @itemize

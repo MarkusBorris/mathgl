@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -20,10 +20,27 @@
 #include "mgl2/font.h"
 #include "mgl2/base.h"
 #include "mgl2/eval.h"
+
+#if MGL_HAVE_FREETYPE
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_OUTLINE_H
+#include FT_BBOX_H
+#endif
+
 #if MGL_HAVE_OMP
 #include <omp.h>
 #endif
 
+//-----------------------------------------------------------------------------
+static unsigned mgl_pb=0;
+unsigned MGL_EXPORT mgl_bsize(unsigned bsize)
+{
+	if(!mgl_pb)	mgl_pb = (bsize>0 && bsize<100)?bsize:16;
+	return mgl_pb;
+}
+unsigned MGL_EXPORT mgl_bsize_(unsigned *bsize)
+{	return mgl_bsize(*bsize);	}
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_mutex_unlock(void *mutex)
 {
@@ -112,7 +129,9 @@ void MGL_EXPORT mgl_strlwr(char *str)
 //-----------------------------------------------------------------------------
 mglBase::mglBase()
 {
+	mgl_init();
 	Flag=0;	saved=false;	PrmInd=NULL;
+	limit_pm1 = false;
 #if MGL_HAVE_PTHREAD
 	pthread_mutex_init(&mutexPnt,0);
 	pthread_mutex_init(&mutexTxt,0);
@@ -178,6 +197,7 @@ mglBase::~mglBase()
 #endif
 }
 //-----------------------------------------------------------------------------
+void mglBase::SetFontHscale(mreal val)	{	fnt->HeightScale(val);	}
 void mglBase::RestoreFont()	{	fnt->Restore();	}
 void mglBase::LoadFont(const char *name, const char *path)
 {	if(name && *name)	fnt->Load(name,path);	else	fnt->Restore();	}
@@ -187,6 +207,12 @@ mreal mglBase::TextWidth(const char *text, const char *font, mreal size) const
 {	return (size<0?-size*FontSize:size)*font_factor*fnt->Width(text,(font&&*font)?font:FontDef)/20.16;	}
 mreal mglBase::TextWidth(const wchar_t *text, const char *font, mreal size) const
 {	return (size<0?-size*FontSize:size)*font_factor*fnt->Width(text,(font&&*font)?font:FontDef)/20.16;	}
+mreal mglBase::TextHeight(const char *text, const char *font, mreal size) const
+{	float y1,y2;	fnt->Width(text,(font&&*font)?font:FontDef,&y1,&y2);
+	return (size<0?-size*FontSize:size)*font_factor*(y2-y1)/20.16;	}
+mreal mglBase::TextHeight(const wchar_t *text, const char *font, mreal size) const
+{	float y1,y2;	fnt->Width(text,(font&&*font)?font:FontDef,&y1,&y2);
+	return (size<0?-size*FontSize:size)*font_factor*(y2-y1)/20.16;	}
 mreal mglBase::TextHeight(const char *font, mreal size) const
 {	return (size<0?-size*FontSize:size)*font_factor*fnt->Height(font?font:FontDef)/20.16; }
 void mglBase::AddActive(long k,int n)
@@ -253,6 +279,118 @@ void mglBase::SetWarn(int code, const char *who)
 }
 //-----------------------------------------------------------------------------
 //		Add glyph to the buffer
+//-----------------------------------------------------------------------------
+#if MGL_HAVE_FREETYPE
+MGL_NO_EXPORT int mgl_glf_moveto(const FT_Vector *to, void *user)
+{
+	std::vector<double> *a = (std::vector<double> *)user;
+	if(a->size()>1)	{	a->push_back(NAN);	a->push_back(NAN);	}
+	a->push_back(to->x);	a->push_back(to->y);
+	return 0;
+}
+MGL_NO_EXPORT int mgl_glf_lineto(const FT_Vector *to, void *user)
+{
+	std::vector<double> *a = (std::vector<double> *)user;
+	if(a->size()<2)	{	a->push_back(0);	a->push_back(0);	}
+	a->push_back(to->x);	a->push_back(to->y);
+	return 0;
+}
+MGL_NO_EXPORT int mgl_glf_parabto(const FT_Vector *ctrl, const FT_Vector *to, void *user)
+{
+	std::vector<double> *a = (std::vector<double> *)user;
+	int x0=0,y0=0, x1=ctrl->x,y1=ctrl->y, x2=to->x,y2=to->y;
+	size_t n=a->size();
+	if(n<2)	{	a->push_back(0);	a->push_back(0);	}
+	else	{	x0 = (*a)[n-2];	y0 = (*a)[n-1];	}
+	for(int i=1;i<=10;i++)
+	{
+		double t = 0.1*i;
+		a->push_back(x0*(1-t)*(1-t)+2*(1-t)*t*x1+t*t*x2);
+		a->push_back(y0*(1-t)*(1-t)+2*(1-t)*t*y1+t*t*y2);
+	}
+	return 0;
+}
+MGL_NO_EXPORT int mgl_glf_cubeto(const FT_Vector *ctrl1, const FT_Vector *ctrl2, const FT_Vector *to, void *user)
+{
+	std::vector<double> *a = (std::vector<double> *)user;
+	int x0=0,y0=0, x1=ctrl1->x,y1=ctrl1->y, x2=ctrl2->x,y2=ctrl2->y, x3=to->x,y3=to->y;
+	size_t n=a->size();
+	if(n<2)	{	a->push_back(0);	a->push_back(0);	}
+	else	{	x0 = (*a)[n-2];	y0 = (*a)[n-1];	}
+	for(int i=1;i<=30;i++)
+	{
+		double t = 0.1*i;
+		a->push_back(x0*(1-t)*(1-t)*(1-t) + 3*(1-t)*t*(x1*(1-t)+t*x2) + t*t*t*x3);
+		a->push_back(y0*(1-t)*(1-t)*(1-t) + 3*(1-t)*t*(y1*(1-t)+t*y2) + t*t*t*y3);
+	}
+	return 0;
+}
+#endif
+void mglGlyph::Load(wchar_t id, const char *fname)
+{
+#if MGL_HAVE_FREETYPE
+	FT_Library m_ftLibrary;
+	if(FT_Init_FreeType(&m_ftLibrary))
+		mgl_set_global_warn("Couldn't initialize the FreeType library.");
+	else
+	{
+		FT_Face m_face;
+		// For simplicity, always use the first face index.
+		if(FT_New_Face(m_ftLibrary, fname, 0, &m_face))
+			mgl_set_global_warn("Couldn't load the font file.");
+		else
+		{
+			// For simplicity, use the charmap FreeType provides by default;
+			// in most cases this means Unicode.
+			FT_UInt index = FT_Get_Char_Index(m_face, id);
+			if(FT_Load_Glyph(m_face, index, FT_LOAD_NO_SCALE|FT_LOAD_NO_BITMAP))
+				mgl_set_global_warn("Couldn't load the glyph.");
+			else
+			{
+				FT_GlyphSlot slot = m_face->glyph;
+				FT_Outline &outline = slot->outline;
+
+				if(slot->format!=FT_GLYPH_FORMAT_OUTLINE || outline.n_contours <= 0 || outline.n_points <= 0 ||FT_Outline_Check(&outline))
+					mgl_set_global_warn("Outline doesn't exist.");
+				else
+				{
+					const FT_Fixed multiplier = 32768L;
+					FT_Matrix matrix;
+					matrix.xx = matrix.yy = multiplier;
+					matrix.xy = matrix.yx = 0;
+					FT_Outline_Transform(&outline, &matrix);
+					
+					FT_Outline_Funcs callbacks;
+					callbacks.move_to = mgl_glf_moveto;
+					callbacks.line_to = mgl_glf_lineto;
+					callbacks.conic_to = mgl_glf_parabto;
+					callbacks.cubic_to = mgl_glf_cubeto;
+					callbacks.shift = 0;
+					callbacks.delta = 0;
+					std::vector<double> xy_coor;
+					if(FT_Outline_Decompose(&outline, &callbacks, &xy_coor))
+						mgl_set_global_warn("Couldn't extract the outline.");
+					nt = -id;	// TODO optimize and copy points. Q: actual width? Q: cmp with known.
+					FT_BBox boundingBox;
+					FT_Outline_Get_BBox(&outline, &boundingBox);
+/*					FT_Pos xMin = boundingBox.xMin;
+					FT_Pos yMin = boundingBox.yMin;
+					FT_Pos xMax = boundingBox.xMax;
+					FT_Pos yMax = boundingBox.yMax;
+					
+					m_xMin = xMin;
+					m_yMin = yMin;
+					m_width = xMax - xMin;
+					m_height = yMax - yMin;*/
+
+				}
+			}
+			FT_Done_Face(m_face);
+		}
+	}
+	FT_Done_FreeType(m_ftLibrary);
+#endif
+}
 //-----------------------------------------------------------------------------
 void mglGlyph::Create(long Nt, long Nl)
 {
@@ -332,18 +470,42 @@ void mglBase::DefineGlyph(HCDT x, HCDT y, unsigned char id)
 //-----------------------------------------------------------------------------
 //		Add points to the buffer
 //-----------------------------------------------------------------------------
+long mglBase::PushPnts(size_t num, const mglPnt *qq)
+{
+	long k;
+#pragma omp critical(pnt)
+	MGL_PUSHs({k=Pnt.size();Pnt.push_back(num,qq);},mutexPnt);
+	return k;
+}
+//-----------------------------------------------------------------------------
+long mglBase::AllocPnts(size_t num)
+{
+	long k;
+#pragma omp critical(pnt)
+	MGL_PUSHs({k=Pnt.allocate(num);},mutexPnt);
+	return k;
+}
+//-----------------------------------------------------------------------------
 void inline mgl_put_inbox(mreal a1, mreal a2, mreal &a)
 {
 	if(a1<a2)	{	if(a<a1)	a=a1;	if(a>a2)	a=a2;	}
 	else		{	if(a<a2)	a=a2;	if(a>a1)	a=a1;	}
 }
-void MGL_NO_EXPORT mgl_coor_box(HMGL gr, mglPoint &p)
+static void mgl_coor_box(HMGL gr, mglPoint &p)
 {
 	mgl_put_inbox(gr->Min.x, gr->Max.x, p.x);
 	mgl_put_inbox(gr->Min.y, gr->Max.y, p.y);
 	mgl_put_inbox(gr->Min.z, gr->Max.z, p.z);
 }
-long mglBase::AddPnt(const mglMatrix *mat, mglPoint p, mreal c, mglPoint n, mreal a, int scl)
+long mglBase::AddPnt(const mglMatrix *mat, const mglPoint &p, mreal c, const mglPoint &n, mreal a, int scl)
+{
+	mglPnt q;
+	if(!AddPntQ(q,mat,p,c,n,a,scl))	return -1;
+	long k;
+#pragma omp critical(pnt)
+	{k=Pnt.size();	MGL_PUSH(Pnt,q,mutexPnt);}	return k;
+}
+bool mglBase::AddPntQ(mglPnt &q, const mglMatrix *mat, mglPoint p, mreal c, mglPoint n, mreal a, int scl)
 {
 	// scl=0 -- no scaling
 	// scl&1 -- usual scaling
@@ -351,22 +513,22 @@ long mglBase::AddPnt(const mglMatrix *mat, mglPoint p, mreal c, mglPoint n, mrea
 	// scl&4 -- disable NAN for normales if no light
 	// scl&8 -- bypass palette for enabling alpha
 	// scl&16 -- put points inside axis range
-	if(mgl_isnan(c) || mgl_isnan(a))	return -1;
-	bool norefr = mgl_isnan(n.x) && mgl_isnan(n.y) && !mgl_isnan(n.z);
+	q.xx = NAN;
+	if(mgl_isnan(c) || mgl_isnan(a))	{	q.x=NAN;	return false;	}
+	bool norefr = mgl_isnan(n.x) && mgl_isnan(n.y) && !mgl_isnan(n.z), res=true;
 	if(scl>0)
 	{
 		if(scl&16)	mgl_coor_box(this, p);
-		ScalePoint(mat,p,n,!(scl&2));
+		res = ScalePoint(mat,p,n,!(scl&2));
 	}
-	if(mgl_isnan(p.x))	return -1;
+// 	if(mgl_isnan(p.x))	{	q.x=NAN;	return false;	}
 	a = (a>=0 && a<=1) ? a : AlphaDef;
 	c = (c>=0) ? c:CDef;
 
-	mglPnt q;
 	if(get(MGL_REDUCEACC))
 	{
 		q.x=q.xx=int(p.x*10)*0.1;	q.y=q.yy=int(p.y*10)*0.1;	q.z=q.zz=int(p.z*10)*0.1;
-		q.c=int(c*100)*0.01;	q.t=q.ta=int(a*100)*0.01;
+		q.c=int(c*100)*0.01;		q.ta=int(a*100)*0.01;
 		q.u=mgl_isnum(n.x)?int(n.x*100)*0.01:NAN;
 		q.v=mgl_isnum(n.y)?int(n.y*100)*0.01:NAN;
 		q.w=mgl_isnum(n.z)?int(n.z*100)*0.01:NAN;
@@ -374,8 +536,10 @@ long mglBase::AddPnt(const mglMatrix *mat, mglPoint p, mreal c, mglPoint n, mrea
 	else
 	{
 		q.x=q.xx=p.x;	q.y=q.yy=p.y;	q.z=q.zz=p.z;
-		q.c=c;	q.t=q.ta=a;	q.u=n.x;	q.v=n.y;	q.w=n.z;
+		q.c=c;	q.ta=a;	q.u=n.x;	q.v=n.y;	q.w=n.z;
 	}
+	if(!(scl&2) && !res)	q.x = NAN;
+
 	long ci=long(c);
 	if(ci<0 || ci>=(long)Txt.size())	ci=0;	// NOTE never should be here!!!
 	const mglTexture &txt=Txt[ci];
@@ -389,38 +553,50 @@ long mglBase::AddPnt(const mglMatrix *mat, mglPoint p, mreal c, mglPoint n, mrea
 	// add gap for texture coordinates for compatibility with OpenGL
 	const mreal gap = 0./MGL_TEXTURE_COLOURS;
 	q.c = ci+(q.c-ci)*(1-2*gap)+gap;
-	q.t = q.t*(1-2*gap)+gap;
-	q.ta = q.t;
+	q.ta = q.ta*(1-2*gap)+gap;
 
 	if(scl&8 && scl>0)	q.a=a;	// bypass palette for enabling alpha in Error()
 	if(!get(MGL_ENABLE_ALPHA))	{	q.a=1;	if(txt.Smooth!=2)	q.ta=1-gap;	}
 	if(norefr)	q.v=0;
 	if(!get(MGL_ENABLE_LIGHT) && !(scl&4))	q.u=q.v=NAN;
-	q.sub=mat->norot?-1*(short)Sub.size():Sub.size()-1;
-	long k;
-#pragma omp critical(pnt)
-	{k=Pnt.size();	MGL_PUSH(Pnt,q,mutexPnt);}	return k;
+	q.sub=mat->norot?-1*(int)Sub.size():Sub.size()-1;
+	return (scl&16)?res:true;
 }
 //-----------------------------------------------------------------------------
 long mglBase::CopyNtoC(long from, mreal c)
 {
-	if(from<0)	return -1;
-	mglPnt p=Pnt[from];
-	if(mgl_isnum(c))	{	p.c=c;	p.t=1;	Txt[long(c)].GetC(c,0,p);	p.a=1;	}
-	long k;
-#pragma omp critical(pnt)
-	{k=Pnt.size();	MGL_PUSH(Pnt,p,mutexPnt);}	return k;
-}
-//-----------------------------------------------------------------------------
-long mglBase::CopyProj(long from, mglPoint p, mglPoint n, short sub)
-{
-	if(from<0)	return -1;
-	mglPnt q=Pnt[from];	q.sub = sub;
-	q.x=q.xx=p.x;	q.y=q.yy=p.y;	q.z=q.zz=p.z;
-	q.u = n.x;		q.v = n.y;		q.w = n.z;
+	mglPnt q;
+	if(!CopyNtoC(q,from,c))	return -1;
 	long k;
 #pragma omp critical(pnt)
 	{k=Pnt.size();	MGL_PUSH(Pnt,q,mutexPnt);}	return k;
+}
+//-----------------------------------------------------------------------------
+bool mglBase::CopyNtoC(mglPnt &q, long from, mreal c)
+{
+	if(from<0)	return false;
+	q = Pnt[from];
+	if(mgl_isnum(c))	{	q.c=c;	q.ta=1;	Txt[long(c)].GetC(c,0,q);	q.a=1;	}
+	else	q.x = NAN;
+	return mgl_isnum(q.x);
+}
+//-----------------------------------------------------------------------------
+long mglBase::CopyProj(long from, const mglPoint &p, const mglPoint &n, short sub)
+{
+	mglPnt q;
+	if(!CopyProj(q,from,p,n,sub))	return -1;
+	long k;
+#pragma omp critical(pnt)
+	{k=Pnt.size();	MGL_PUSH(Pnt,q,mutexPnt);}	return k;
+}
+//-----------------------------------------------------------------------------
+bool mglBase::CopyProj(mglPnt &q, long from, const mglPoint &p, const mglPoint &n, short sub)
+{
+	if(from<0)	return false;
+	q=Pnt[from];	q.sub = sub;
+	q.x=q.xx=p.x;	q.y=q.yy=p.y;	q.z=q.zz=p.z;
+	q.u = n.x;		q.v = n.y;		q.w = n.z;
+	return mgl_isnum(q.x);
 }
 //-----------------------------------------------------------------------------
 void mglBase::Reserve(long n)
@@ -608,7 +784,14 @@ bool mglBase::ScalePoint(const mglMatrix *, mglPoint &p, mglPoint &n, bool use_n
 	}
 	if(fabs(x)>MGL_FEPSILON || fabs(y)>MGL_FEPSILON || fabs(z)>MGL_FEPSILON)	res = false;
 
-	if(!res && use_nan)	x = NAN;	// extra sign that point shouldn't be plotted
+// 	if(!res && use_nan)	x = NAN;	// extra sign that point shouldn't be plotted
+// 	else if(limit_pm1)
+	if(limit_pm1 && (res || !use_nan))
+	{
+		x = x>1?1:(x<-1?-1:x);
+		y = y>1?1:(y<-1?-1:y);
+		z = z>1?1:(z<-1?-1:z);
+	}
 	return res;
 }
 //-----------------------------------------------------------------------------
@@ -643,7 +826,7 @@ void mglBase::SetOrigin(mreal x0, mreal y0, mreal z0, mreal c0)
 	}
 }
 //-----------------------------------------------------------------------------
-void mglBase::SetRanges(mglPoint m1, mglPoint m2)
+void mglBase::SetRanges(const mglPoint &m1, const mglPoint &m2)
 {
 	if(mgl_isrange(m1.x, m2.x))	{	Min.x=m1.x;	Max.x=m2.x;	}
 	if(mgl_isrange(m1.y, m2.y))	{	Min.y=m1.y;	Max.y=m2.y;	}
@@ -948,7 +1131,7 @@ void MGL_EXPORT mgl_chrrgb(char p, float c[3])
 		}
 }
 //-----------------------------------------------------------------------------
-size_t MGL_EXPORT mgl_get_num_color(const char *s, int smooth)
+size_t MGL_EXPORT_PURE mgl_get_num_color(const char *s, int smooth)
 {
 	if(!s || !s[0])	return 0;
 	size_t l=strlen(s), n=0;	long j=0;
@@ -968,7 +1151,7 @@ void mglTexture::Set(const char *s, int smooth, mreal alpha)
 {
 	// NOTE: New syntax -- colors are CCCCC or {CNCNCCCN}; options inside []
 	if(!s || !s[0])	return;
-	mgl_strncpy(Sch,s,259);	Smooth=smooth;	Alpha=alpha;
+	mgl_strncpy(Sch,s,259);	Smooth=smooth;	Alpha=alpha;	Clear();
 
 	long l=strlen(s);
 	bool map = smooth==2 || mglchr(s,'%'), sm = smooth>=0 && !strchr(s,'|');	// Use mapping, smoothed colors
@@ -982,8 +1165,8 @@ void mglTexture::Set(const char *s, int smooth, mreal alpha)
 	}
 	if(n<=0)	return;
 	bool man=sm;
-	mglColor *c = new mglColor[2*n];		// Colors itself
-	mreal *val = new mreal[n];
+	c0 = new mglColor[2*n];	// Colors itself
+	val = new float[n];
 	for(long i=0, m=0, j=n=0;i<l;i++)	// fill colors
 	{
 		if(smooth>=0 && s[i]==':' && j<1)	break;
@@ -994,18 +1177,18 @@ void mglTexture::Set(const char *s, int smooth, mreal alpha)
 		if(strchr(MGL_COLORS,s[i]) && j<1 && (m==0 || s[i-1]=='{'))	// {CN,val} format, where val in [0,1]
 		{
 			if(m>0 && s[i+1]>'0' && s[i+1]<='9')// ext color
-			{	c[2*n].Set(s[i],(s[i+1]-'0')/5.f);	i++;	}
-			else	c[2*n].Set(s[i]);	// usual color
-			val[n]=-1;	c[2*n].a = -1;	n++;
+			{	c0[2*n].Set(s[i],(s[i+1]-'0')/5.f);	i++;	}
+			else	c0[2*n].Set(s[i]);	// usual color
+			val[n]=-1;	c0[2*n].a = -1;	n++;
 		}
 		if(s[i]=='x' && i>0 && s[i-1]=='{' && j<1)	// {xRRGGBB,val} format, where val in [0,1]
 		{
 			uint32_t id = strtoul(s+1+i,0,16);
-			if(memchr(s+i+1,'}',8) || memchr(s+i+1,',',8))	c[2*n].a = -1;
-			else	{	c[2*n].a = (id%256)/255.;	id /= 256;	}
-			c[2*n].b = (id%256)/255.;	id /= 256;
-			c[2*n].g = (id%256)/255.;	id /= 256;
-			c[2*n].r = (id%256)/255.;
+			if(memchr(s+i+1,'}',8) || memchr(s+i+1,',',8))	c0[2*n].a = -1;
+			else	{	c0[2*n].a = (id%256)/255.;	id /= 256;	}
+			c0[2*n].b = (id%256)/255.;	id /= 256;
+			c0[2*n].g = (id%256)/255.;	id /= 256;
+			c0[2*n].r = (id%256)/255.;
 			while(strchr("0123456789abcdefABCDEFx",s[i]))	i++;
 			val[n]=-1;	n++;	i--;
 		}
@@ -1017,19 +1200,19 @@ void mglTexture::Set(const char *s, int smooth, mreal alpha)
 	}
 	for(long i=0;i<n;i++)	// default texture
 	{
-		if(c[2*i].a<0)	c[2*i].a=alpha;
-		c[2*i+1]=c[2*i];
-		if(man)	c[2*i].a=0;
+		if(c0[2*i].a<0)	c0[2*i].a=alpha;
+		c0[2*i+1]=c0[2*i];
+		if(man)	c0[2*i].a=0;
 	}
 	if(map && sm && n>1)		// map texture
 	{
 		if(n==2)
-		{	c[1]=c[2];	c[2]=c[0];	c[0]=BC;	c[3]=c[1]+c[2];	}
+		{	c0[1]=c0[2];	c0[2]=c0[0];	c0[0]=BC;	c0[3]=c0[1]+c0[2];	}
 		else if(n==3)
-		{	c[1]=c[2];	c[2]=c[0];	c[0]=BC;	c[3]=c[4];	n=2;}
+		{	c0[1]=c0[2];	c0[2]=c0[0];	c0[0]=BC;	c0[3]=c0[4];	n=2;}
 		else
-		{	c[1]=c[4];	c[3]=c[6];	n=2;	}
-		c[0].a = c[1].a = c[2].a = c[3].a = alpha;
+		{	c0[1]=c0[4];	c0[3]=c0[6];	n=2;	}
+		c0[0].a = c0[1].a = c0[2].a = c0[3].a = alpha;
 		val[0]=val[1]=-1;
 	}
 	// TODO if(!sm && n==1)	then try to find color in palette ???
@@ -1053,7 +1236,7 @@ void mglTexture::Set(const char *s, int smooth, mreal alpha)
 	if(!sm)	for(long i=0;i<256;i++)
 	{
 		long j = 2*long(v*i);	//u-=j;
-		col[2*i] = c[j];	col[2*i+1] = c[j+1];
+		col[2*i] = c0[j];	col[2*i+1] = c0[j+1];
 	}
 	else	for(long i=i1=0;i<256;i++)
 	{
@@ -1063,13 +1246,12 @@ void mglTexture::Set(const char *s, int smooth, mreal alpha)
 			for(;i1<n-1 && i>=255*val[i1];i1++);
 			v2 = i1<n?1/(val[i1]-val[i1-1]):0;
 			j=i1-1;	u=(i/255.-val[j])*v2;
-			col[2*i] = c[2*j]*(1-u)+c[2*j+2]*u;
-			col[2*i+1]=c[2*j+1]*(1-u)+c[2*j+3]*u;
+			col[2*i] = c0[2*j]*(1-u)+c0[2*j+2]*u;
+			col[2*i+1]=c0[2*j+1]*(1-u)+c0[2*j+3]*u;
 		}
 		else
-		{	col[2*i] = c[2*n-2];col[2*i+1] = c[2*n-1];	}
+		{	col[2*i] = c0[2*n-2];col[2*i+1] = c0[2*n-1];	}
 	}
-	delete []c;	delete []val;
 }
 //-----------------------------------------------------------------------------
 mglColor mglTexture::GetC(mreal u,mreal v) const
@@ -1144,7 +1326,7 @@ mreal mglBase::NextColor(long id, long sh)
 	return cc;
 }
 //-----------------------------------------------------------------------------
-MGL_EXPORT const char *mglchrs(const char *str, const char *chr)
+MGL_EXPORT_PURE const char *mglchrs(const char *str, const char *chr)
 {
 	if(!str || !str[0] || !chr || !chr[0])	return NULL;
 	size_t l=strlen(chr);
@@ -1156,7 +1338,7 @@ MGL_EXPORT const char *mglchrs(const char *str, const char *chr)
 	return NULL;
 }
 //-----------------------------------------------------------------------------
-MGL_EXPORT const char *mglchr(const char *str, char ch)
+MGL_EXPORT_PURE const char *mglchr(const char *str, char ch)
 {
 	if(!str || !str[0])	return NULL;
 	size_t l=strlen(str),k=0;
@@ -1244,14 +1426,20 @@ char mglBase::SetPenPal(const char *p, long *Id, bool pal)
 }
 //-----------------------------------------------------------------------------
 // keep this for restore default mask
-MGL_EXPORT uint64_t mgl_mask_def[16]={0x000000FF00000000,	0x080808FF08080808,	0x0000FF00FF000000,	0x0000007700000000,
-							0x0000182424180000,	0x0000183C3C180000,	0x00003C24243C0000,	0x00003C3C3C3C0000,
-							0x0000060990600000,	0x0060584658600000,	0x00061A621A060000,	0x0000005F00000000,
-							0x0008142214080000,	0x00081C3E1C080000,	0x8142241818244281,	0x0000001824420000};
-MGL_EXPORT uint64_t mgl_mask_val[16]={0x000000FF00000000,	0x080808FF08080808,	0x0000FF00FF000000,	0x0000007700000000,
-							0x0000182424180000,	0x0000183C3C180000,	0x00003C24243C0000,	0x00003C3C3C3C0000,
-							0x0000060990600000,	0x0060584658600000,	0x00061A621A060000,	0x0000005F00000000,
-							0x0008142214080000,	0x00081C3E1C080000,	0x8142241818244281,	0x0000001824420000};
+MGL_EXPORT uint64_t mgl_mask_def[16]={
+	0x000000FF00000000,	0x080808FF08080808,	0x0000FF00FF000000,	0x0000000F00000000,
+	0x0000182424180000,	0x0000183C3C180000,	0x00003C24243C0000,	0x00003C3C3C3C0000,
+	0x0000060990600000,	0x0060584658600000,	0x00061A621A060000,	0x0000002700000000,
+	0x0008083E08080000,	0x0139010010931000,	0x0000001818000000,	0x101010FF010101FF};
+MGL_EXPORT uint64_t mgl_mask_val[16]={
+	0x000000FF00000000,	0x080808FF08080808,	0x0000FF00FF000000,	0x0000000F00000000,
+	0x0000182424180000,	0x0000183C3C180000,	0x00003C24243C0000,	0x00003C3C3C3C0000,
+	0x0000060990600000,	0x0060584658600000,	0x00061A621A060000,	0x0000002700000000,
+	0x0008083E08080000,	0x0139010010931000,	0x0000001818000000,	0x101010FF010101FF};
+// 	0x000000FF00000000,	0x080808FF08080808,	0x0000FF00FF000000,	0x0000007700000000,
+// 	0x0000182424180000,	0x0000183C3C180000,	0x00003C24243C0000,	0x00003C3C3C3C0000,
+// 	0x0000060990600000,	0x0060584658600000,	0x00061A621A060000,	0x0000005F00000000,
+//	0x0008142214080000,	0x00081C3E1C080000,	0x8142241818244281,	0x0000001824420000};
 void mglBase::SetMask(const char *p)
 {
 	mask = MGL_SOLID_MASK;	// reset to solid face
@@ -1284,7 +1472,8 @@ mreal mglBase::GetA(mreal a) const
 {
 	if(fa)	a = fa->Calc(0,0,0,a);
 	a = (a-FMin.c)/(FMax.c-FMin.c);
-	a = (a<1?(a>0?a:0):1)/MGL_FEPSILON;	// for texture a must be <1 always!!!
+	a = (a>1?1:(a<0?0:a))/MGL_FEPSILON;	// for texture a must be <1 always!!!
+//	a = (a<1?(a>0?a:0):1)/MGL_FEPSILON;	// for texture a must be <1 always!!!
 	return a;
 }
 //-----------------------------------------------------------------------------
@@ -1375,7 +1564,7 @@ mreal mglBase::SaveState(const char *opt)
 		s=q;	q=strchr(s,';');
 		if(q)	{	*q=0;	q++;	}
 		mgl_strtrim(s);		char *a=s;
-		long n=mglFindArg(s);	if(n>0)	{	s[n]=0;		s=s+n+1;	}
+		long n=mglFindArg(s);	if(n>0)	{	s[n]=0;	s=s+n+1;	}
 		mgl_strtrim(a);		char *b=s;
 		n=mglFindArg(s);	if(n>0)	{	s[n]=0;		s=s+n+1;	}
 		mgl_strtrim(b);
@@ -1391,7 +1580,7 @@ mreal mglBase::SaveState(const char *opt)
 			if(a[0]=='x')		{	Min.x=ff;	Max.x=ss;	}
 			else if(a[0]=='y')	{	Min.y=ff;	Max.y=ss;	}
 			else if(a[0]=='z')	{	Min.z=ff;	Max.z=ss;	}
-//			else if(a[0]=='c')	{	Min.c=ff;	Max.c=ss;	}	// Bad idea since there is formula for coloring
+// NOTE!	else if(a[0]=='c')	{	Min.c=ff;	Max.c=ss;	}	// Bad idea since there is formula for coloring
 		}
 		else if(!strcmp(a,"cut"))		SetCut(ff!=0);
 		else if(!strcmp(a,"meshnum"))	SetMeshNum(ff);
@@ -1592,5 +1781,44 @@ void mglBase::ClearPrmInd()
 {
 #pragma omp critical(prmind)
 	{	if(PrmInd)	delete []PrmInd;	PrmInd=NULL;	}
+}
+//-----------------------------------------------------------------------------
+void mglBase::curve_plot(size_t num, size_t k0, size_t step)
+{
+	// exclude straight-line parts
+	if(get(MGL_FULL_CURV) || num<3 || B.b[8]<2)	for(size_t i=0;i+1<num;i++)
+		line_plot(k0+i*step,k0+(i+1)*step);
+	else	for(size_t i=0;i+1<num;i++)	// NOTE: this work well for 2D output only!!!
+	{
+		const mglPoint p1(GetPntP(k0+i*step));	//, ps(GetPntP(k0+(i+1)*step));
+// 		if(mgl_isnan(p1.x) || mgl_isnan(ps.x))	continue;
+		const mglColor c1(GetPntC(k0+i*step));
+		// remove duplicates
+		while(p1.same(GetPntP(k0+(i+1)*step)))	i++;
+		if(i+1>=num)	break;
+
+		float t1=-100, t2=100;		// XY angle boundary
+		float rg1=-100, rg2=100;	// RG angle boundary
+		float gb1=-100, gb2=100;	// GB angle boundary
+		size_t k;
+		for(k=i+1;k<num;k++)
+		{
+			const mglPoint p2(GetPntP(k0+k*step)-p1);
+			float dd=0.3/sqrt(p2.x*p2.x+p2.y*p2.y), t = atan2(p2.y,p2.x);
+			if(t>t1 && t<t2)
+			{	t1 = t1<t-dd?t-dd:t1;	t2 = t2>t+dd?t+dd:t2;	}	// new range
+			else	break;
+			const mglColor c2(GetPntC(k0+(k-1)*step)-c1);	dd = sqrt(c2.NormS());
+			if(dd>0)	// colors are different
+			{
+				float rg = atan2(c2.r,c2.g), gb = atan2(c2.g,c2.b),	d = 1e-2/dd;
+				if(rg1 > rg || rg2 < rg || gb1 > gb || gb2 < gb)	break;		// too curved
+				rg1 = rg1<rg-d?rg-d:rg1;	rg2 = rg2>rg+d?rg+d:rg2;	// new RG range
+				gb1 = gb1<gb-d?gb-d:gb1;	gb2 = gb2>gb+d?gb+d:gb2;	// new GB range
+			}
+		}
+		if(k>i+1)	k--;
+		line_plot(k0+i*step,k0+k*step);	i = k-1;
+	}
 }
 //-----------------------------------------------------------------------------

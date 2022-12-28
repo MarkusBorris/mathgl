@@ -5,8 +5,8 @@ set(mgl_src
 	export_2d.cpp export_3d.cpp eval.cpp evalp.cpp export.cpp
 	fit.cpp font.cpp obj.cpp other.cpp parser.cpp pde.cpp pixel.cpp pixel_gen.cpp
 	plot.cpp prim.cpp surf.cpp vect.cpp volume.cpp evalc.cpp
-	s_hull/s_hull_pro.cpp window.cpp fractal.cpp
-	exec_dat.cpp exec_gr.cpp exec_set.cpp exec_prm.cpp
+	s_hull/s_hull_pro.cpp window.cpp fractal.cpp random.cpp
+	exec_dat.cpp exec_gr.cpp exec_set.cpp exec_prm.cpp c2mdual.c
 )
 
 set(mgl_hdr
@@ -23,6 +23,10 @@ ${MathGL2_BINARY_DIR}/include/mgl2/dllexport.h	cont.hpp
 	../include/mgl2/thread.h	../include/mgl2/abstract.h	../include/mgl2/pde.h
 #	tex_table.cc	 def_font.cc
 )
+
+if(MSVC)
+	add_definitions(-DMGL_LIB_MSVC)
+endif(MSVC)
 
 if(MGL_HAVE_GSL2)
 	add_definitions(-DMGL_HAVE_GSL2)

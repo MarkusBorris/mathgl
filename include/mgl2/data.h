@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -22,31 +22,34 @@
 
 #include "mgl2/data_cf.h"
 #include "mgl2/pde.h"
+
+#if MGL_HAVE_ARMA
+#include <armadillo>
+#endif
 //-----------------------------------------------------------------------------
 #include <stdarg.h>
 //-----------------------------------------------------------------------------
-mreal MGL_EXPORT mglLinear(const mreal *a, long nx, long ny, long nz, mreal x, mreal y, mreal z);
+mreal MGL_EXPORT_PURE mglLinear(const mreal *a, long nx, long ny, long nz, mreal x, mreal y, mreal z);
 mreal MGL_EXPORT mglSpline3(const mreal *a, long nx, long ny, long nz, mreal x, mreal y, mreal z,mreal *dx=0, mreal *dy=0, mreal *dz=0);
-mreal MGL_EXPORT mglSpline3s(const mreal *a, long nx, long ny, long nz, mreal x, mreal y, mreal z);
-std::string MGL_EXPORT mgl_data_to_string(HCDT d, long ns);
+mreal MGL_EXPORT_PURE mglSpline3s(const mreal *a, long nx, long ny, long nz, mreal x, mreal y, mreal z);
 //-----------------------------------------------------------------------------
 /// Class for working with data array
 class MGL_EXPORT mglData : public mglDataA
 {
 public:
 using mglDataA::Momentum;
+using mglDataA::Last;
 	long nx;		///< number of points in 1st dimensions ('x' dimension)
 	long ny;		///< number of points in 2nd dimensions ('y' dimension)
 	long nz;		///< number of points in 3d dimensions ('z' dimension)
 	mreal *a;		///< data array
-	std::string id;	///< column (or slice) names
 	bool link;		///< use external data (i.e. don't free it)
 
 	/// Initiate by other mglData variable
 	mglData(const mglData &d)	{	a=0;	mgl_data_set(this,&d);		}	// NOTE: must be constructor for mglData& to exclude copy one
 #if MGL_HAVE_RVAL
-	mglData(mglData &&d):nx(d.nx),ny(d.ny),nz(d.nz),a(d.a),id(d.id),link(d.link)
-	{	s=d.s;	temp=d.temp;	func=d.func;	o=d.o;	d.a=0;	d.func=0;	}
+	mglData(mglData &&d):nx(d.nx),ny(d.ny),nz(d.nz),a(d.a),link(d.link)
+	{	s=d.s;	temp=d.temp;	func=d.func;	o=d.o;	id=d.id;	d.a=0;	d.func=0;	}
 #endif
 	mglData(const mglDataA *d)
 	{	a=0;	if(d)	mgl_data_set(this, d);	else	mgl_data_create(this,1,1,1);		}
@@ -146,6 +149,17 @@ using mglDataA::Momentum;
 		va_end(vl);
 	}
 
+#if MGL_HAVE_ARMA
+	inline void Set(const arma::vec &d)
+	{	Create(d.n_elem);	for(long i=0;i<nx;i++)	a[i] = d[i];	}
+	inline void Set(const arma::mat &d)
+	{	Create(d.n_rows,d.n_cols);	for(long i=0;i<nx*ny;i++)	a[i] = d[i];	}
+	inline void Set(const arma::cube &d)
+	{	Create(d.n_rows,d.n_cols,d.n_slices);	for(long i=0;i<nx*ny*nz;i++)	a[i] = d[i];	}
+	inline arma::mat arma_mat(long k=0) const { return arma::mat(a+k*nx*ny,ny,nx);  }
+	inline arma::cube arma_cube() const {return arma::cube(a,nx,ny,nz);}
+#endif
+
 	/// Create or recreate the array with specified size and fill it by zero
 	inline void Create(long mx,long my=1,long mz=1)
 	{	mgl_data_create(this,mx,my,mz);	}
@@ -230,12 +244,35 @@ using mglDataA::Momentum;
 	/// Put array to data element(s)
 	inline void Put(const mglDataA &dat, long i=-1, long j=-1, long k=-1)
 	{	mgl_data_put_dat(this,&dat,i,j,k);	}
-	/// Set names for columns (slices)
-	inline void SetColumnId(const char *ids)
-	{	mgl_data_set_id(this,ids);	}
-	/// Make new id
-	inline void NewId()	{	id.clear();	}
 
+	/// Fills data by integer random numbers of uniform distribution in range [lo,hi]
+	inline void RndInteger(long lo, long hi)
+	{	mgl_data_rnd_integer(this, lo, hi);	}
+	/// Fills data by random numbers of uniform distribution in range [lo,hi]
+	inline void RndUniform(mreal lo, mreal hi)
+	{	mgl_data_rnd_uniform(this, lo, hi);	}
+	/// Fills data by random numbers of Bernoulli distribution
+	inline void RndBernoulli(mreal p=0.5)
+	{	mgl_data_rnd_bernoulli(this, p);	}
+	/// Fills data by random numbers of binomial distribution
+	inline void RndBinomial(long trials, mreal p=0.5)
+	{	mgl_data_rnd_binomial(this, trials, p);	}
+	/// Fills data by random numbers of Gaussian distribution
+	inline void RndGaussian(mreal mu=0.0, mreal sigma=1.0)
+	{	mgl_data_rnd_gaussian(this, mu, sigma);	}
+	/// Fills data by random numbers of exponential distribution
+	inline void RndExponential(mreal lambda)
+	{	mgl_data_rnd_exponential(this, lambda);	}
+	/// Fills data by random numbers of discrete distribution according A
+	inline void RndDiscrete(const mglDataA &A)
+	{	mgl_data_rnd_discrete(this, &A);	}
+	/// Shuffles elements or slices of data array
+	inline void RndShuffle(char dir='a')
+	{	mgl_shuffle(this, dir);	}
+	/// Fills data by fractional brownian motions along x-direction
+	inline void RndBrownian(mreal y1, mreal y2, mreal sigma, mreal alpha)
+	{	mgl_data_brownian(this, y1, y2, sigma, alpha);	}
+	
 	/// Read data from tab-separated text file with auto determining size
 	inline bool Read(const char *fname)
 	{	return mgl_data_read(this,fname); }
@@ -260,6 +297,10 @@ using mglDataA::Momentum;
 	/// Scan textual file for template and fill data array
 	inline int ScanFile(const char *fname, const char *templ)
 	{	return mgl_data_scan_file(this,fname, templ);	}
+	/// Read data from binary file of type: 0 - double, 1 - float, 2 - long double, 3 - long int, 4 - int, 5 - short int, 6 - char.
+	/** NOTE: this function may not correctly read binary files written in different CPU kind! */
+	inline bool ReadBin(const char *fname, int type)
+	{	return mgl_data_read_bin(this, fname, type);	}
 
 
 	/// Get column (or slice) of the data filled by formulas of named columns
@@ -286,6 +327,9 @@ using mglDataA::Momentum;
 	{	return mglData(true,mgl_data_section(this,&ids,dir,val));	}
 	inline mglData Section(long id, char dir='y', mreal val=NAN) const
 	{	return mglData(true,mgl_data_section_val(this,id,dir,val));	}
+	/// Get contour lines for dat[i,j]=val. NAN values separate the the curves.
+	inline mglData Conts(mreal val)
+	{	return mglData(true,mgl_data_conts(val,this));	}
 
 	/// Get trace of the data array
 	inline mglData Trace() const
@@ -299,12 +343,22 @@ using mglDataA::Momentum;
 	/// Get array which is result of summation in given direction or directions
 	inline mglData Sum(const char *dir) const
 	{	return mglData(true,mgl_data_sum(this,dir));	}
+	/// Get array of positions of first value large val
+	inline mglData First(const char *dir, mreal val) const
+	{	return mglData(true,mgl_data_first_dir(this,dir,val));	}
+	/// Get array of positions of last value large val
+	inline mglData Last(const char *dir, mreal val) const
+	{	return mglData(true,mgl_data_last_dir(this,dir,val));	}
+
 	/// Get array which is result of maximal values in given direction or directions
 	inline mglData Max(const char *dir) const
 	{	return mglData(true,mgl_data_max_dir(this,dir));	}
 	/// Get array which is result of minimal values in given direction or directions
 	inline mglData Min(const char *dir) const
 	{	return mglData(true,mgl_data_min_dir(this,dir));	}
+	/// Get positions of local maximums and minimums
+	inline mglData MinMax() const
+	{	return mglData(true,mgl_data_minmax(this));	}
 	/// Get the data which is direct multiplication (like, d[i,j] = this[i]*a[j] and so on)
 	inline mglData Combine(const mglDataA &dat) const
 	{	return mglData(true,mgl_data_combine(this,&dat));	}
@@ -318,9 +372,12 @@ using mglDataA::Momentum;
 	{	return mglData(true,mgl_data_evaluate(this,&idat,&jdat,0,norm));	}
 	inline mglData Evaluate(const mglData &idat, const mglData &jdat, const mglData &kdat, bool norm=true) const
 	{	return mglData(true,mgl_data_evaluate(this,&idat,&jdat,&kdat,norm));	}
-	/// Find roots for set of nonlinear equations defined by textual formula
+	/// Find roots for nonlinear equation defined by textual formula
 	inline mglData Roots(const char *eq, char var='x') const
 	{	return mglData(true,mgl_data_roots(eq, this, var));	}
+	/// Find roots for set of nonlinear equations defined by textual formula
+	inline mglData MultiRoots(const char *eq, const char *vars) const
+	{	return mglData(true,mgl_find_roots_txt(eq, vars, this));	}
 	/// Find correlation with another data arrays
 	inline mglData Correl(const mglDataA &dat, const char *dir) const
 	{	return mglData(true,mgl_data_correl(this,&dat,dir));	}
@@ -377,7 +434,9 @@ using mglDataA::Momentum;
 	 *  ‘x’, ‘y’, ‘z’ for 1st, 2nd or 3d dimension;
 	 *  ‘dN’ for linear averaging over N points;
 	 *  ‘3’ for linear averaging over 3 points;
-	 *  ‘5’ for linear averaging over 5 points.
+	 *  ‘5’ for linear averaging over 5 points;
+	 *  ‘^’ for finding upper bound;
+	 *  ‘_’ for finding lower bound.
 	 *  By default quadratic averaging over 5 points is used. */
 	inline void Smooth(const char *dirs="xyz",mreal delta=0)
 	{	mgl_data_smooth(this,dirs,delta);	}
@@ -390,6 +449,13 @@ using mglDataA::Momentum;
 	/// Limit the data to be inside [-v,v], keeping the original sign
 	inline void Limit(mreal v)
 	{	mgl_data_limit(this, v);	}
+	/// Project the periodical data to range [v1,v2] (like mod() function). Separate branches by NAN if sep=true.
+	inline void Coil(mreal v1, mreal v2, bool sep=true)
+	{	mgl_data_coil(this, v1, v2, sep);	}
+	/// Keep the data sign/value along line i and j in given direction. 
+	/** Parameter "how" may contain: 'x','y' or 'z' for direction (default is 'y'); 'a' for keeping amplitude instead of sign.*/
+	inline void Keep(const char *how, long i, long j=0)
+	{	mgl_data_keep(this, how, i, j);	}
 
 	/// Apply Hankel transform
 	inline void Hankel(const char *dir)	{	mgl_data_hankel(this,dir);	}
@@ -448,8 +514,17 @@ using mglDataA::Momentum;
 	inline void operator-=(mreal d)		{	mgl_data_sub_num(this,d);	}
 #ifndef SWIG
 	/// Direct access to the data cell
-	inline mreal &operator[](long i)	{	return a[i];	}
-	// NOTE see 13.10 for operator(), operator[] -- m.b. I should add it ???
+	inline mreal operator[](long i) const	{	return a[i];	}
+	inline mreal &operator[](long i)		{	return a[i];	}
+	/// Get sub-array of the data with given fixed indexes
+	inline mglData operator()(long xx,long yy=-1,long zz=-1) const
+	{	return mglData(true,mgl_data_subdata(this,xx,yy,zz));	}
+	inline mglData operator()(const mglDataA &xx, const mglDataA &yy, const mglDataA &zz) const
+	{	return mglData(true,mgl_data_subdata_ext(this,&xx,&yy,&zz));	}
+	inline mglData operator()(const mglDataA &xx, const mglDataA &yy) const
+	{	return mglData(true,mgl_data_subdata_ext(this,&xx,&yy,0));	}
+	inline mglData operator()(const mglDataA &xx) const
+	{	return mglData(true,mgl_data_subdata_ext(this,&xx,0,0));	}
 #endif
 
 #ifndef DEBUG
@@ -472,14 +547,17 @@ using mglDataA::Momentum;
 	mreal vthr(long i) const {	return a[i];	}
 	// add for speeding up !!!
 	mreal dvx(long i,long j=0,long k=0) const
-	{   long i0=i+nx*(j+ny*k);
-		return i>0? (i<nx-1? (a[i0+1]-a[i0-1])/2:a[i0]-a[i0-1]) : a[i0+1]-a[i0];	}
+	{   long i0 = size_t(i)<size_t(nx-1) ? i+nx*(j+ny*k):nx*(1+j+ny*k)-2;	return a[i0+1]-a[i0];	}
+//	{   long i0=i+nx*(j+ny*k);
+//		return i>0? (i<nx-1? (a[i0+1]-a[i0-1])/2:a[i0]-a[i0-1]) : a[i0+1]-a[i0];	}
 	mreal dvy(long i,long j=0,long k=0) const
-	{   long i0=i+nx*(j+ny*k);
-		return j>0? (j<ny-1? (a[i0+nx]-a[i0-nx])/2:a[i0]-a[i0-nx]) : a[i0+nx]-a[i0];}
+	{   long i0 = size_t(j)<size_t(ny-1) ? i+nx*(j+ny*k):i+nx*(ny*(k+1)-2);	return a[i0+nx]-a[i0];	}
+//	{   long i0=i+nx*(j+ny*k);
+//		return j>0? (j<ny-1? (a[i0+nx]-a[i0-nx])/2:a[i0]-a[i0-nx]) : a[i0+nx]-a[i0];}
 	mreal dvz(long i,long j=0,long k=0) const
-	{   long i0=i+nx*(j+ny*k), n=nx*ny;
-		return k>0? (k<nz-1? (a[i0+n]-a[i0-n])/2:a[i0]-a[i0-n]) : a[i0+n]-a[i0];	}
+	{   long n=nx*ny, i0 = size_t(k)<size_t(nz-1) ? i+nx*(j+ny*k):i+nx*(j+ny*(nz-2));	return a[i0+n]-a[i0];	}
+//	{   long i0=i+nx*(j+ny*k), n=nx*ny;
+//		return k>0? (k<nz-1? (a[i0+n]-a[i0-n])/2:a[i0]-a[i0-n]) : a[i0+n]-a[i0];	}
 };
 //-----------------------------------------------------------------------------
 #ifndef SWIG
@@ -545,6 +623,9 @@ inline mglData mglRay(const char *ham, mglPoint r0, mglPoint p0, mreal dt=0.1, m
 /// Saves result of ODE solving for var complex variables with right part func (separated by ';') and initial conditions x0 over time interval [0,tmax] with time step dt
 inline mglData mglODE(const char *func, const char *var, const mglDataA &ini, mreal dt=0.1, mreal tmax=10)
 {	return mglData(true, mgl_ode_solve_str(func,var, &ini, dt, tmax));	}
+/// Saves result of ODE solving for var complex variables with right part func (separated by ';') and initial conditions x0 of size n*m over time interval [0,tmax] with time step dt
+inline mglData mglODEs(const char *func, const char *var, char brd, const mglDataA &ini, mreal dt=0.1, mreal tmax=10)
+{	return mglData(true, mgl_ode_solve_set(func,var, brd, &ini, dt, tmax));	}
 //-----------------------------------------------------------------------------
 /// Get array as solution of tridiagonal system of equations a[i]*x[i-1]+b[i]*x[i]+c[i]*x[i+1]=d[i]
 /** String \a how may contain:
@@ -605,12 +686,16 @@ inline mglData mglGSplineInit(const mglDataA &xdat, const mglDataA &ydat)
 inline mreal mglGSpline(const mglDataA &coef, mreal dx, mreal *d1=0, mreal *d2=0)
 {	return mgl_gspline(&coef, dx, d1,d2);	}
 //-----------------------------------------------------------------------------
+/// Evaluate formula 'str' for given list of variables 'vars'. 
+/** NOTE: you need to delete returned data array!*/
+HMDT MGL_EXPORT mglFormulaCalc(const char *str, const std::vector<mglDataA*> &vars);
+//-----------------------------------------------------------------------------
 /// Wrapper class for expression evaluating
 class MGL_EXPORT mglExpr
 {
 	HMEX ex;
-	mglExpr(const mglExpr &){}	// copying is not allowed
-	const mglExpr &operator=(const mglExpr &t){return t;}	// copying is not allowed
+	mglExpr(const mglExpr &){ex=0;}	// copying is not allowed
+	const mglExpr &operator=(const mglExpr &t){ex=0;	return t;}	// copying is not allowed
 public:
 	mglExpr(const char *expr)		{	ex = mgl_create_expr(expr);	}
 #if MGL_HAVE_RVAL
@@ -797,7 +882,7 @@ public:
 
 	/// Create or recreate the array with specified size and fill it by zero
 	inline void Create(long mx,long my=1,long mz=1)	{	nx=mx;	ny=my;	nz=mz;	setD();	}
-	inline void SetRanges(mglPoint p1, mglPoint p2)	{	v1=p1;	v2=p2;	setD();	}
+	inline void SetRanges(const mglPoint &p1, const mglPoint &p2)	{	v1=p1;	v2=p2;	setD();	}
 	/// Set formula to be used as dfunction
 	inline void SetFormula(const char *eq)
 	{
@@ -888,7 +973,7 @@ class MGL_EXPORT mglDataT : public mglDataA
 {
 	const mglDataA &dat;
 	long ind;
-	const mglDataT &operator=(const mglDataT &d)	{	return d;	}
+	const mglDataT &operator=(const mglDataT &d)	{	ind=0;	return d;	}
 public:
 	mglDataT(const mglDataT &d) : dat(d.dat), ind(d.ind)	{	s = d.s;	}
 	mglDataT(const mglDataA &d, long col=0) : dat(d), ind(col)	{}
@@ -938,7 +1023,7 @@ class MGL_EXPORT mglDataR : public mglDataA
 {
 	const mglDataA &dat;
 	long ind;
-	const mglDataR &operator=(const mglDataR &d)	{	return d;	}
+	const mglDataR &operator=(const mglDataR &d)	{	ind=0;	return d;	}
 public:
 	mglDataR(const mglDataR &d) : dat(d.dat), ind(d.ind)	{	s = d.s;	}
 	mglDataR(const mglDataA &d, long row=0) : dat(d), ind(row)	{}

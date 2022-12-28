@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -65,7 +65,7 @@ int MGL_NO_EXPORT mgl_pnga_save(const char *fname, int w, int h, unsigned char *
 						PNG_FILTER_TYPE_DEFAULT);
 			png_set_rows(png_ptr, info_ptr, p);
 			png_write_png(png_ptr, info_ptr,  PNG_TRANSFORM_IDENTITY, 0);
-			png_write_end(png_ptr, info_ptr);
+//			png_write_end(png_ptr, info_ptr);
 		}
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 	}
@@ -99,7 +99,7 @@ int MGL_NO_EXPORT mgl_png_save(const char *fname, int w, int h, unsigned char **
 						PNG_FILTER_TYPE_DEFAULT);
 			png_set_rows(png_ptr, info_ptr, p);
 			png_write_png(png_ptr, info_ptr,  PNG_TRANSFORM_IDENTITY, 0);
-			png_write_end(png_ptr, info_ptr);
+//			png_write_end(png_ptr, info_ptr);
 		}
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 	}
@@ -222,7 +222,7 @@ int MGL_NO_EXPORT mgl_bps_save(const char *fname, int w, int h, unsigned char **
 	bool gz = fname[strlen(fname)-1]=='z';
 
 	void *fp;
-	if(!strcmp(fname,"-"))	fp = stdout;		// allow to write in stdout
+	if(!strcmp(fname,"-"))	fp = stdout;		// allow one to write in stdout
 	else
 	{
 		fp = gz ? (void*)gzopen(fname,"wt") : (void*)fopen(fname,"wt");
@@ -611,33 +611,39 @@ void MGL_EXPORT mgl_write_frame_(uintptr_t *gr, const char *fname,const char *de
 #endif
 void MGL_EXPORT mgl_show_image(HMGL gr, const char *viewer, int keep)
 {
-	char fname[128], *cmd = new char [128];
-	snprintf(fname,128,"%s.png", tmpnam(NULL));	fname[127]=0;
+	static size_t counter=size_t(0xffffffff*mgl_rnd());
+	char *fname = new char[256], *cmd = new char [288];
+#if defined(_MSC_VER)
+	snprintf(fname,128,"%s.png", tmpnam(NULL));
+#else
+	snprintf(fname,256,"%s/mathgl%lu.png", P_tmpdir, counter);
+#endif
+	fname[255]=0;	counter++;
 	mgl_write_png_solid(gr,fname,"MathGL ShowImage file");
 	if(!viewer || !viewer[0])
 		viewer = MGL_DEF_VIEWER;
 #ifdef WIN32
 		if(keep)
 		{
-			snprintf(cmd,128,"%s %s &", viewer,fname);	cmd[127]=0;
+			snprintf(cmd,288,"%s %s &", viewer,fname);	cmd[287]=0;
 			if(system(cmd)==-1)	printf(_("Error to call external viewer\n"));
 			Sleep(2000);
-			snprintf(cmd,128,"del %s", fname);
+			snprintf(cmd,288,"del %s", fname);
 		}
-		else	snprintf(cmd,128,"%s %s; del %s", viewer,fname,fname);
+		else	snprintf(cmd,288,"%s %s; del %s", viewer,fname,fname);
 #else
 		if(keep)
 		{
-			snprintf(cmd,128,"%s %s &", viewer,fname);	cmd[127]=0;
+			snprintf(cmd,288,"%s %s &", viewer,fname);	cmd[287]=0;
 			if(system(cmd)==-1)	printf(_("Error to call external viewer\n"));
 			sleep(2);
-			snprintf(cmd,128,"rm %s", fname);
+			snprintf(cmd,288,"rm %s", fname);
 		}
-		else	snprintf(cmd,128,"%s %s; rm %s", viewer,fname,fname);
+		else	snprintf(cmd,288,"%s %s; rm %s", viewer,fname,fname);
 #endif
-		cmd[127] = 0;
+		cmd[287] = 0;
 		if(system(cmd)==-1)	printf(_("Error to call external viewer\n"));
-		delete []cmd;
+		delete []cmd;	delete []fname;
 }
 void MGL_EXPORT mgl_show_image_(uintptr_t *gr, const char *viewer, int *keep, int l)
 {	char *s=new char[l+1];	memcpy(s,viewer,l);	s[l]=0;

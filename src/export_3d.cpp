@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -641,7 +641,7 @@ bool mglCanvas::ExportMGLD(const char *fname, const char *descr)
 	for(size_t i=0;i<Pnt.size();i++)
 	{
 		const mglPnt &q=Pnt[i];
-		fprintf(fp,"%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\n", q.xx, q.yy, q.zz, q.c, q.t, q.ta, q.u, q.v, q.w, q.r, q.g, q.b, q.a);
+		fprintf(fp,"%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\t%.4g\n", q.xx, q.yy, q.zz, q.c, q.ta, q.ta, q.u, q.v, q.w, q.r, q.g, q.b, q.a);
 	}
 	fprintf(fp,"# Primitives: type n1 n2 n3 n4 id s w p\n");
 	for(size_t i=0;i<Prm.size();i++)
@@ -710,11 +710,11 @@ bool mglCanvas::ImportMGLD(const char *fname, bool add)
 #pragma omp critical
 	{
 		Pnt.reserve(n);	Prm.reserve(m);	Txt.reserve(l);	Glf.reserve(k);
-		mglPnt p;
+		mglPnt p;	float tmp;
 		for(unsigned long i=0;i<n;i++)
 		{
 			do {	if(!fgets(buf,512,fp))	*buf=0;	mgl_strtrim(buf);	} while(*buf=='#');
-			sscanf(buf,"%g%g%g%g%g%g%g%g%g%g%g%g%g", &p.xx, &p.yy, &p.zz, &p.c, &p.t, &p.ta, &p.u, &p.v, &p.w, &p.r, &p.g, &p.b, &p.a);
+			sscanf(buf,"%g%g%g%g%g%g%g%g%g%g%g%g%g", &p.xx, &p.yy, &p.zz, &p.c, &tmp, &p.ta, &p.u, &p.v, &p.w, &p.r, &p.g, &p.b, &p.a);
 			// rescale to current image size
 			p.xx *= Width/double(w);	p.yy *= Height/double(h);	p.zz *= Depth/double(d);
 			Pnt.push_back(p);
@@ -1016,7 +1016,7 @@ void MGL_EXPORT mgl_write_xgl_(uintptr_t *gr, const char *fname,const char *desc
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_x3d_mdef(HMGL gr, void *fp, bool gz)
 {
-	bool m_p=false,m_x=false,m_d=false,m_v=false,m_t=false,
+/*	bool m_p=false,m_x=false,m_d=false,m_v=false,m_t=false,
 	m_s=false,m_a=false,m_o=false,m_T=false,
 	m_V=false,m_S=false,m_D=false,m_Y=false,m_l=false,
 	m_L=false,m_r=false,m_R=false,m_X=false,m_P=false;
@@ -1048,7 +1048,7 @@ void MGL_EXPORT mgl_x3d_mdef(HMGL gr, void *fp, bool gz)
 	if(m_X)	{	m_x=true;	m_s=true;	}
 	if(m_p)	mgl_printf(fp, gz, "<ProtoDeclare name='m_p'><ProtoInterface/>\n<ProtoBody>"
 		"<LineSet vertexCount='0,1,2,3'>\n<Coordinate point='-1 0 0, 1 0 0, 0 -1 0, 0 1 0'/>"
-		"\n</LineSet></ProtoBody></ProtoDeclare>\n");
+		"\n</LineSet></ProtoBody></ProtoDeclare>\n");*/
 	/*if(m_x)	mgl_printf(fp, gz, "/m_x {sm sm rm s2 s2 rl 0 sm 2 mul rm sm 2 mul s2 rl d0} def\n");	// TODO
 	 *	if(m_s)	mgl_printf(fp, gz, "/m_s {sm sm rm 0 s2 rl s2 0 rl 0 sm 2 mul rl cp d0} def\n");
 	 *	if(m_d)	mgl_printf(fp, gz, "/m_d {sm 0 rm ss ss rl ss sm rl sm sm rl cp d0} def\n");
@@ -1068,7 +1068,7 @@ void MGL_EXPORT mgl_x3d_mdef(HMGL gr, void *fp, bool gz)
 	 *	if(m_P)	mgl_printf(fp, gz, "/m_P {m_p 0 sm rm m_s} def\n");
 	 *	if(m_X)	mgl_printf(fp, gz, "/m_X {m_x ss sm rm m_s} def\n");*/
 	//	if(m_C)	mgl_printf(fp, gz, "/m_C {m_c m_o} def\n");
-	mgl_printf(fp, gz, "\n");
+//	mgl_printf(fp, gz, "\n");
 }
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_x3d_prim(const mglPrim &q, const mglPnt &p, const long *pnt, void *fp,bool gz, mreal size)
@@ -1195,7 +1195,7 @@ void MGL_EXPORT mgl_write_x3d(HMGL gr, const char *fname,const char *descr)
 	delete []ng;
 
 	// primitive definition in groups
-	long npnt = gr->GetPntNum(), k;
+	long npnt = gr->GetPntNum();
 	long *pnt=new long[npnt];
 	mglPrim q;
 	for(size_t i=0;i<gr->Grp.size();i++)
@@ -1204,7 +1204,7 @@ void MGL_EXPORT mgl_write_x3d(HMGL gr, const char *fname,const char *descr)
 		std::vector<long> &p = gr->Grp[i].p;
 
 		// define coordinates, colors and so on
-		long line=-1, face=-1, other=-1;	k=0;
+		long line=-1, face=-1, other=-1;
 		for(size_t j=0;j<p.size();j++)	// find points for this group
 		{
 			const mglPrim &q=gr->GetPrm(p[j],false);

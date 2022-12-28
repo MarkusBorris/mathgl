@@ -36,6 +36,7 @@
 #include <QTranslator>
 #include <QMimeData>
 #include <QUrl>
+#include <QFileInfo>
 //-----------------------------------------------------------------------------
 #include <mgl2/qmathgl.h>
 #include "udav_wnd.h"
@@ -114,11 +115,10 @@ int main(int argc, char **argv)
 	settings.endGroup();
 
 	mgl_suppress_warn(true);
-	QCoreApplication::setAttribute(Qt::AA_X11InitThreads);
+// 	QCoreApplication::setAttribute(Qt::AA_X11InitThreads);
 #ifdef WIN32
-	char buf[512];	getcwd(buf,500);	strcat(buf,"\\plugins\\");
-	QCoreApplication::addLibraryPath(buf);
-	QCoreApplication::addLibraryPath("c:\\plugins\\");
+	QCoreApplication::addLibraryPath("c:/plugins/");
+	QCoreApplication::addLibraryPath(QFileInfo(QString::fromLocal8Bit(argv[0])).absolutePath().append("/plugins/"));
 #endif
 	mgl_ask_func = mgl_ask_qt;
 	QApplication a(argc, argv);
@@ -195,7 +195,7 @@ MainWindow::MainWindow(QWidget *wp) : QMainWindow(wp)
 
 	aload = a = new QAction(QPixmap(":/png/document-open.png"), _("Open file"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(choose()));
-	a->setToolTip(_("Open and execute/show script or data from file (Ctrl+O).\nYou may switch off automatic exection in UDAV properties."));
+	a->setToolTip(_("Open and execute/show script or data from file (Ctrl+O).\nYou may switch off automatic execution in UDAV properties."));
 	a->setShortcut(Qt::CTRL+Qt::Key_O);
 
 	asave = a = new QAction(QPixmap(":/png/document-save.png"), _("Save script"), this);
@@ -451,7 +451,7 @@ void MainWindow::properties()	{	propDlg->exec();	}
 //-----------------------------------------------------------------------------
 void MainWindow::about()
 {
-	QString s = "<a href='http://mathgl.sourceforge.net/doc_en/UDAV-overview.html'>UDAV</a> v. 2."+QString::number(MGL_VER2)+
+	QString s = "<a href='http://mathgl.sourceforge.net/doc_en/UDAV-overview.html'>UDAV</a> v. "+QString(MGL_VER_STRING)+
 	_("<br>(c) Alexey Balakin, 2007-present<br><br><a href='http://www.gnu.org/copyleft/gpl.html'>License is GPL v.2 or later.</a>");
 	QMessageBox::about(this, _("UDAV - about"), s);
 }
@@ -761,7 +761,6 @@ void MainWindow::messClicked()
 	QString q = mess->textCursor().block().text();
 	if(q.contains("in line "))
 	{
-		QString s = q.section(' ',-1);
 		int n = q.section(' ',-1).toInt()-1;	if(n<0)	return;
 		edit->moveCursor(QTextCursor::Start);
 		for(int i=0;i<n;i++)	edit->moveCursor(QTextCursor::NextBlock);

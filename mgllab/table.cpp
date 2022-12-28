@@ -2,7 +2,7 @@
  * Copyright (C) 2007-2014 Alexey Balakin <mathgl.abalakin@gmail.ru>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
+ * modify it under the terms of the GNU Lesser General Public License 
  * as published by the Free Software Foundation
  *
  * This program is distributed in the hope that it will be useful,
@@ -382,7 +382,7 @@ public:
 			case 0:	*out = c->Sum(r);	break;
 			case 1:	*out = c->Max(r);	break;
 			case 2:	*out = c->Min(r);	break;
-			case 3:	out = mgl_data_pulse(c,*r);	break;
+			case 3:	*out = mglData(true,mgl_data_pulse(c,*r));	break;
 		}
 		hide();
 	}
@@ -460,7 +460,7 @@ void save_dat_cb(Fl_Widget*, void*v)
 		const char *ext = fl_filename_ext(newfile);
 		if(!strcmp(ext,"h5") || !strcmp(ext,"hdf"))	// this is HDF file
 		{
-			std::string name = wcstombs(e->var->s);
+			std::string name = wcstombs(e->var->Name());
 			e->var->SaveHDF(newfile, name.c_str());
 		}
 		else	e->var->Save(newfile);
@@ -470,11 +470,11 @@ void save_dat_cb(Fl_Widget*, void*v)
 void exp_dat_cb(Fl_Widget*, void*v)
 {
 	TableWindow* e = (TableWindow*)v;
-	const char *scheme, *newfile = mgl_file_chooser(_("Export Data?"),
+	const char *newfile = mgl_file_chooser(_("Export Data?"),
 		_("PNG Files \t*.png"), true);
 	if(newfile)
 	{	// TODO show dialog for color scheme
-		scheme = fl_input(_("Enter color scheme"),MGL_DEF_SCH);
+		const char *scheme = fl_input(_("Enter color scheme"),MGL_DEF_SCH);
 		if(scheme)	e->var->Export(newfile,scheme);
 	}
 }
@@ -482,12 +482,12 @@ void exp_dat_cb(Fl_Widget*, void*v)
 void imp_dat_cb(Fl_Widget*, void*v)
 {
 	TableWindow* e = (TableWindow*)v;
-	const char *scheme, *newfile = mgl_file_chooser(_("Import Data?"),
+	const char *newfile = mgl_file_chooser(_("Import Data?"),
 		_("PNG Files \t*.png"));
 	HMDT d = dynamic_cast<HMDT>(e->var);
 	if(d && newfile)
 	{
-		scheme = fl_input(_("Enter color scheme"),MGL_DEF_SCH);
+		const char *scheme = fl_input(_("Enter color scheme"),MGL_DEF_SCH);
 		if(scheme)
 		{	d->Import(newfile,scheme);	e->refresh();	}
 	}
@@ -503,7 +503,7 @@ void list_dat_cb(Fl_Widget*, void*v)
 	{	fl_message(_("Incorrect type of base data"));	return;	}
 	if(e->var->GetNz()>1)	fl_message(_("Only current slice will be inserted"));
 
-	std::string list = "list " + wcstombs(e->var->s);
+	std::string list = "list " + wcstombs(e->var->Name());
 	long k=e->get_slice(), nx=e->var->GetNx(), ny=e->var->GetNy();
 	for(long j=0;j<ny;j++)
 	{
@@ -559,8 +559,8 @@ public:
 		o->tooltip(_("Change data values and close this window"));
 		w->set_modal();	w->end();
 	}
-	double min()	{	return wmin->value();	}
-	double max()	{	return wmax->value();	}
+	double vmin()	{	return wmin->value();	}
+	double vmax()	{	return wmax->value();	}
 	int sym()		{	return wsym->value();	}
 	bool ok()		{	return !result.empty();	}
 	void cb_ok()
@@ -581,8 +581,8 @@ void fill_cb(Fl_Widget*, void*v)
 		HMDT d = dynamic_cast<HMDT>(e->var);
 		HADT c = dynamic_cast<HADT>(e->var);
 		char ch = nrm_dlg.result[0];
-		if(d)	{	d->Fill(nrm_dlg.min(),nrm_dlg.max(),ch);	e->refresh();	}
-		if(c)	{	c->Fill(nrm_dlg.min(),nrm_dlg.max(),ch);	e->refresh();	}
+		if(d)	{	d->Fill(nrm_dlg.vmin(),nrm_dlg.vmax(),ch);	e->refresh();	}
+		if(c)	{	c->Fill(nrm_dlg.vmin(),nrm_dlg.vmax(),ch);	e->refresh();	}
 	}
 }
 //-----------------------------------------------------------------------------
@@ -594,8 +594,8 @@ void normal_cb(Fl_Widget*, void*v)
 	{
 		HMDT d = dynamic_cast<HMDT>(e->var);
 		HADT c = dynamic_cast<HADT>(e->var);
-		if(d)	{	d->Norm(nrm_dlg.min(),nrm_dlg.max(),nrm_dlg.sym());	e->refresh();	}
-		if(c)	{	c->Fill(nrm_dlg.min(),nrm_dlg.max(),nrm_dlg.sym());	e->refresh();	}
+		if(d)	{	d->Norm(nrm_dlg.vmin(),nrm_dlg.vmax(),nrm_dlg.sym());	e->refresh();	}
+		if(c)	{	c->Fill(nrm_dlg.vmin(),nrm_dlg.vmax(),nrm_dlg.sym());	e->refresh();	}
 	}
 }
 //-----------------------------------------------------------------------------
@@ -646,6 +646,7 @@ struct CropDlg : public GeneralDlg
 		n1=mgl_int(z1->value());	n2=mgl_int(z2->value());
 		if(d)	d->Crop(n1,n2,'z');
 		if(c)	c->Crop(n1,n2,'z');
+		hide();
 	}
 	void run(mglDataA *d)
 	{
@@ -683,6 +684,7 @@ public:
 		HADT c = dynamic_cast<HADT>(dat);
 		if(d)	d->Transpose(how->text());
 		if(c)	c->Transpose(how->text());
+		hide();
 	}
 	void run(mglDataA *d)
 	{
@@ -897,7 +899,7 @@ void TableWindow::update(mglDataA *v)
 {
 	static std::string name;
 	if(v==0)	return;
-	name = wcstombs(v->s);
+	name = wcstombs(v->Name());
 	w->label(name.c_str());
 	v->func = delete_cb;
 	if(var)	var->o = 0;

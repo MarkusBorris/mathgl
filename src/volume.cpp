@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -54,33 +54,30 @@ void MGL_EXPORT mgl_cloud_xyz(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT a, const cha
 
 	// x, y, z -- have the same size as a
 	n /= tx;	m /= ty;	l /= tz;
-	long *pos=new long[n*m*l];
 	gr->Reserve(n*m*l);
 	mglPoint q(NAN);
-	for(long k=0;k<l;k++)
+	const long kq = gr->AllocPnts(n*m*l),nm=n*m;
+#pragma omp parallel for
+	for(long k=0;k<l;k++)	for(long j=0;j<m;j++)	for(long i=0;i<n;i++)
 	{
-		if(gr->NeedStop())	break;
-		for(long j=0;j<m;j++)	for(long i=0;i<n;i++)
-		{
-			mglPoint p = nboth ? mglPoint(x->v(i*tx),y->v(j*ty),z->v(k*tz)) : mglPoint(x->v(i*tx,j*ty,k*tz),y->v(i*tx,j*ty,k*tz),z->v(i*tx,j*ty,k*tz));
-			mreal aa = gr->GetA(a->v(i*tx,j*ty,k*tz));
-			mreal bb = inv ? (1-aa)*(1-aa)*alpha : aa*aa*alpha;
-			pos[i+n*(j+m*k)] = gr->AddPnt(p,gr->GetC(ss,aa,false),q,bb);
-		}
+		mglPoint p = nboth ? mglPoint(x->v(i*tx),y->v(j*ty),z->v(k*tz)) : mglPoint(x->v(i*tx,j*ty,k*tz),y->v(i*tx,j*ty,k*tz),z->v(i*tx,j*ty,k*tz));
+		mreal aa = gr->GetA(a->v(i*tx,j*ty,k*tz));
+		mreal bb = inv ? (1-aa)*(1-aa)*alpha : aa*aa*alpha;
+		gr->AddPntQ(kq+i+n*(j+m*k), p,gr->GetC(ss,aa,false),q,bb);
 	}
-	if(dot)	for(long i=0;i<n*m*l;i++)	gr->mark_plot(pos[i],'.');
+	if(dot)	for(long i=0;i<n*m*l;i++)	gr->mark_plot(kq+i,'.');
 	else	for(long k=0;k<l;k++)
 	{
 		if(gr->NeedStop())	break;
 		for(long j=0;j<m;j++)	for(long i=0;i<n;i++)
 		{
-			long i0 = i+n*(j+m*k);
-			if(i<n-1 && j<m-1)	gr->quad_plot(pos[i0],pos[i0+1],pos[i0+n],pos[i0+n+1]);
-			if(i<n-1 && k<l-1)	gr->quad_plot(pos[i0],pos[i0+1],pos[i0+n*m],pos[i0+n*m+1]);
-			if(k<l-1 && j<m-1)	gr->quad_plot(pos[i0],pos[i0+n],pos[i0+n*m],pos[i0+n+n*m]);
+			long i0 = kq+i+n*(j+m*k);
+			if(i<n-1 && j<m-1)	gr->quad_plot(i0,i0+1,i0+n, i0+n+1);
+			if(i<n-1 && k<l-1)	gr->quad_plot(i0,i0+1,i0+nm,i0+nm+1);
+			if(k<l-1 && j<m-1)	gr->quad_plot(i0,i0+n,i0+nm,i0+n+nm);
 		}
 	}
-	delete []pos;	gr->EndGroup();
+	gr->EndGroup();
 }
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_cloud(HMGL gr, HCDT a, const char *sch, const char *opt)
@@ -107,7 +104,7 @@ void MGL_EXPORT mgl_cloud_(uintptr_t *gr, uintptr_t *a, const char *sch, const c
 //	Surf3 series
 //
 //-----------------------------------------------------------------------------
-mreal MGL_NO_EXPORT mgl_get_norm(mreal x, mreal d1, mreal d2, mreal d3)
+mreal static mgl_get_norm(mreal x, mreal d1, mreal d2, mreal d3)
 {
 	mreal nx = d1*(1-x) + d2*x;
 	if(mgl_isbad(nx))
@@ -122,7 +119,7 @@ mreal MGL_NO_EXPORT mgl_get_norm(mreal x, mreal d1, mreal d2, mreal d3)
 	}
 	return nx;
 }
-mglPoint MGL_NO_EXPORT mgl_normal_3d(HCDT a, mglPoint p, bool inv, long n,long m,long l)
+mglPoint static mgl_normal_3d(HCDT a, mglPoint p, bool inv, long n,long m,long l)
 {
 	mreal x=p.x, y=p.y, z=p.z;
 	mreal nx=0, ny=0, nz=0;
@@ -136,14 +133,14 @@ mglPoint MGL_NO_EXPORT mgl_normal_3d(HCDT a, mglPoint p, bool inv, long n,long m
 	return inv ? mglPoint(nx,ny,nz) : mglPoint(-nx,-ny,-nz);
 }
 //-----------------------------------------------------------------------------
-mreal MGL_NO_EXPORT mgl_normal_1d(HCDT a, mreal x, long n)
+mreal static mgl_normal_1d(HCDT a, mreal x, long n)
 {
 	long i=long(x);
 	i = i<n-1 ? i:n-2;	x-=i;
 	return mgl_get_norm(x, a->dvx(i), a->dvx(i+1), i>0?a->dvx(i-1):NAN);
 }
 //-----------------------------------------------------------------------------
-mglPoint MGL_NO_EXPORT mgl_find_norm(bool nboth, HCDT x, HCDT y, HCDT z, HCDT a, mglPoint u, bool inv, long n,long m,long l)
+mglPoint static mgl_find_norm(bool nboth, HCDT x, HCDT y, HCDT z, HCDT a, mglPoint u, bool inv, long n,long m,long l)
 {
 	mglPoint s = mgl_normal_3d(a,u,inv,n,m,l), t, q;
 	if(nboth)
@@ -161,7 +158,7 @@ mglPoint MGL_NO_EXPORT mgl_find_norm(bool nboth, HCDT x, HCDT y, HCDT z, HCDT a,
 	return q;
 }
 //-----------------------------------------------------------------------------
-inline mreal MGL_NO_EXPORT mgl_cos_pp(const mglPoint *kk,long i0,long i1,long i2)
+inline mreal static mgl_cos_pp(const mglPoint *kk,long i0,long i1,long i2)
 {
 	mglPoint dp1 = kk[i1]-kk[i0], dp2 = kk[i2]-kk[i0];
 	mreal p1=dp1*dp1,p2=dp2*dp2,pc=dp1*dp2;
@@ -176,9 +173,10 @@ void MGL_EXPORT mgl_surf3_plot(HMGL gr, long n,long m,long *kx1,long *kx2,long *
 #pragma omp parallel for private(id,us,pd,pp) collapse(2)
 	for(long j=0;j<m-1;j++)	for(long i=0;i<n-1;i++)
 	{
-		long i0 = i+n*j,ii,jj,k;
+		long i0 = i+n*j,ni = 0,ii,jj;
 		// find ID of points of Surf3 intersection with cell i0
-		memset(id,-1,12*sizeof(long));	long ni = 0;
+		for(int i=0;i<12;i++)	id[i]=-1;
+//		memset(id,-1,12*sizeof(long));	long ni = 0;
 		if(kx1[i0]>=0)		id[ni++] = kx1[i0];
 		if(ky1[i0]>=0)		id[ni++] = ky1[i0];
 		if(kx1[i0+n]>=0)	id[ni++] = kx1[i0+n];
@@ -218,7 +216,7 @@ void MGL_EXPORT mgl_surf3_plot(HMGL gr, long n,long m,long *kx1,long *kx2,long *
 		// select the same orientation of all triangles of the surface
 		us[0] = us[jj] = 1;
 		// find all triangles
-		for(k=2;k<ni;k++)
+		for(long k=2;k<ni;k++)
 		{
 			// find closest point in sence cosine of angle
 			for(i0=-1,ii=1,d0=-2;ii<ni;ii++)
@@ -247,7 +245,7 @@ void MGL_EXPORT mgl_surf3_plot(HMGL gr, long n,long m,long *kx1,long *kx2,long *
 	}
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_surf3ca_gen(HMGL gr, double val, HCDT x, HCDT y, HCDT z, HCDT a, HCDT c, HCDT b, const char *sch)
+void static mgl_surf3ca_gen(HMGL gr, double val, HCDT x, HCDT y, HCDT z, HCDT a, HCDT c, HCDT b, const char *sch)
 {
 	long n=a->GetNx(),m=a->GetNy(),l=a->GetNz();
 	bool nboth = mgl_isnboth(x,y,z,a);
@@ -295,39 +293,60 @@ void MGL_NO_EXPORT mgl_surf3ca_gen(HMGL gr, double val, HCDT x, HCDT y, HCDT z, 
 			}
 		}
 		mreal cv=gr->GetC(ss,val);
-		if(b && c)	for(size_t i=kk1;i<kk.size();i++)
+		if(b && c)
 		{
-			mglPoint &u = kk[i];
-			mreal cc = c->linear(u.x,u.y,u.z), bb = b->linear(u.x,u.y,u.z);
-			if(mgl_isnan(cc) || mgl_isnan(bb))	u.c = -1;	else
-			u.c = gr->AddPnt(nboth ? mglPoint(x->linear(u.x,0,0),y->linear(u.y,0,0),z->linear(u.z,0,0)) :
+			const long kq = gr->AllocPnts(kk.size());
+#pragma omp parallel for
+			for(msize i=kk1;i<kk.size();i++)
+			{
+				mglPoint &u = kk[i];
+				double cc = c->linear(u.x,u.y,u.z), bb = b->linear(u.x,u.y,u.z);
+				gr->AddPntQ(kq+i,nboth ? mglPoint(x->linear(u.x,0,0),y->linear(u.y,0,0),z->linear(u.z,0,0)) :
 					mglPoint(x->linear(u.x,u.y,u.z),y->linear(u.x,u.y,u.z),z->linear(u.x,u.y,u.z)),
 					gr->GetC(ss,cc), mgl_find_norm(nboth, x,y,z,a, u, inv,n,m,l), gr->GetA(bb));
+				u.c = kq+i;
+			}
 		}
-		else if(c)	for(size_t i=kk1;i<kk.size();i++)
+		else if(c)
 		{
-			mglPoint &u = kk[i];
-			mreal cc = c->linear(u.x,u.y,u.z);
-			if(mgl_isnan(cc))	u.c = -1;	else
-			u.c = gr->AddPnt(nboth ? mglPoint(x->linear(u.x,0,0),y->linear(u.y,0,0),z->linear(u.z,0,0)) :
+			const long kq = gr->AllocPnts(kk.size());
+#pragma omp parallel for
+			for(msize i=kk1;i<kk.size();i++)
+			{
+				mglPoint &u = kk[i];
+				double cc = c->linear(u.x,u.y,u.z);
+				gr->AddPntQ(kq+i,nboth ? mglPoint(x->linear(u.x,0,0),y->linear(u.y,0,0),z->linear(u.z,0,0)) :
 					mglPoint(x->linear(u.x,u.y,u.z),y->linear(u.x,u.y,u.z),z->linear(u.x,u.y,u.z)),
 					gr->GetC(ss,cc), mgl_find_norm(nboth, x,y,z,a, u, inv,n,m,l));
+				u.c = kq+i;
+			}
 		}
-		else if(b)	for(size_t i=kk1;i<kk.size();i++)
+		else if(b)
 		{
-			mglPoint &u = kk[i];
-			mreal bb = b->linear(u.x,u.y,u.z);
-			if(mgl_isnan(bb))	u.c = -1;	else
-			u.c = gr->AddPnt(nboth ? mglPoint(x->linear(u.x,0,0),y->linear(u.y,0,0),z->linear(u.z,0,0)) :
+			const long kq = gr->AllocPnts(kk.size());
+#pragma omp parallel for
+			for(msize i=kk1;i<kk.size();i++)
+			{
+				mglPoint &u = kk[i];
+				double bb = b->linear(u.x,u.y,u.z);
+				gr->AddPntQ(kq+i,nboth ? mglPoint(x->linear(u.x,0,0),y->linear(u.y,0,0),z->linear(u.z,0,0)) :
 					mglPoint(x->linear(u.x,u.y,u.z),y->linear(u.x,u.y,u.z),z->linear(u.x,u.y,u.z)),
 					cv, mgl_find_norm(nboth, x,y,z,a, u, inv,n,m,l), gr->GetA(bb));
+				u.c = kq+i;
+			}
 		}
-		else	for(size_t i=kk1;i<kk.size();i++)
+		else
 		{
-			mglPoint &u = kk[i];
-			u.c = gr->AddPnt(nboth ? mglPoint(x->linear(u.x,0,0),y->linear(u.y,0,0),z->linear(u.z,0,0)) :
+			const long kq = gr->AllocPnts(kk.size());
+#pragma omp parallel for
+			for(msize i=kk1;i<kk.size();i++)
+			{
+				mglPoint &u = kk[i];
+				gr->AddPntQ(kq+i,nboth ? mglPoint(x->linear(u.x,0,0),y->linear(u.y,0,0),z->linear(u.z,0,0)) :
 					mglPoint(x->linear(u.x,u.y,u.z),y->linear(u.x,u.y,u.z),z->linear(u.x,u.y,u.z)),
 					cv, mgl_find_norm(nboth, x,y,z,a, u, inv,n,m,l));
+				u.c = kq+i;
+			}
 		}
 
 		if(k>0)	mgl_surf3_plot(gr,n,m,kx1,kx2,ky1,ky2,kz,kk,wire);

@@ -2,7 +2,7 @@
  * Copyright (C) 2007-2014 Alexey Balakin <mathgl.abalakin@gmail.ru>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
+ * modify it under the terms of the GNU Lesser General Public License 
  * as published by the Free Software Foundation
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,10 +19,10 @@
 #include <locale.h>
 #include <getopt.h>
 #include "mgllab.h"
-#include <Fl/Fl_Spinner.H>
-#include <Fl/Fl_Output.H>
-#include <Fl/Fl_Select_Browser.H>
-#include <Fl/Fl_Printer.H>
+#include <FL/Fl_Spinner.H>
+#include <FL/Fl_Output.H>
+#include <FL/Fl_Select_Browser.H>
+#include <FL/Fl_Printer.H>
 //-----------------------------------------------------------------------------
 #ifndef MGL_DOC_DIR
 #ifdef WIN32
@@ -40,11 +40,13 @@ int highlight;
 int mouse_zoom;
 int use_thr;
 int complete_word;
+int wndW=930, wndH=510, txtW=300;
 std::string docdir;
 std::string helpname;
 std::string fontname;
 int lang;
 int scheme;
+int dark;
 std::string lastfiles[5];
 Fl_Preferences pref(Fl_Preferences::USER,"abalakin","mgllab");
 //-----------------------------------------------------------------------------
@@ -86,6 +88,11 @@ void save_pref()
 	pref.set("fname3",lastfiles[2].c_str());
 	pref.set("fname4",lastfiles[3].c_str());
 	pref.set("fname5",lastfiles[4].c_str());
+
+	pref.set("wnd_width", wndW);
+	pref.set("wnd_height",wndH);
+	pref.set("txt_width", txtW);
+	pref.set("dark",dark);
 }
 //-----------------------------------------------------------------------------
 void load_pref(ScriptWindow *w)
@@ -103,9 +110,15 @@ void load_pref(ScriptWindow *w)
 	pref.get("complete_word",complete_word,1);
 	pref.get("font_kind",font_kind,1);
 	pref.get("font_size",font_size,14);
-	set_style(font_kind, font_size);
+	pref.get("dark", dark,0);
+	set_style(font_kind, font_size,dark);
 	pref.get("font_name",s,"");
 	if(s)	{	fontname=s;	free(s);	}
+
+	pref.get("wnd_width", wndW,930);
+	pref.get("wnd_height",wndH,510);
+	pref.get("txt_width", txtW,300);
+
 	pref.get("fname1",s,"");	if(s)	{	lastfiles[0]=s;	free(s);	}
 	pref.get("fname2",s,"");	if(s)	{	lastfiles[1]=s;	free(s);	}
 	pref.get("fname3",s,"");	if(s)	{	lastfiles[2]=s;	free(s);	}
@@ -142,18 +155,6 @@ void set_title(Fl_Window* w)
 //-----------------------------------------------------------------------------
 void close_dlg_cb(Fl_Widget *, void *v)	{	((Fl_Window *)v)->hide();	}
 //-----------------------------------------------------------------------------
-void fname_cb(Fl_Widget*, void *v)
-{
-	ScriptWindow* e = (ScriptWindow*)v;
-	const char *file = mgl_file_chooser(_("Insert file name?"));
-	if(file)
-	{
-		char *str = new char[strlen(file)+4];
-		snprintf(str,strlen(file)+4," '%s'",file);
-		e->editor->insert(str);
-		delete []str;
-	}
-}
 //-----------------------------------------------------------------------------
 void new_cb(Fl_Widget*, void*)
 {
@@ -185,6 +186,14 @@ void close_cb(Fl_Widget*, void* v)
 
 	w->hide();
 	textbuf->remove_modify_callback(changed_cb, w);
+	ScriptWindow *wnd = dynamic_cast<ScriptWindow*>(w);
+	if(wnd)
+	{
+		wndW = wnd->w();
+		wndH = wnd->h();
+		txtW = wnd->editor->w();
+		save_pref();
+	}
 	delete w;
 	num_windows--;
 	if (!num_windows) exit(0);
@@ -206,7 +215,6 @@ void saveas_cb(Fl_Widget*, void *v)
 {
 	const char *newfile;
 	char *fname=0;
-	FILE *fp=0;
 	while(1)
 	{
 		newfile = mgl_file_chooser(_("Save File As?"), _("MGL files \t*.mgl"), true);
@@ -218,11 +226,11 @@ void saveas_cb(Fl_Widget*, void *v)
 			strcpy(fname,newfile);	strcat(fname,".mgl");
 			newfile = fname;
 		}
-		fp = fl_fopen(newfile,"r");
+		FILE *fp = fl_fopen(newfile,"r");
 		if(fp)
 		{
 			fclose(fp);
-			if(fl_choice(_("File is exesist. Overwrite it?"),0,_("No"),_(" Yes "))==2)
+			if(fl_choice(_("File exist. Overwrite it?"),0,_("No"),_(" Yes "))==2)
 				break;
 		}
 		else	break;
@@ -232,10 +240,10 @@ void saveas_cb(Fl_Widget*, void *v)
 }
 //-----------------------------------------------------------------------------
 ScriptWindow *new_view();
-void view_cb(Fl_Widget*, void*)
-{	Fl_Window* w = new_view();	w->show();	}
+//void view_cb(Fl_Widget*, void*)
+//{	Fl_Window* w = new_view();	w->show();	}
 //-----------------------------------------------------------------------------
-void hint_cb(Fl_Widget*, void*)	{}
+// void hint_cb(Fl_Widget*, void*)	{}
 void lastfile1_cb(Fl_Widget*, void *v)
 {	if (!check_save()) return;
 	load_file(lastfiles[0].c_str(),-1,(ScriptWindow*)v);	}
@@ -298,8 +306,8 @@ Fl_Menu_Item menuitems[] = {
 		{_("Find|Replace"), FL_CTRL+'f', find_dlg_cb},
 		{_("Find next"), FL_F+3, find_next_cb, 0, FL_MENU_DIVIDER},
 		{_("Insert"), 0, 0, 0, FL_SUBMENU},
-			{_("File path"), FL_META+'p', ins_path_cb},
-			{_("Folder path"), 0, ins_fname_cb},
+			{_("File path"), FL_META+'p', ins_fname_cb},
+			{_("Folder path"), 0, ins_path_cb},
 			{_("Command"), FL_META+'c', newcmd_dlg_cb},
 			{_("Inplot"), FL_META+'i', inplot_dlg_cb},
 			{_("Fitted formula"), FL_META+'f', ins_fits_cb},
@@ -340,27 +348,27 @@ extern Fl_RGB_Image img_udav;
 ScriptWindow *new_view()
 {
 	Fl_Group *gg;
-	ScriptWindow *w = new ScriptWindow(930, 510, _("Untitled - mgllab"));
+	ScriptWindow *w = new ScriptWindow(wndW, wndH, _("Untitled - mgllab"));
 	w->begin();
-	w->menu = new Fl_Menu_Bar(0, 0, 930, 30);
+	w->menu = new Fl_Menu_Bar(0, 0, wndW, 30);
 	w->menu->copy(menuitems, w);
 	w->label(_("Untitled - mgllab"));
 
-	Fl_Tile *t = new Fl_Tile(0,30,930,455);
-	add_editor(w);
+	Fl_Tile *t = new Fl_Tile(0,30,wndW,wndH-55);
+	add_editor(w, txtW, wndH);
 
-	w->rtab = new Fl_Tabs(300,30,630,455,0);
-	w->gplot = new Fl_Group(300,30,630,430,_("Canvas"));
-	w->graph = new Fl_MGLView(300,30,630,430,_("Canvas"));
+	w->rtab = new Fl_Tabs(txtW,30,wndW-txtW,wndH-55,0);
+	w->gplot = new Fl_Group(txtW,30,wndW-txtW,wndH-80,_("Canvas"));
+	w->graph = new Fl_MGLView(txtW,30,wndW-txtW,wndH-80,_("Canvas"));
 	w->gplot->resizable(w->graph);	w->gplot->end();	w->graph->adjust();
-	w->ghelp = new Fl_Group(300,30,630,430,_("Help"));
-	add_help(w);	w->ghelp->end();	w->ghelp->hide();
-	gg = new Fl_Group(300,30,630,430,_("Memory"));	gg->hide();
-	add_mem(w);		gg->end();
+	w->ghelp = new Fl_Group(txtW,30,wndW-txtW,wndH-80,_("Help"));
+	add_help(w, txtW, wndW, wndH);	w->ghelp->end();	w->ghelp->hide();
+	gg = new Fl_Group(txtW,30,wndW-txtW,wndH-80,_("Memory"));	gg->hide();
+	add_mem(w, txtW, wndW, wndH);		gg->end();
 	w->rtab->end();
 
-//	w->status = new Fl_Output(0,485,930,25);
-	w->status = new Fl_Box(0,485,930,25);	w->status->box(FL_ENGRAVED_BOX);
+//	w->status = new Fl_Output(0,485,wndW,25);
+	w->status = new Fl_Box(0,wndH-25,wndW,25);	w->status->box(FL_ENGRAVED_BOX);
 	w->status->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
 	w->set_status(_("Ready"));
 	w->draw = new Fl_MGL(w->graph);	w->draw->e = w;
@@ -383,8 +391,9 @@ int main(int argc, char **argv)
 {
 //	Fl::lock();
 	mgl_ask_func = mgl_ask_fltk;
+	mgl_progress_func = mgl_progress_fltk;
 	load_pref(NULL);
-	
+
 	textbuf = new Fl_Text_Buffer;
 	style_init();
 	textbuf->tab_distance(4);
@@ -410,7 +419,7 @@ int main(int argc, char **argv)
 		{	setlocale(LC_CTYPE, optarg);	setlocale(LC_NUMERIC, "C");	}
 		else if(ch=='h')
 		{
-			printf(_("mgllab draw mgl script interactively.\nCurrent version is 2.%g\n"),MGL_VER2);
+			printf(_("mgllab draw mgl script interactively.\nCurrent version is %s\n"),MGL_VER_STRING);
 			printf(_("Usage:\tmgllab [parameter(s)] scriptfile\n"));
 			printf(_("\t-1 str       set str as argument $1 for script\n"
 					"\t...          ...\n"
@@ -449,13 +458,14 @@ class PropDlg : public GeneralDlg
 	Fl_Check_Button *highlight_w;
 	Fl_Check_Button *mouse_zoom_w;
 	Fl_Check_Button *use_thr_w;
+	Fl_Check_Button *dark_w;
 	Fl_Choice *lang_w;
 	Fl_Choice *scheme_w;
 public:
 	PropDlg() : GeneralDlg()
 	{
 		Fl_Button *o;
-		w = new Fl_Double_Window(340, 390, _("Properties"));
+		w = new Fl_Double_Window(340, 415, _("Properties"));
 		w->align(Fl_Align(FL_ALIGN_CLIP|FL_ALIGN_INSIDE));
 		fkind = new Fl_Choice(75, 10, 90, 25, _("Font kind"));
 		fkind->add("Helvetica");	fkind->add("Courier");	fkind->add("Times");
@@ -472,12 +482,13 @@ public:
 		highlight_w = new Fl_Check_Button(5, 220, 330, 25, _("Highlight current object(s)"));
 		mouse_zoom_w = new Fl_Check_Button(5, 245, 330, 25, _("Enable mouse wheel for zooming"));
 		use_thr_w = new Fl_Check_Button(5, 270, 330, 25, _("Use multi-threading for drawing"));
-		lang_w = new Fl_Choice(160, 300, 175, 25, _("Language for mgllab"));
+		dark_w = new Fl_Check_Button(5, 295, 330, 25, _("Use dark color scheme"));
+		lang_w = new Fl_Choice(160, 325, 175, 25, _("Language for mgllab"));
 		for(long i=0;i<NUM_LOCALE;i++)	lang_w->add(loc[i]);
-		scheme_w = new Fl_Choice(160, 330, 175, 25, _("Widget scheme"));
+		scheme_w = new Fl_Choice(160, 355, 175, 25, _("Widget scheme"));
 		scheme_w->add("base");	scheme_w->add("gtk+");	scheme_w->add("plastic");	scheme_w->add("gleam");
-		o = new Fl_Button(85, 360, 75, 25, _("Cancel"));	o->callback(cb_dlg_cancel,this);
-		o = new Fl_Return_Button(180, 360, 75, 25, _("OK"));	o->callback(cb_dlg_ok,this);
+		o = new Fl_Button(85, 385, 75, 25, _("Cancel"));	o->callback(cb_dlg_cancel,this);
+		o = new Fl_Return_Button(180, 385, 75, 25, _("OK"));	o->callback(cb_dlg_ok,this);
 		w->set_modal();	w->end();
 	}
 	void init()
@@ -494,10 +505,10 @@ public:
 		use_thr_w->value(use_thr);
 		lang_w->value(lang);
 		scheme_w->value(scheme);
+		dark_w->value(dark);
 	}
 	void cb_ok()
 	{
-		set_style(fkind->value(),fsize->value());
 		auto_exec = auto_exec_w->value();
 		exec_save = exec_save_w->value();
 		highlight = highlight_w->value();
@@ -506,6 +517,8 @@ public:
 		use_thr = use_thr_w->value();
 		docdir = help_path->value();
 		fontname = font_path->value();
+		dark = dark_w->value();
+		set_style(fkind->value(),fsize->value(),dark);
 		if(e->graph->get_graph())
 			mgl_load_font(e->graph->get_graph(),fontname.c_str(),NULL);
 		set_scheme_lang(scheme_w->value(),lang_w->value());	// NOTE: must be after setting docdir

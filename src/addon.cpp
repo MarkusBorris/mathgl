@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -44,18 +44,23 @@ void MGL_EXPORT mgl_strcls(char *str)
 	delete []tmp;
 }
 //-----------------------------------------------------------------------------
-long MGL_EXPORT mgl_strpos(const char *str,char *fnd)
+long MGL_EXPORT_PURE mgl_strpos(const char *str,char *fnd)
 {
 	const char *p=strstr(str,fnd);
 	return p?p-str:-1L;
 }
 //-----------------------------------------------------------------------------
-long MGL_EXPORT mgl_chrpos(const char *str,char ch)
+long MGL_EXPORT_PURE mgl_chrpos(const char *str,char ch)
 {
 	const char *p=str?strchr(str,ch):0;
 	return p?p-str:-1L;
 }
 //-----------------------------------------------------------------------------
+int mgl_fgetstr_script = 0;
+void MGL_EXPORT mgl_fgetstr_mgl(int enable)
+{
+	mgl_fgetstr_script = enable;
+}
 MGL_EXPORT char *mgl_fgetstr(FILE *fp)
 {
 	const long size=10240;	// NOTE: this set maximal length of string to be read
@@ -64,6 +69,12 @@ MGL_EXPORT char *mgl_fgetstr(FILE *fp)
 	{
 		if(!fgets(s,size,fp))	break;
 		mgl_strtrim(s);
+		if(mgl_fgetstr_script && s[0]=='#' && s[1]=='M' && s[2]=='G' && s[3]=='L' && s[4]==' ')
+		{
+			std::string buf("mglconv -n ");	buf+= s+5;
+			if(system(buf.c_str())==-1)
+				mgl_info("Couldn't execute '%s'",buf.c_str());
+		}
 		//		strlwr(s);
 	} while(!feof(fp) && (s[0]==0 || s[0]=='%' || s[0]=='#'));
 	for(long i=0;s[i];i++)	if(s[i]=='#')	{	s[i]=0;	break;	}
@@ -125,11 +136,11 @@ void MGL_EXPORT mgl_info(const char *str, ...)
 	fclose(fp);
 }
 //-----------------------------------------------------------------------------
-MGL_EXPORT FILE *mgl_next_data(const char *fname,int p)
+MGL_EXPORT FILE *mgl_next_data(const char *fname,long p)
 {
 	char *s;
-	int len;
-	static int pos=0;
+	long len;
+	static long pos=0;
 	static char path[256];
 
 	if(p>0)	pos = p;
@@ -174,24 +185,29 @@ void MGL_EXPORT mgl_difr_grid_old(dual *a,int n,int step,dual q,int Border,dual 
 		{
 			default:
 			case 0:		// zero at border
+			case 'z':
 				b[0] = 0;	b[n-1] = 0;		break;
 			case 1:		// constant at border
 				b[0] = b[1];	b[n-1] = b[n-2];	break;
 			case 2:		// linear at border
+			case 'l':
 				b[0] = mreal(2)*b[1]-b[2];
 				b[n-1] = mreal(2)*b[n-2]-b[n-3];
 				break;
 			case 3:		// square at border
+			case 's':
 				b[0] = b[3]+mreal(3)*(b[1]-b[2]);
 				b[n-1] = b[n-4]+mreal(3)*(b[n-2]-b[n-3]);
 				break;
 			case -1:		// exponent at border
 			case 4:
+			case 'e':
 				b[0] = norm(b[2])<norm(b[1]) ? b[1] : b[1]*b[1]/b[2];
 				b[n-1] = norm(b[n-3])<norm(b[n-2]) ? b[n-2] : b[n-2]*b[n-2]/b[n-3];
 				break;
 			case -2:		// gaussian at border
 			case 5:
+			case 'g':
 				b[0] = norm(b[2])<norm(b[1]) ? b[3] : pow(b[1]/b[2],3)*b[3];
 				b[n-1] = norm(b[n-3])<norm(b[n-2]) ? b[n-4] : pow(b[n-2]/b[n-3],3)*b[n-4];
 				break;
@@ -218,7 +234,7 @@ void MGL_EXPORT mgl_difr_axial_old(dual *a,int n,int step,dual q,int Border,dual
 			mreal dd = i+di;
 			dd = 1./(sqrt(dd*dd+1.)+dd);	// corrections for "axiality"
 			mreal gg = 1+dd*dd;
-			d[i] = a[i*step] + adt*( b[i-1]*((gg-dd)/k) - b[i]*(2*gg/k) + b[i+1]*((gg+dd)/k) );
+			d[i] = a[i*step] + adt*( b[i-1]*((gg-2*dd)/k) - b[i]*(2*gg/k) + b[i+1]*((gg+2*dd)/k) );
 		}
 		memcpy(b,d,n*sizeof(dual));
 		switch(Border)
@@ -234,10 +250,10 @@ void MGL_EXPORT mgl_difr_axial_old(dual *a,int n,int step,dual q,int Border,dual
 				b[n-1] = b[n-4] + mreal(3)*(b[n-2]-b[n-3]);
 				break;
 			case -1:		// exponent at border
-				b[n-1] = norm(b[n-3])<norm(b[n-2]) ? b[n-2] : b[n-2]*b[n-2]/b[n-3];
+				b[n-1] = norm(b[n-3])>norm(b[n-2]) ? b[n-2]*b[n-2]/b[n-3] : mreal(2)*b[n-2]-b[n-3];
 				break;
 			case -2:		// gaussian at border
-				b[n-1] = norm(b[n-3])<norm(b[n-2]) ? b[n-4] : pow(b[n-2]/b[n-3],3)*b[n-4];
+				b[n-1] = norm(b[n-3])>norm(b[n-2]) ? pow(b[n-2]/b[n-3],3)*b[n-4] : b[n-4] + mreal(3)*(b[n-2]-b[n-3]);
 				break;
 		}
 	}

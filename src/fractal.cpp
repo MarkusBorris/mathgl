@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -25,7 +25,7 @@ MGL_NO_EXPORT char *mgl_read_gz(gzFile fp);
 //	IFS series
 //
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_ifs_2d_point(HCDT A, mreal& x, mreal& y, mreal amax)
+void static mgl_ifs_2d_point(HCDT A, mreal& x, mreal& y, mreal amax)
 {
 	long i, n=A->GetNy();
 	mreal r = amax*mgl_rnd(), sum_prob = 0, x1;
@@ -57,7 +57,7 @@ HMDT MGL_EXPORT mgl_data_ifs_2d(HCDT A, long n, long skip)
 uintptr_t MGL_EXPORT mgl_data_ifs_2d_(uintptr_t *d, long *n, long *skip)
 {	return uintptr_t(mgl_data_ifs_2d(_DT_,*n,*skip));	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_ifs_3d_point(HCDT A, mreal& x, mreal& y, mreal& z, mreal amax)
+void static mgl_ifs_3d_point(HCDT A, mreal& x, mreal& y, mreal& z, mreal amax)
 {
 	int i, n=A->GetNy();
 	mreal r = amax*mgl_rnd(), sum_prob = 0, x1, y1;
@@ -140,74 +140,74 @@ uintptr_t mgl_data_ifs_file_(const char *fname, const char *name, long *n, long 
 //	Functions for flame fractal
 //
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_linear_var0(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_linear_var0(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	xNew += par[0]*x;	yNew += par[0]*y;	}
-void MGL_NO_EXPORT mgl_sinusoidal_var1(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_sinusoidal_var1(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	xNew += par[0]*sin(x);	yNew += par[0]*sin(y);	}
-void MGL_NO_EXPORT mgl_spherical_var2(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_spherical_var2(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	mreal c1 = par[0]/(x*x+y*y);	xNew += c1*x;	yNew += c1*y;	}
-void MGL_NO_EXPORT mgl_swirl_var3(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_swirl_var3(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal r2=x*x+y*y, c1=sin(r2), c2=cos(r2);
 	xNew += par[0]*(x*c1 - y*c2);
 	yNew += par[0]*(x*c2 + y*c1);
 }
-void MGL_NO_EXPORT mgl_horseshoe_var4(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_horseshoe_var4(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]/hypot(x,y);
 	xNew += c1*(x*x-y*y);
 	yNew += 2*c1*x*y;
 }
-void MGL_NO_EXPORT mgl_polar_var5(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_polar_var5(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	xNew += par[0]*atan2(x,y)/M_PI;
 	yNew += par[0]*(hypot(x,y)-1);
 }
-void MGL_NO_EXPORT mgl_handkerchief_var6(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_handkerchief_var6(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal r=hypot(x,y), t=atan2(x,y), c1=par[0]*r;
 	xNew += c1*sin(t+r);	yNew += c1*cos(t-r);
 }
-void MGL_NO_EXPORT mgl_heart_var7(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_heart_var7(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal r=hypot(x,y), c1=par[0]*r, c2=atan2(x,y)*r;
 	xNew +=  c1*sin(c2);	yNew -= c1*cos(c2);
 }
-void MGL_NO_EXPORT mgl_disc_var8(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_disc_var8(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=par[0]*atan2(x,y)/M_PI, c2=M_PI*hypot(x,y);
 	xNew += c1*sin(c2);		yNew += c1*cos(c2);
 }
-void MGL_NO_EXPORT mgl_spiral_var9(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_spiral_var9(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal r=hypot(x,y), t=atan2(x,y), c1=par[0]/r;
 	xNew += c1*(cos(t)+sin(r));
 	yNew += c1*(sin(t)-cos(r));
 }
-void MGL_NO_EXPORT mgl_hyperbolic_var10(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_hyperbolic_var10(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal r=hypot(x,y), t=atan2(x,y);
 	xNew += par[0]*sin(t)/r;
 	yNew += par[0]*r*cos(t);
 }
-void MGL_NO_EXPORT mgl_diamond_var11(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_diamond_var11(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal r=hypot(x,y), t=atan2(x,y);
 	xNew += par[0]*sin(t)*cos(r);
 	yNew += par[0]*cos(t)*sin(r);
 }
-void MGL_NO_EXPORT mgl_ex_var12(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_ex_var12(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal r=hypot(x,y), t=atan2(x,y), c1=par[0]*r;
 	mreal c2=mgl_ipow(sin(t+r),3), c3 = mgl_ipow(cos(t-r), 3);
 	xNew += c1*(c2 + c3);	yNew += c1*(c2 - c3);
 }
-void MGL_NO_EXPORT mgl_julia_var13(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_julia_var13(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=par[0]*sqrt(hypot(x,y)), c2=atan2(x,y)/2, c3=(rand()%2)*M_PI;
 	xNew += c1*cos(c2+c3);	yNew += c1*sin(c2+c3);
 }
-void MGL_NO_EXPORT mgl_bent_var14(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_bent_var14(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	if(x>=0 && y>=0)
 	{	xNew += par[0]*x;	yNew += par[0]*y;	}
@@ -218,42 +218,42 @@ void MGL_NO_EXPORT mgl_bent_var14(mreal &xNew, mreal &yNew, mreal x, mreal y, co
 	else
 	{	xNew += par[0]*2*x;	yNew += par[0]*y/2;	}
 }
-void MGL_NO_EXPORT mgl_waves_var15(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_waves_var15(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	// NOTE: par[1]=b[i], par[2]=1/c[i]^2, par[3]=e[i], par[4]=1/f[i]^2
 	xNew += par[0]*(x + par[1]*sin(y*par[2]));
 	yNew += par[0]*(y + par[3]*sin(x*par[4]));
 }
-void MGL_NO_EXPORT mgl_fisheye_var16(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_fisheye_var16(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]*2/(hypot(x,y) + 1);
 	xNew += c1*y;	yNew += c1*x;
 }
-void MGL_NO_EXPORT mgl_popcorn_var17(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_popcorn_var17(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	// NOTE: par[1]=c[i], par[2]=f[i]
 	xNew += par[0]*(x + par[1]*sin(tan(3*y)));
 	yNew += par[0]*(y + par[2]*sin(tan(3*x)));
 }
-void MGL_NO_EXPORT mgl_exponential_var18(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_exponential_var18(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=par[0]*exp(x-1);
 	xNew += c1*cos(M_PI*y);	yNew += c1*sin(M_PI*y);
 }
-void MGL_NO_EXPORT mgl_power_var19(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_power_var19(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal t=atan2(x,y), c1=par[0]*pow(hypot(x,y), sin(t));
 	xNew += c1*cos(t);	yNew += c1*sin(t);
 }
-void MGL_NO_EXPORT mgl_cosine_var20(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_cosine_var20(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	xNew += par[0]*cos(M_PI*x)*cosh(y);
 	yNew -= par[0]*sin(M_PI*x)*sinh(y);
 }
-void MGL_NO_EXPORT mgl_rings_var21(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_rings_var21(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	// NOTE: par[1]=c[i]^2
 	mreal t=atan2(x,y), r=hypot(x,y), c1=par[0]*(fmod(r+par[1],2*par[1])-par[1]+r*(1-par[1])); // convert to int?
 	xNew += c1*cos(t);	yNew += c1*sin(t);
 }
-void MGL_NO_EXPORT mgl_fan_var22(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_fan_var22(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	// NOTE: par[1]=c[i]^2, par[2]=f[i]
 	mreal t=atan2(x,y), c1=par[0]*hypot(x,y), c2;
 	c2 = fmod(t+par[2], M_PI*par[1]); // convert to int?
@@ -261,17 +261,17 @@ void MGL_NO_EXPORT mgl_fan_var22(mreal &xNew, mreal &yNew, mreal x, mreal y, con
 	else	c2 += t;
 	xNew += c1*cos(c2);	yNew += c1*sin(c2);
 }
-void MGL_NO_EXPORT mgl_blob_var23(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_blob_var23(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal t=atan2(x,y), c1=par[0]*hypot(x,y)*(par[2]+(par[1]-par[2])/2*(sin(par[3]*t)));
 	xNew += c1*cos(t);	yNew += c1*sin(t);
 }
-void MGL_NO_EXPORT mgl_pdj_var24(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_pdj_var24(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	xNew += par[0]*(sin(par[1]*y) - cos(par[2]*x));
 	yNew += par[0]*(sin(par[3]*x) - cos(par[4]*y));
 }
-void MGL_NO_EXPORT mgl_fan2_var25(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_fan2_var25(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal t=atan2(x,y), c1, c2;
 	c1 = M_PI*par[1]*par[1];
@@ -280,72 +280,72 @@ void MGL_NO_EXPORT mgl_fan2_var25(mreal &xNew, mreal &yNew, mreal x, mreal y, co
 	c1 = par[0]*hypot(x,y);
 	xNew += c1*sin(c2);	yNew += c1*cos(c2);
 }
-void MGL_NO_EXPORT mgl_rings2_var26(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_rings2_var26(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal r=hypot(x,y), t=atan2(x,y), c1=par[1]*par[1];
 	c1 = par[0]*(r - 2*c1*int((r+c1)/(2*c1)) + r*(1-c1));
 	xNew += c1*cos(t);	yNew += c1*sin(t);
 }
-void MGL_NO_EXPORT mgl_eyefish_var27(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_eyefish_var27(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]*2/(hypot(x,y)+1);
 	xNew += c1*x;		yNew += c1*y;
 }
-void MGL_NO_EXPORT mgl_bubble_var28(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_bubble_var28(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]*4/(x*x+y*y+4);
 	xNew += c1*x;		yNew += c1*y;
 }
-void MGL_NO_EXPORT mgl_cylinder_var29(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_cylinder_var29(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	xNew += par[0]*sin(x);	yNew += par[0]*y;	}
-void MGL_NO_EXPORT mgl_perspective_var30(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_perspective_var30(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]*par[2]/(par[2]-y*sin(par[1]));
 	xNew += c1*x;	yNew += c1*y*cos(par[1]);
 }
-void MGL_NO_EXPORT mgl_noise_var31(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_noise_var31(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=par[0]*mgl_rnd(), c2=2*M_PI*mgl_rnd();
 	xNew += c1*x*cos(c2);	yNew += c1*y*sin(c2);
 }
-void MGL_NO_EXPORT mgl_juliaN_var32(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_juliaN_var32(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=int(fabs(par[1])*mgl_rnd()), c2;
 	c2 = (atan2(y,x) + 2*M_PI*c1)/par[1];
 	c1 = par[0]*pow(hypot(x,y), par[2]/par[1]);
 	xNew += c1*cos(c2);	yNew += c1*sin(c2);
 }
-void MGL_NO_EXPORT mgl_juliaScope_var33(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_juliaScope_var33(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=int(fabs(par[1])*mgl_rnd()), c2;
 	c2 = ((2*(rand()%2)-1)*atan2(y,x) + 2*M_PI*c1)/par[1];
 	c1 = par[0]*pow(hypot(x,y), par[2]/par[1]);
 	xNew += c1*cos(c2);	yNew += c1*sin(c2);
 }
-void MGL_NO_EXPORT mgl_blur_var34(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_blur_var34(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=par[0]*mgl_rnd(), c2=2*M_PI*mgl_rnd();
 	xNew += c1*cos(c2);	yNew += c1*sin(c2);
 }
-void MGL_NO_EXPORT mgl_gaussian_var35(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_gaussian_var35(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=par[0]*(4*mgl_rnd()-2), c2=2*M_PI*mgl_rnd();
 	xNew += c1*cos(c2);	yNew += c1*sin(c2);
 }
-void MGL_NO_EXPORT mgl_radialBlur_var36(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_radialBlur_var36(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal r=hypot(x,y), c1=par[1]*M_PI_2, c2=par[0]*(4*mgl_rnd()-2), c3;
 	c3 = c2*cos(c1) - 1;	c2 = atan2(y,x) + c2 *sin(c1);
 	xNew += r*cos(c2) + c3*x;	yNew += r*sin(c2) + c3*y;
 }
-void MGL_NO_EXPORT mgl_pie_var37(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_pie_var37(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=int(mgl_rnd()*par[1] + 0.5), c2;
 	c2 = par[2] + 2*M_PI/par[1]*(c1 + mgl_rnd()*par[3]);
 	c1 = par[0]*mgl_rnd();
 	xNew += c1*cos(c2);	yNew += c1*sin(c2);
 }
-void MGL_NO_EXPORT mgl_ngon_var38(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_ngon_var38(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=2*M_PI/par[2], c2;
 	c2 = atan2(y,x) - c1*floor(atan2(y,x)/c1);
@@ -353,56 +353,56 @@ void MGL_NO_EXPORT mgl_ngon_var38(mreal &xNew, mreal &yNew, mreal x, mreal y, co
 	c1 = par[0]*(par[3]*(1/cos(c2) - 1) + par[4])/pow(hypot(x,y), par[1]);
 	xNew += c1*x;	yNew += c1*y;
 }
-void MGL_NO_EXPORT mgl_curl_var39(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_curl_var39(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=1 + par[1]*x + par[2]*(x*x - y*y);
 	mreal c2 = par[1]*y + 2*par[2]*x*y;
 	mreal c3 = par[0]/(c1*c1 + c2*c2);
 	xNew += c3*(c1*x + c2*y);	yNew += c3*(c1*x - c2*y);
 }
-void MGL_NO_EXPORT mgl_rectangles_var40(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_rectangles_var40(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	xNew += par[0]*((2*floor(x/par[1]) + 1)*par[1] - x);
 	yNew += par[0]*((2*floor(y/par[2]) + 1)*par[2] - y);
 }
-void MGL_NO_EXPORT mgl_arch_var41(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_arch_var41(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=mgl_rnd()*M_PI*par[0], c2=sin(c1);
 	xNew += par[0]*c2;	yNew += par[0]*c2*c2/cos(c1);
 }
-void MGL_NO_EXPORT mgl_tangent_var42(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_tangent_var42(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	xNew += par[0]*sin(x)/cos(y);	yNew += par[0]*tan(y);	}
-void MGL_NO_EXPORT mgl_square_var43(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_square_var43(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	xNew += par[0]*(mgl_rnd() - 0.5);
 	yNew += par[0]*(mgl_rnd() - 0.5);
 }
-void MGL_NO_EXPORT mgl_blade_var44(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_blade_var44(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=par[0]*x, c2=mgl_rnd()*hypot(x,y)*par[0];
 	xNew += c1*(cos(c2) + sin(c2));	// TODO check use of c2
 	yNew += c1*(cos(c2) - sin(c2));
 }
-void MGL_NO_EXPORT mgl_secant_var45(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_secant_var45(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	xNew += par[0]*x;	yNew += 1/cos(par[0]*hypot(x,y));	}
-void MGL_NO_EXPORT mgl_rays_var46(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_rays_var46(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]*par[0]*tan(mgl_rnd()*M_PI*par[0])/(x*x+y*y);
 	xNew += c1*cos(x);	yNew += c1*sin(y);
 }
-void MGL_NO_EXPORT mgl_twintrian_var47(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_twintrian_var47(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=par[0]*x, c2, c3;
 	c2 = mgl_rnd()*hypot(x,y)*par[0];
 	c3 = log10(sin(c2)*sin(c2)) + cos(c2);
 	xNew += c1*c3;	yNew += c1*(c3 - M_PI*sin(c2));
 }
-void MGL_NO_EXPORT mgl_cross_var48(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_cross_var48(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]/fabs(x*x - y*y);
 	xNew += c1*x;	yNew += c1*y;
 }
-void MGL_NO_EXPORT mgl_disc2_var49(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_disc2_var49(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = cos(par[2])-1, c2 = sin(par[2]), c3;
 	if(par[2]>2*M_PI)
@@ -419,39 +419,39 @@ void MGL_NO_EXPORT mgl_disc2_var49(mreal &xNew, mreal &yNew, mreal x, mreal y, c
 	mreal a = par[0]*atan2(x,y)/M_PI;
 	xNew += a*(c1+sin(c3)); yNew += a*(c2+cos(c3));
 }
-void MGL_NO_EXPORT mgl_supershape_var50(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_supershape_var50(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[2]/4*atan2(y,x)+M_PI_4, r = hypot(x,y);
 	c1 = pow(fabs(sin(c1)), par[5])+pow(fabs(cos(c1)), par[4]);
 	c1 = par[0]*((par[1]*mgl_rnd()+(1-par[1])*r)-par[6])*pow(c1, -1.0/par[3])/r;
 	xNew += c1*x;	yNew += c1*y;
 }
-void MGL_NO_EXPORT mgl_flower_var51(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_flower_var51(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]*(mgl_rnd()-par[2])*cos(par[1]*atan2(y,x))/hypot(x,y);
 	xNew += c1*x;	yNew += c1*y;
 }
-void MGL_NO_EXPORT mgl_conic_var52(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_conic_var52(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = x/hypot(x,y);
 	c1 = par[0]*(mgl_rnd()-par[2])*par[1]/(1+par[1]*c1)/hypot(x,y);
 	xNew += c1*x;	yNew += c1*y;
 }
-void MGL_NO_EXPORT mgl_parabola_var53(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_parabola_var53(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = hypot(x,y), c2;
 	c2 = cos(c1);	c1 = sin(c1);
 	xNew += par[0]*par[1]*c1*c1 *mgl_rnd();
 	yNew += par[0]*par[2]*c2*mgl_rnd();
 }
-void MGL_NO_EXPORT mgl_bent2_var54(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_bent2_var54(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]*x, c2 = par[0]*y;
 	if(x<0.0)	c1 *= par[1];
 	if(y<0.0)	c2 *= par[2];
 	xNew += c1;		yNew += c2;
 }
-void MGL_NO_EXPORT mgl_bipolar_var55(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_bipolar_var55(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = 0.5*atan2(2*y, x*x+y*y-1)-M_PI_2*par[1], c2, c3, c4;
 	if(c1>M_PI_2)	c1 = -M_PI_2+fmod(c1+M_PI_2, M_PI);
@@ -460,7 +460,7 @@ void MGL_NO_EXPORT mgl_bipolar_var55(mreal &xNew, mreal &yNew, mreal x, mreal y,
 	c3 = x*x+y*y+1;	c4 = 2*x;
 	xNew += 0.25*c2*log((c3+c4)/(c3-c4));	yNew += c1*c2;
 }
-void MGL_NO_EXPORT mgl_boarders_var56(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_boarders_var56(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = round(x), c2 = round(y), c3, c4;
 	c3 = x-c1;	c4 = y-c2;
@@ -499,13 +499,13 @@ void MGL_NO_EXPORT mgl_boarders_var56(mreal &xNew, mreal &yNew, mreal x, mreal y
 		}
 	}
 }
-void MGL_NO_EXPORT mgl_butterfly_var57(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_butterfly_var57(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = 4/sqrt(3*M_PI)*par[0], c2 = 2*y; // replace 4/sqrt(3*M_PI) for the result?
 	c1 *= sqrt(fabs(x*y)/(x*x+c2*c2));
 	xNew += c1*x; yNew += c1*c2;
 }
-void MGL_NO_EXPORT mgl_cell_var58(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_cell_var58(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=floor(x/par[1]), c2=floor(y/par[1]), c3=x-c1*par[1], c4=y-c2*par[1];
 	if(c2>=0)
@@ -521,7 +521,7 @@ void MGL_NO_EXPORT mgl_cell_var58(mreal &xNew, mreal &yNew, mreal x, mreal y, co
 	xNew += par[0]*(par[1]*c1+c3);
 	yNew += par[0]*(par[1]*c2+c4);
 }
-void MGL_NO_EXPORT mgl_cpow_var59(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_cpow_var59(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = atan2(y, x), c2, c3, c4, c5;
 	c2 = par[1]/par[3];
@@ -533,12 +533,12 @@ void MGL_NO_EXPORT mgl_cpow_var59(mreal &xNew, mreal &yNew, mreal x, mreal y, co
 	c3 = sin(c5);
 	xNew += c1*c2;	yNew += c1*c3;
 }
-void MGL_NO_EXPORT mgl_curve_var60(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_curve_var60(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	xNew += par[0]*(x+par[1]*exp(-(y*y)/(par[3]*par[3])));
 	yNew += par[0]*(y+par[2]*exp(-(x*x)/(par[4]*par[4])));
 }
-void MGL_NO_EXPORT mgl_edisc_var61(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_edisc_var61(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = x*x+y*y+1, c2,c3,c4,c5;
 	c2 = 2*x;
@@ -552,7 +552,7 @@ void MGL_NO_EXPORT mgl_edisc_var61(mreal &xNew, mreal &yNew, mreal x, mreal y, c
 	c5 = sin(c2)*sinh(c3);
 	xNew += c1*c4;	yNew += c1*c5;
 }
-void MGL_NO_EXPORT mgl_elliptic_var62(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_elliptic_var62(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = x*x+y*y+1, c2, c3, c4, c5;
 	c2 = 2*x;
@@ -569,19 +569,19 @@ void MGL_NO_EXPORT mgl_elliptic_var62(mreal &xNew, mreal &yNew, mreal x, mreal y
 	if(y>0)	yNew += c1*log(c2+c5);
 	else	yNew -= c1*log(c2+c5);
 }
-void MGL_NO_EXPORT mgl_escher_var63(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_escher_var63(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = 0.5*(1+cos(par[1])), c2 = 0.5*sin(par[1]), c3, c4, c5;
 	c3 = 0.5*log(x*x+y*y);	c4 = atan2(y, x);
 	c5 = c1*c4+c2*c3;		c1 = par[0]*exp(c1*c3-c2*c4);
 	xNew += c1*cos(c5);	yNew += c1*sin(c5);
 }
-void MGL_NO_EXPORT mgl_foci_var64(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_foci_var64(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1=0.5*exp(x), c2=0.25/c1, c3=par[0]/(c1+c2-cos(y));	// TODO Check this!!!
 	xNew += c1*(c2-c3);	yNew += c1*sin(y);
 }
-void MGL_NO_EXPORT mgl_lazySusan_var65(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_lazySusan_var65(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = hypot(x, y), c2;
 	if(c1<par[0])
@@ -598,7 +598,7 @@ void MGL_NO_EXPORT mgl_lazySusan_var65(mreal &xNew, mreal &yNew, mreal x, mreal 
 		yNew += c1*(y+par[5])-par[5];
 	}
 }
-void MGL_NO_EXPORT mgl_loonie_var66(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_loonie_var66(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = x*x+y*y, c2 = par[0]*par[0];
 	if(c1<c2)
@@ -606,15 +606,15 @@ void MGL_NO_EXPORT mgl_loonie_var66(mreal &xNew, mreal &yNew, mreal x, mreal y, 
 		c1 = par[0]*sqrt(c2/c1-1);
 		xNew += c1*x;	yNew += c1*y;
 	}
-	else	xNew += par[0]*x;	yNew += par[0]*y;
+	else	{	xNew += par[0]*x;	yNew += par[0]*y;	}
 }
-void MGL_NO_EXPORT mgl_preBlur_var67(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_preBlur_var67(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]*(mgl_rnd()+mgl_rnd()+mgl_rnd()+mgl_rnd()-2), c2;
 	c2 = 2*mgl_rnd()*M_PI;
 	x += c1*cos(c2);	y += c1*sin(c2); // NOTE: This changes the original coordinates, not the new ones
 }
-void MGL_NO_EXPORT mgl_modulus_var68(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_modulus_var68(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	if(x>par[1])	xNew += par[0]*(-par[1]+fmod(x-par[1], 2*par[1]));
 	else if(x<par[1])	xNew += par[0]*(par[1]-fmod(par[1]-x, 2*par[1]));
@@ -623,7 +623,7 @@ void MGL_NO_EXPORT mgl_modulus_var68(mreal &xNew, mreal &yNew, mreal x, mreal y,
 	else if(y<par[2])	yNew += par[0]*(par[2]-fmod(par[2]-y, 2*par[2]));
 	else	yNew += par[0]*y;
 }
-void MGL_NO_EXPORT mgl_oscope_var69(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_oscope_var69(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[3]*exp(-fabs(x)*par[4])*cos(2*M_PI*par[2]*x)+par[1];
 	if(fabs(y) <= c1)
@@ -631,49 +631,49 @@ void MGL_NO_EXPORT mgl_oscope_var69(mreal &xNew, mreal &yNew, mreal x, mreal y, 
 	else
 	{	xNew += par[0]*x;	yNew += par[0]*y;	}
 }
-void MGL_NO_EXPORT mgl_polar2_var70(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_polar2_var70(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal t = atan2(x, y);
 	xNew += par[0]*t*t;	yNew += par[0]*t/2*log(x*x+y*y);
 }
-void MGL_NO_EXPORT mgl_popcorn2_var71(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_popcorn2_var71(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	xNew += par[0]*(x+par[1]*sin(tan(par[3]*y)));
 	yNew += par[0]*(y+par[2]*sin(tan(par[3]*x)));
 }
-void MGL_NO_EXPORT mgl_scry_var72(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_scry_var72(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = 1/(hypot(x, y)*(x*x+y*y+1/par[0]));
 	xNew += c1*x;	yNew += c1*y;
 }
-void MGL_NO_EXPORT mgl_separation_var73(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_separation_var73(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	if(x>0)	xNew += par[0]*(sqrt(x*x+par[1]*par[1])-x*par[2]);
 	else	xNew -= par[0]*(sqrt(x*x+par[1]*par[1])+x*par[2]);
 	if(y>0)	yNew += par[0]*(sqrt(y*y+par[3]*par[3])-y*par[4]);
 	else	yNew -= par[0]*(sqrt(y*y+par[3]*par[3])+y*par[4]);
 }
-void MGL_NO_EXPORT mgl_split_var74(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_split_var74(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	if(cos(M_PI*x*par[1])>=0)	xNew += par[0]*y;
 	else	xNew -= par[0]*y;
 	if(cos(M_PI*y*par[2])>=0)	yNew += par[0]*x;
 	else	yNew -= par[0]*x;
 }
-void MGL_NO_EXPORT mgl_splits_var75(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_splits_var75(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	if(x>=0)	xNew+= par[0]*(x+par[1]);
 	else 	xNew += par[0]*(x-par[1]);
 	if(y>=0)	yNew += par[0]*(y+par[2]);
 	else	yNew += par[0]*(y-par[2]);
 }
-void MGL_NO_EXPORT mgl_stripes_var76(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_stripes_var76(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = floor(x+0.5), c2 = x-c1;
 	xNew += par[0]*(c2*(1-par[1])+c1);
 	yNew += par[0]*(y+c2*c2*par[2]);
 }
-void MGL_NO_EXPORT mgl_wedge_var77(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_wedge_var77(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = hypot(x, y), c2, c3, c4;
 	c2 = atan2(y, x)+par[4]*c1;
@@ -683,7 +683,7 @@ void MGL_NO_EXPORT mgl_wedge_var77(mreal &xNew, mreal &yNew, mreal x, mreal y, c
 	c1 = par[0]*(c1+par[2]);
 	xNew += c1*cos(c2);	yNew += c1*sin(c2);
 }
-void MGL_NO_EXPORT mgl_wedgeJulia_var78(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_wedgeJulia_var78(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = int(fabs(par[3])*mgl_rnd()), c2;
 	c1 = (atan2(y, x)+2*M_PI*c1)/par[3];
@@ -692,7 +692,7 @@ void MGL_NO_EXPORT mgl_wedgeJulia_var78(mreal &xNew, mreal &yNew, mreal x, mreal
 	c1 = par[0]*pow(x*x +y*y, par[4]/(2*par[3]));
 	xNew += c1*cos(c2);	yNew += c1*sin(c2);
 }
-void MGL_NO_EXPORT mgl_wedgeSph_var79(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_wedgeSph_var79(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = 1/hypot(x, y), c2, c3, c4;
 	c2 = atan2(y, x)+par[4]*c1;
@@ -702,7 +702,7 @@ void MGL_NO_EXPORT mgl_wedgeSph_var79(mreal &xNew, mreal &yNew, mreal x, mreal y
 	c1 = par[0]*(c1+par[3]);
 	xNew += c1*cos(c2);	yNew += c1*sin(c2);
 }
-void MGL_NO_EXPORT mgl_whorl_var80(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_whorl_var80(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = hypot(x, y), c2;
 	if(c1<par[0])	c2 = atan2(y, x)+par[1]/(par[0]-c1);
@@ -710,80 +710,80 @@ void MGL_NO_EXPORT mgl_whorl_var80(mreal &xNew, mreal &yNew, mreal x, mreal y, c
 	c1 *= par[0];
 	xNew += c1*cos(c2);	yNew += c1*sin(c2);
 }
-void MGL_NO_EXPORT mgl_waves2_var81(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_waves2_var81(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	xNew += par[0]*(x+par[2]*sin(y*par[1]));
 	yNew += par[0]*(y+par[4]*sin(x*par[3]));
 }
-void MGL_NO_EXPORT mgl_exp_var82(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_exp_var82(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]*exp(x);
 	xNew += c1*cos(y);	yNew += c1*sin(y);
 }
-void MGL_NO_EXPORT mgl_log_var83(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_log_var83(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	xNew += par[0]*0.5*log(x*x+y*y);	yNew += par[0]*atan2(y, x);
 }
-void MGL_NO_EXPORT mgl_sin_var84(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_sin_var84(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	xNew += par[0]*sin(x)*cosh(y);	yNew += par[0]*cos(x)*sinh(y);
 }
-void MGL_NO_EXPORT mgl_cos_var85(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_cos_var85(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	xNew += par[0]*cos(x)*cosh(y);	yNew -= par[0]*sin(x)*sinh(y);
 }
-void MGL_NO_EXPORT mgl_tan_var86(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_tan_var86(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]/(cos(2*x)+cosh(2*y));
 	xNew += c1*sin(2*x);	yNew += c1*sinh(2*y);
 }
-void MGL_NO_EXPORT mgl_sec_var87(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_sec_var87(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = 2*par[0]/(cos(2*x)+cosh(2*y));
 	xNew += c1*cos(x)*cosh(y);	yNew += c1*sin(x)*sinh(y);
 }
-void MGL_NO_EXPORT mgl_csc_var88(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_csc_var88(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = 2*par[0]/(cosh(2*y)-cos(2*x));
 	xNew += c1*sin(x)*cosh(y);	yNew -= c1*cos(x)*sinh(y);
 }
-void MGL_NO_EXPORT mgl_cot_var89(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_cot_var89(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]/(cosh(2*y)-cos(2*x));
 	xNew += c1*sin(2*x);	yNew -= c1*sinh(2*y);
 }
-void MGL_NO_EXPORT mgl_sinh_var90(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_sinh_var90(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	xNew += par[0]*sinh(x)*cos(y);	yNew += par[0]*cosh(y)*sin(y);	}
-void MGL_NO_EXPORT mgl_cosh_var91(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_cosh_var91(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {	xNew += par[0]*cosh(x)*cos(y);	yNew += par[0]*sinh(x)*sin(y);	}
-void MGL_NO_EXPORT mgl_tanh_var92(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_tanh_var92(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]/(cos(2*y)+cosh(2*x));
 	xNew += c1*sinh(2*x);	yNew += c1*sin(2*y);
 }
-void MGL_NO_EXPORT mgl_sech_var93(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_sech_var93(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = 2*par[0]/(cos(2*y)+cosh(2*x));
 	xNew += c1*cos(y)*cosh(x);	yNew -= c1*sin(y)*sinh(x);
 }
-void MGL_NO_EXPORT mgl_csch_var94(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_csch_var94(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = 2*par[0]/(cosh(2*x)-cos(2*y));
 	xNew += c1*sinh(x)*cos(y);	yNew -= c1*cosh(x)*sin(y);
 }
-void MGL_NO_EXPORT mgl_coth_var95(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_coth_var95(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = par[0]/(cosh(2*x)-cos(2*y));
 	xNew += c1*sinh(2*x);	yNew += c1*sin(2*y);
 }
-void MGL_NO_EXPORT mgl_auger_var96(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_auger_var96(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = sin(par[3]*y), c2 = sin(par[3]*x);
 	c1 = x+par[2]*(par[4]*c1/2+fabs(x)*c1);
 	c2 = y+par[2]*(par[4]*c2/2+fabs(y)*c2);
 	xNew += par[0]*(x+par[1]*(c1-x));	yNew += par[0]*c2;
 }
-void MGL_NO_EXPORT mgl_flux_var97(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
+void static mgl_flux_var97(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par)
 {
 	mreal c1 = x+par[0], c2 = x-par[0], c3;
 	c3 = 0.5*(atan2(y, c2)-atan2(y, c1));
@@ -792,7 +792,7 @@ void MGL_NO_EXPORT mgl_flux_var97(mreal &xNew, mreal &yNew, mreal x, mreal y, co
 }
 //-----------------------------------------------------------------------------
 typedef void (*flame_func)(mreal &xNew, mreal &yNew, mreal x, mreal y, const mreal *par);
-MGL_NO_EXPORT flame_func ffunc[mglFlame2dLAST] = {
+static flame_func ffunc[mglFlame2dLAST] = {
 	mgl_linear_var0,	mgl_sinusoidal_var1,	mgl_spherical_var2,	mgl_swirl_var3,		mgl_horseshoe_var4,
 	mgl_polar_var5,		mgl_handkerchief_var6,	mgl_heart_var7,		mgl_disc_var8,		mgl_spiral_var9,
 	mgl_hyperbolic_var10,	mgl_diamond_var11,	mgl_ex_var12,		mgl_julia_var13,	mgl_bent_var14,
@@ -814,7 +814,7 @@ MGL_NO_EXPORT flame_func ffunc[mglFlame2dLAST] = {
 	mgl_sinh_var90,			mgl_cosh_var91,		mgl_tanh_var92,		mgl_sech_var93,		mgl_csch_var94,
 	mgl_coth_var95,			mgl_auger_var96,	mgl_flux_var97};
 //-----------------------------------------------------------------------------
-long MGL_NO_EXPORT mgl_flame_2d_point(HCDT A, HCDT F, mreal& x, mreal& y, mreal amax)
+long static mgl_flame_2d_point(HCDT A, HCDT F, mreal& x, mreal& y, mreal amax)
 {
 	long i, n=A->GetNy(), m=F->GetNy(), last_func=0, l=F->GetNx();
 	l = l>6?6:l;

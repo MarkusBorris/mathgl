@@ -18,17 +18,17 @@ endif(NOT SWIG_FOUND)
 INCLUDE(${SWIG_USE_FILE})
 
 if(enable-python)
-	set(Python_ADDITIONAL_VERSIONS 2.7)
-	FIND_PACKAGE(PythonInterp)
+	set(Python_ADDITIONAL_VERSIONS ${PY3VERSION_DOTTED})
+	FIND_PACKAGE(PythonInterp ${PY3VERSION_DOTTED} REQUIRED)
 	if(NOT PYTHONINTERP_FOUND)
 		message(SEND_ERROR "Couldn't find python interpreter.")
 	endif(NOT PYTHONINTERP_FOUND)
-	FIND_PACKAGE(PythonLibs)
+	FIND_PACKAGE(PythonLibs ${PY3VERSION_DOTTED} REQUIRED)
 	if(NOT PYTHONLIBS_FOUND)
 		message(SEND_ERROR "Couldn't find python development libraries.")
 	endif(NOT PYTHONLIBS_FOUND)
 	execute_process(
-		COMMAND ${PYTHON_EXECUTABLE} -c "import numpy; print numpy.get_include()"
+		COMMAND ${PYTHON_EXECUTABLE} -c "import numpy; print (numpy.get_include())"
 		OUTPUT_VARIABLE NUMPY_INCLUDE_PATH
 		RESULT_VARIABLE NUMPY_ERR
 		OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -39,23 +39,27 @@ if(enable-python)
 
 	include_directories(${PYTHON_INCLUDE_DIR}  ${NUMPY_INCLUDE_PATH})
 	execute_process(
-		COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(prefix='${CMAKE_INSTALL_PREFIX}')"
+		COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib(prefix='${CMAKE_INSTALL_PREFIX}'))"
 		OUTPUT_VARIABLE MGL_PYTHON_SITE_PACKAGES
 		OUTPUT_STRIP_TRAILING_WHITESPACE)
 	set(SWIG_MODULE_mathgl_EXTRA_DEPS numpy.i ${src_imp_dep})
-	SWIG_ADD_MODULE(mathgl python mathgl.i)
+	if(${CMAKE_VERSION} VERSION_LESS "3.8.0")
+		SWIG_ADD_MODULE(mathgl python mathgl.i)
+	else(${CMAKE_VERSION} VERSION_LESS "3.8.0")
+		SWIG_ADD_LIBRARY(mathgl LANGUAGE python SOURCES mathgl.i)
+	endif(${CMAKE_VERSION} VERSION_LESS "3.8.0")
 	SWIG_LINK_LIBRARIES(mathgl mgl ${PYTHON_LIBRARIES})
-	set_target_properties(_mathgl PROPERTIES BUILD_WITH_INSTALL_RPATH ON)
+	set_target_properties(mathgl PROPERTIES BUILD_WITH_INSTALL_RPATH ON)
 	add_custom_command(OUTPUT mathgl.pyc
 		COMMAND ${PYTHON_EXECUTABLE}
 		ARGS -c \"from py_compile import compile\; compile('mathgl.py') \"
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/lang
-		DEPENDS _mathgl
+		DEPENDS mathgl
 	)
-	add_custom_target(mgl_python_module ALL DEPENDS _mathgl mathgl.pyc)
+	add_custom_target(mgl_python_module ALL DEPENDS mathgl mathgl.pyc)
 
-	install(FILES ${MathGL2_BINARY_DIR}/lang/mathgl.py ${MathGL2_BINARY_DIR}/lang/mathgl.pyc DESTINATION ${MGL_PYTHON_SITE_PACKAGES})
-	install (TARGETS _mathgl LIBRARY DESTINATION ${MGL_PYTHON_SITE_PACKAGES})
+	install(FILES ${MathGL2_BINARY_DIR}/lang/mathgl.py ${MathGL2_BINARY_DIR}/lang/__pycache__/mathgl.cpython-${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}.pyc DESTINATION ${MGL_PYTHON_SITE_PACKAGES}/mathgl/__pycache__)
+	install (TARGETS mathgl LIBRARY DESTINATION ${MGL_PYTHON_SITE_PACKAGES}/mathgl)
 	set(mgl_clean_files ${mgl_clean_files} mathgl.py)
 endif(enable-python)
 
@@ -67,7 +71,11 @@ if(enable-lua)
 
 	include_directories(${LUA_INCLUDE_DIR})
 	set(SWIG_MODULE_mgl-lua_EXTRA_DEPS numpy.i ${src_imp_dep})
-	SWIG_ADD_MODULE(mgl-lua lua mathgl.i)
+	if(${CMAKE_VERSION} VERSION_LESS "3.8.0") 
+		SWIG_ADD_MODULE(mgl-lua lua mathgl.i)
+	else(${CMAKE_VERSION} VERSION_LESS "3.8.0")
+		SWIG_ADD_LIBRARY(mgl-lua LANGUAGE lua SOURCES mathgl.i)
+	endif(${CMAKE_VERSION} VERSION_LESS "3.8.0")
 	SWIG_LINK_LIBRARIES(mgl-lua mgl ${LUA_LIBRARIES})
 	set_target_properties(mgl-lua PROPERTIES PREFIX "" BUILD_WITH_INSTALL_RPATH ON)
 
@@ -109,7 +117,11 @@ message(STATUS "${oct_prog} ${oct_host} ${oct_api}")
 
 	add_compile_options(${oct_inc})
 	SET(SWIG_MODULE_mgl-oct_EXTRA_DEPS numpy.i ${src_imp_dep})
-	SWIG_ADD_MODULE(mgl-oct octave mathgl.i)
+	if(${CMAKE_VERSION} VERSION_LESS "3.8.0") 
+		SWIG_ADD_MODULE(mgl-oct octave mathgl.i)
+	else(${CMAKE_VERSION} VERSION_LESS "3.8.0")
+		SWIG_ADD_LIBRARY(mgl-oct LANGUAGE octave SOURCES mathgl.i)
+	endif(${CMAKE_VERSION} VERSION_LESS "3.8.0")
 	SWIG_LINK_LIBRARIES(mgl-oct mgl)
 	set_target_properties(mgl-oct PROPERTIES OUTPUT_NAME mathgl PREFIX "" SUFFIX ".oct" BUILD_WITH_INSTALL_RPATH ON)
 	add_custom_command(OUTPUT mathgl.tar.gz

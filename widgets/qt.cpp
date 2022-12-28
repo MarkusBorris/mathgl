@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -72,6 +72,12 @@ using mglCanvasWnd::Window;
 	void Adjust();		///< Adjust size of bitmap to window size
 	void GotoFrame(int d);	///< Show arbitrary frame (use relative step)
 	void Animation();		///< Run slideshow (animation) of frames
+	void MakeDialog(const char *ids, char const * const *args, const char *title=""){}	// TODO
+	void *Window()	{return Wnd;}	///< Return pointer to widget (QMainWindow*) used for plotting
+	void *Widget()	{return QMGL;}	///< Return pointer to widget (QMathGL*) used for plotting
+	void WndSize(int w, int h)	{	Wnd->resize(w,h);	}	///< Resize window
+	void WndMove(int x, int y)	{	Wnd->move(x,y);	}	///< Move window
+
 
 protected:
 	QScrollArea *scroll;	///< Scrolling area
@@ -100,6 +106,7 @@ QMathGL::QMathGL(QWidget *parent, Qt::WindowFlags f) : QWidget(parent, f)
 	autoResize = false;	draw_par = 0;	draw_func = 0;
 	dotsRefr = true;
 	gr = new mglCanvas;	appName = "MathGL";
+	setMinimumSize(gr->GetWidth(),gr->GetHeight());
 	popup = 0;	grBuf = 0;	draw = 0;	prevQuality=MGL_DRAW_NORM;
 	phi = tet = per = 0;	x0=y0=xe=ye=0;
 	x1 = y1 = ax1 = ay1 = 0;	x2 = y2 = ax2 = ay2 = 1;
@@ -155,6 +162,7 @@ void QMathGL::setGraph(HMGL GR)	///< Set grapher object
 	if(mgl_use_graph(gr,-1)<1)	mgl_delete_graph(gr);
 	gr=gg;	mgl_use_graph(gg,1);
 	gr->SetEventFunc(mgl_qt_event_func, NULL);
+	setMinimumSize(gr->GetWidth(),gr->GetHeight());
 }
 //-----------------------------------------------------------------------------
 void QMathGL::paintEvent(QPaintEvent *)
@@ -332,6 +340,7 @@ void QMathGL::update()
 		if(mgl_is_frames(gr))	mgl_end_frame(gr);
 		setlocale(LC_NUMERIC, loc.c_str());
 		gr->AskStop(false);
+		setMinimumSize(gr->GetWidth(),gr->GetHeight());
 	}
 	else if(mgl_get_num_frame(gr)>0)
 	{
@@ -366,7 +375,7 @@ void QMathGL::drawPrim()
 	for(i=0;i<n;i++)
 	{
 		mgl_set_obj_id(gr,i+MGL_MAX_LINES);
-		QString tst = primitives.section('\n',i,i);
+//		QString tst = primitives.section('\n',i,i);
 		pr.Parse(&gg,primitives.section('\n',i,i).toLocal8Bit().constData(),i+MGL_MAX_LINES);
 	}
 	gg.SetRanges(ox1,ox2);	gg.Pop();	setlocale(LC_NUMERIC, loc.c_str());
@@ -430,7 +439,7 @@ void QMathGL::mousePressEvent(QMouseEvent *ev)
 
 		p = gr->CalcXYZ(ev->x(), ev->y(), true);
 		if(mgl_isnan(p.x))	mousePos = "";
-		else	mousePos.sprintf("x=%g, y=%g, z=%g",p.x,p.y,p.z);
+		else	mousePos.asprintf("x=%g, y=%g, z=%g",p.x,p.y,p.z);
 		emit posChanged(mousePos);
 		repaint();
 	}
@@ -494,7 +503,7 @@ void QMathGL::mouseMoveEvent(QMouseEvent *ev)
 			if(gg)	emit perChanged(int(per));
 			refresh();
 		}
-		if(ev->buttons()&Qt::MidButton)	// shift
+		if(ev->buttons()&Qt::MiddleButton)	// shift
 		{
 			mreal ff = 1./sqrt(mreal(width()*height()));
 			mreal dx = (x0-xe)*ff*(x2-x1), dy = (y0-ye)*ff*(y2-y1);
@@ -504,7 +513,7 @@ void QMathGL::mouseMoveEvent(QMouseEvent *ev)
 		refresh();
 	}
 	else if(zoom)	refresh();
-	else if(ev->buttons()&Qt::MidButton)	// shift axis
+	else if(ev->buttons()&Qt::MiddleButton)	// shift axis
 	{
 		mreal ff = 1./sqrt(mreal(width()*height()));
 		mreal dx = (x0-xe)*ff*(ax2-ax1), dy = (y0-ye)*ff*(ay2-ay1);
@@ -612,6 +621,13 @@ void QMathGL::mouseMoveEvent(QMouseEvent *ev)
 			refresh();	x0 = xe;	y0 = ye;
 		}
 	}
+/*	else if(mgl_get_flag(gr,MGL_SHOW_POS) && !(ev->button()&Qt::LeftButton))
+	{
+		mglPoint p = gr->CalcXYZ(ev->x(), ev->y(), true);
+		if(mgl_isnan(p.x))	mousePos = "";
+		else	mousePos.asprintf("x=%g, y=%g, z=%g",p.x,p.y,p.z);
+		emit posChanged(mousePos);
+	}*/
 	ev->accept();
 }
 //-----------------------------------------------------------------------------
@@ -649,14 +665,14 @@ void QMathGL::wheelEvent(QWheelEvent *ev)
 	if(!enableWheel)	{	ev->ignore();	return;	}
 	if(rotate)	// zoom
 	{
-		mreal d,c,f=exp(0.001*ev->delta())/2;
+		mreal d,c,f=exp(0.001*ev->angleDelta().y())/2;
 		d = (y2-y1)*f;	c = (y2+y1)/2;	y1 = c-d;	y2 = c+d;
 		d = (x2-x1)*f;	c = (x2+x1)/2;	x1 = c-d;	x2 = c+d;
 		refresh();	ev->accept();
 	}
 	else 		// zoom axis
 	{
-		mreal d,c,f=exp(0.001*ev->delta())/2;
+		mreal d,c,f=exp(0.001*ev->angleDelta().y())/2;
 		d = (ay2-ay1)*f;	c = (ay2+ay1)/2;	ay1 = c-d;	ay2 = c+d;
 		d = (ax2-ax1)*f;	c = (ax2+ax1)/2;	ax1 = c-d;	ax2 = c+d;
 		mgl_zoom_axis(gr,ax1,ay1,0,0,ax2,ay2,0,0);
@@ -851,12 +867,13 @@ void QMathGL::setSize(int w, int h)
 {
 	resize(w, h);
 	if(w!=pic.width() || h!=pic.height())	// update only when image size is changed
-	{	mgl_set_size(gr,w,h);	update();	}
+	{	mgl_set_size(gr,w,h);	update();
+		setMinimumSize(gr->GetWidth(),gr->GetHeight());	}
 }
 //-----------------------------------------------------------------------------
 void QMathGL::about()
 {
-	QString s = _("MathGL v. 2.") + QString::number(MGL_VER2) + _("\n(c) Alexey Balakin, 2007\nhttp://mathgl.sourceforge.net/");
+	QString s = _("MathGL v. 2.") + QString(MGL_VER_STRING) + _("\n(c) Alexey Balakin, 2007\nhttp://mathgl.sourceforge.net/");
 	QMessageBox::about(this, _("MathGL - about"), s);
 }
 //-----------------------------------------------------------------------------
@@ -865,7 +882,7 @@ void QMathGL::aboutQt()	{	QMessageBox::aboutQt(this, _("About Qt"));	}
 void QMathGL::print()
 {
 	QPrinter *printer = new QPrinter;
-	printer->setOrientation(getRatio()>1 ? QPrinter::Landscape : QPrinter::Portrait);
+	printer->setPageOrientation(getRatio()>1 ? QPageLayout::Landscape : QPageLayout::Portrait);
 	QPrintDialog printDlg(printer, this);
 	if (printDlg.exec() == QDialog::Accepted)
 	{
@@ -954,7 +971,7 @@ void QMathGL::addText(QString txt)
 mglCanvasQT::mglCanvasQT() : mglCanvasWnd()
 {	Wnd = 0;	}
 mglCanvasQT::~mglCanvasQT()
-{	if(Wnd)	{	QMGL->gr=0;	delete Wnd;	}	}
+{	if(Wnd)	{	QMGL->noGraph();	delete Wnd;	}	}
 //-----------------------------------------------------------------------------
 void mglCanvasQT::GotoFrame(int d)
 {
@@ -1001,7 +1018,7 @@ void mglCanvasQT::Window(int argc, char **argv, int (*draw)(mglBase *gr, void *p
 
 	if(!qApp)
 	{
-		QCoreApplication::setAttribute(Qt::AA_X11InitThreads);
+// 		QCoreApplication::setAttribute(Qt::AA_X11InitThreads);
 		if(!argv)	{	argc_ = 0;	argv_=&parg;	}
 		else		{	argc_ = argc;	argv_=argv;	}
 		QApplication *a = new QApplication(argc_, argv_);
@@ -1232,7 +1249,7 @@ MGL_EXPORT QMenu *mglMakeMenu(QMainWindow *Wnd, QMathGL *QMGL, QSpinBox *&tet, Q
 		bb->addAction(a);		oo->addAction(a);
 		a = new QAction(QPixmap(down_1_xpm), _("Move down"), Wnd);
 		Wnd->connect(a, SIGNAL(triggered()), QMGL, SLOT(shiftDown()));
-		a->setToolTip(_("Move graphics up down 1/3 of its height."));
+		a->setToolTip(_("Move graphics down 1/3 of its height."));
 		bb->addAction(a);		oo->addAction(a);
 		a = new QAction(QPixmap(right_1_xpm), _("Move right"), Wnd);
 		Wnd->connect(a, SIGNAL(triggered()), QMGL, SLOT(shiftRight()));
@@ -1285,7 +1302,7 @@ HMGL MGL_EXPORT mgl_create_graph_qt(int (*draw)(HMGL gr, void *p), const char *t
 	g->Window(0,0,draw,title,par,load);
 	return g;
 }
-void* mgl_qt_widget(HMGL gr)
+MGL_EXPORT_PURE void* mgl_qt_widget(HMGL gr)
 {
 	mglCanvasQT *g = dynamic_cast<mglCanvasQT *>(gr);
 	return g?g->QMGL:NULL;

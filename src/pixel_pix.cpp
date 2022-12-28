@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -93,8 +93,8 @@ void mglCanvas::quad_pix(long i, long j, const mglPnt &p1, const mglPnt &p2, con
 		p.v = (n1.y+n2.y)*0.5;
 		p.w = (n1.z+n2.z)*0.5;
 	}
-	unsigned char r[4];
-	pnt_plot(i,j,p.z,col2int(p,r,d->ObjId),d->ObjId);
+	unsigned char r[4];	col2int(p,r,d->ObjId);
+	if(r[3])	pnt_plot(i,j,p.z,r,d->ObjId);
 }
 //-----------------------------------------------------------------------------
 void mglCanvas::trig_pix(long i, long j, const mglPnt &p1, const mglPnt &p2, const mglPnt &p3, bool anorm, const mglDrawReg *d)
@@ -112,7 +112,8 @@ void mglCanvas::trig_pix(long i, long j, const mglPnt &p1, const mglPnt &p2, con
 	{	mglPoint nr(mglPoint(p2.x-p1.x,p2.y-p1.y,p2.z-p1.z)^mglPoint(p3.x-p1.x,p3.y-p1.y,p3.z-p1.z));
 		p.u = nr.x;	p.v = nr.y;	p.w = nr.z;	}
 	unsigned char r[4];
-	pnt_plot(i,j,p.z,col2int(p,r,d->ObjId),d->ObjId);
+	col2int(p,r,d->ObjId);
+	if(r[3])	pnt_plot(i,j,p.z,r,d->ObjId);
 }
 //-----------------------------------------------------------------------------
 void mglCanvas::line_pix(long i, long j, const mglPnt &p1, const mglPnt &p2, const mglDrawReg *dr)
@@ -132,7 +133,7 @@ void mglCanvas::line_pix(long i, long j, const mglPnt &p1, const mglPnt &p2, con
 	col2int(p,r,dr->ObjId);
 	r[3] = v<(pw-1)*(pw-1)/4 ? 255 : mgl_sline(255,dpw*(sqrt(v)+(1-pw)/2));
 	float dz = Width>2 ? 1 : 1e-5*Width;		// provide additional height to be well visible on the surfaces
-	pnt_plot(i,j,p.z+dz,r,dr->ObjId);
+	if(r[3])	pnt_plot(i,j,p.z+dz,r,dr->ObjId);
 }
 //-----------------------------------------------------------------------------
 void mglCanvas::pnt_pix(long i, long j, const mglPnt &p, const mglDrawReg *dr)
@@ -144,12 +145,12 @@ void mglCanvas::pnt_pix(long i, long j, const mglPnt &p, const mglDrawReg *dr)
 	float xx = (i-p.x), yy = (j-p.y), v = xx*xx+yy*yy;
 	if(cs[3]==0 || v>(10/dpw+pw)*(10/dpw+pw))	return;
 	if(v<(pw-1)*(pw-1)/4)	cs[3] = mgl_sline(cs[3],dpw*(sqrt(v)+(1-pw)/2));
-	pnt_plot(i,j,p.z,cs,dr->ObjId);
+	if(cs[3])	pnt_plot(i,j,p.z,cs,dr->ObjId);
 }
 //-----------------------------------------------------------------------------
 void mglCanvas::mark_pix(long i, long j, const mglPnt &q, char type, mreal size, mglDrawReg *d)
 {
-	unsigned char cs[4];	col2int(q,cs,d?d->ObjId:d->ObjId);	cs[3] = size>0 ? 255 : 255*q.t;
+	unsigned char cs[4];	col2int(q,cs,d->ObjId);	cs[3] = size>0 ? 255 : 255*q.t;
 	mglPnt p0=q,p1=q,p2=q,p3=q;
 	mreal ss=fabs(size);
 
@@ -268,7 +269,7 @@ void mglCanvas::mark_pix(long i, long j, const mglPnt &q, char type, mreal size,
 			{
 				float xx = (i-q.x), yy = (j-q.y);
 				float dz = Width>2 ? 1 : 1e-5*Width;		// provide additional height to be well visible on the surfaces
-				if(xx*xx+yy*yy<ss*ss)	pnt_plot(i,j,q.z+dz,cs,d->ObjId);
+				if(xx*xx+yy*yy<ss*ss && cs[3])	pnt_plot(i,j,q.z+dz,cs,d->ObjId);
 			}
 		case 'o':
 			{
@@ -278,7 +279,7 @@ void mglCanvas::mark_pix(long i, long j, const mglPnt &q, char type, mreal size,
 //				if(v>pw*pw)	return;
 				if(v>(pw-1)*(pw-1)/4)	cs[3] = mgl_sline(cs[3],2*(sqrt(v)+(1-pw)/2));
 				float dz = Width>2 ? 1 : 1e-5*Width;		// provide additional height to be well visible on the surfaces
-				pnt_plot(i,j,q.z+dz,cs,d->ObjId);
+				if(cs[3])	pnt_plot(i,j,q.z+dz,cs,d->ObjId);
 			}
 			break;
 		case 'C':
@@ -290,7 +291,7 @@ void mglCanvas::mark_pix(long i, long j, const mglPnt &q, char type, mreal size,
 //				if(v>pw*pw)	return;
 				if(v>(pw-1)*(pw-1)/4)	cs[3] = mgl_sline(cs[3],2*(sqrt(v)+(1-pw)/2));
 				float dz = Width>2 ? 1 : 1e-5*Width;		// provide additional height to be well visible on the surfaces
-				pnt_plot(i,j,q.z+dz,cs,d->ObjId);
+				if(cs[3])	pnt_plot(i,j,q.z+dz,cs,d->ObjId);
 			}
 			break;
 		}

@@ -1,3 +1,119 @@
+8.0.1 Released 12 January 2022
+
+* Increase accuracy at line segment skipping.
+* Changes in SOVERSION numbering.
+* Minor spelling fix (thanks to Rafael Laboissière)
+
+8.0 Released 1 January 2022
+
+* Change version numbering according Debian rules.
+* Add accurate line segment and quadrangle/triangle face cutting at axis border crossing.
+* Add 'fastcut' for disable accurate but slow line/trig/quad primitives cutting at axis borders.
+* Restore back transparent background by default. You can set non-transparent background by using 'clf' or 'background' functions.
+* Compatibility changes for Qt5.15 and MSVC.
+INCOMPATIBLE:
+* Change colorbar C-functions by adding last argument for options.
+* Add alpha-value in fill_background().
+* Disable Qt4 interface by default.
+
+2.5 Released 8 December 2021
+
+* Add 'keep' for keeping the data phase/sign or value along line i and j in given direction
+* Add functions 'sum', 'prod' at formula evaluation, like "sum(_i^2,5)" will produce "30"=0+1^2+2^2+3^2+4^2, and "prod(1+_i,5)" will produce 5!="120". You can nest them for variables _i,_j,...,_z, like "sum(sum(_j+_i^2,5),5)" will give "200".
+* Add functions 'value', 'spline' at formula evaluation, like "value(a,5)" will give value of 6-th element of a, i.e. a[5].
+* Add user-defined functions fn1()...fn9() at formula evaluation, like "fn1(3)\x^_1" will produce "x^3".
+* Add mglODEs() (i.e. 'ode') for solving PDE/cascade/etc: ode res 'eqs' 'vars' 'bnd_kind' ini [dt tmax]. Here 'eqs' may contain relative pointer, like 'u(j+1)-2*u(j)+u(j-1)', and can be complex. Variables have 'j' for current index, 't' for current time.
+* Add 'lines' to draw a set of lines with arrows between points.
+* Add 'dcont' to draw a set of curves, which are intersection of two isosurfaces at given level.
+* Add 'first', 'last' to get array of first/last indexes of values larger specified one along given direction.
+* Add 'bernoulli', 'binomial', 'brownian', 'discrete', 'exponential', 'gaussian', 'shuffle', 'uniform', 'uniformint' for data filling by random numbers with different distributions.
+* Add 'readbin' to read data from binary files.
+* Add 'texparse' to enable/disable TeX-like command parsing at text output.
+* Update ODE: regularization is used if dt*tmax<0 (total time may differ, but number of steps still the same).
+* Add mgl_default_graph() -- the global (default) pointer to HMGL for keeping plot settings, simplifying external scripts and capture it in GUI.
+* Add style 'p' in command 'smooth' to use parabolic smoothing of arbitrary points.
+* Allow 'background' for scaling image, centering image and tessellate image as mosaic.
+* Allow filling 'background' by the specified color.
+* Allow masks for 'candle', 'area', 'region', 'bars', 'barh', 'chart', 'tape', 'face', 'polygon', 'ellipse', 'rhomb'.
+* Allow single value specification for contour level in 'cont', 'tricont', 'contd', 'contp', 'contv', 'tricontv', 'cont3', 'dcont'.
+* Add mgl_dual_save_hdf(), mgl_real_save_hdf(), mgl_int_save_hdf() for saving single number in HDF5 file. Correspondingly, commands 'save' and 'savehdf' can save single value now.
+* Add mgl_formula_calc(), mgl_formula_calc_c() for evaluating textual formulas of arbitrary set of data arrays.
+* Add mglDataList -- global mglDataA* collection for viewing/changing in GUI data from external languages (like, Python, ...).
+* Add Armadillo interface for mglData and mglDataC.
+* If nsub parameter of command 'hist' is negative (nsub<0) then the linear interpolation is used instead of spline one.
+* Add dark text colors for mgllab.
+
+2.4.4 Released 8 July 2019
+
+* mglData now have operator() which work as SubData() function.
+* Add 'minmax' for positions of local maximums and minimums.
+* Add ContGen() and ContFGen() to draw contour lines manually. Correspondingly 'cont' and 'contf' commands are extended.
+* Add 'conts' for getting coordinate of contour lines.
+* Extend 'put' for partial filling if data size(s) are smaller as destination.
+* Classes mglFormula and mglFormulaC now can read file with given sizes if string have the format ":fname:x1:x2:y1:y2:z1:z2". Here data is supposed in range [x1,x2]*[y1,y2]*[z1,z2] (by default [0,1]*[0,1]*[0,1]). Calc() in this case return the interpolated values.
+* Fix [xyz]range option for Area and Region.
+* Minor bugfixes.
+
+2.4.3 Released 14 March 2019
+
+* Add 'clabel' command -- draw labels for colorbar. Should be used *after* drawing colorbar!
+* Extend 'ctick' command
+* Add subpixel smoothing for masks
+* Boxes around text (style '@') now use actual height and position of the text.
+* Add mask to EPS export. Note, mask angles are reduced to 45*(0,1,...7) degrees for decreasing pattern size in the EPS.
+* Update default masks: '*' become dot, '^' become bricks, 'd' become plus, 'D' become tacks, ';' and 'j' change lengths. Note, you can use brush.ods to prepare user-defined masks.
+* Add styles '^' and '_' for command 'smooth' to find upper/lower bound of the data.
+* Improve FlowP() to draw both branches (in positive and negative time direction).
+* Improve CGI interface and update website.
+* Introduce struct mdual as interface for C and C++ complex numbers. It is implicitly converted to std::complex<> in C++. And need to call c2mdual() and mdual2c() in pure C. However mdual is binary compatible with C _Complex numbers.
+* Add flag in CMake to manually disable support of C99 complex numbers.
+* Bypass user-specified extension in base font family name.
+* Improve hints in mgllab and udav.
+* Add utility 'mgltask' for making output file with a set of copies of mask-file. It useful for making set of initial conditions with a few parameters varied in specified range.
+* Add example of OpenGL output.
+* Bugfix for approximate min and max position.
+* Bugfix for position of SVG output.
+* Compatibility fixes for new versions of CMake, compilers and libraries.
+INCOMPATIBLE:
+* Formally pure C interface handle complex numbers by new way due to strict following of C/C++ standards. However, the MathGL library is binary compatible with previous version(s).
+
+2.4.2.1 Released 31 March 2018
+
+* Bugfix for panel placement in mgllab.
+* Move colorbars close to axis by default.
+* Improve Spanish translation (thanks to Diego Sejas Viscarra).
+
+2.4.2 Released 21 March 2018
+
+* Add custom dialog for FLTK widgets. This can be constructed from C/C++ code, or from MGL script using special comments "##d##d $I kind|label|par1|par2|..." will create an entry in custom dialog for changing plot properties. Here "$I" is id ($0,$1...$9,$a,$b...$z), "label" is the label of element, "kind" is one following:
+	'e' for editor or input line (parameter is initial value) , 
+	'v' for spinner or counter (parameters are "ini|min|max|step|big_step"), 
+	's' for slider (parameters are "ini|min|max|step"), 
+	'b' for check box (parameter is "ini"; also understand "on"=1), 
+	'c' for choice (parameters are possible choices).
+* Add 'progress' for displaying the progress of execution (by '#' symbols in console, or by progress-bar widget).
+* Add 'contp' for contour lines on parametrically specified surface.
+* Add 'flow3' for flow threads of 3D vector field, which start from the plain.
+* Add variant of 'flow' for drawing a flow thread, starting from specified point.
+* Add 'scaletext' for disabling text size scaling in relative inplots (like columnplot, ...).
+* Add 'setup' for setting all low-level flags.
+* Add 'coil' for projecting periodical data.
+* Add modulo operation "%" (x%y=fmod(x,y)) to the list of known operations in real-valued formulas.
+* Add style '.' for 'cont' to draw contour lines from saddle points.
+* Add style '.' for 'flow' to draw flow thread from saddle points.
+* Add option 'value' in 'tube' for setting number of edges manually.
+* Crop output of 'ode' if NAN or INFINITY value occurs.
+* Remove style '~' for 'plot' and 'tens'. Now, all curves try to omit points.
+* Add setup flag MGL_FULL_CURV which disable omitting points of curve.
+* Shift axis labels closer to axis.
+* Change size of LaTeX-like commands \sup, \sub to be the same as \overset, \underset.
+* Change ticks drawing in colorbar.
+* Add new section "All samples" of documentation with large set of samples for most of MathGL features.
+* Samples in documentation are generated automatically now (from sample.cpp).
+INCOMPATIBLE:
+* Make obsolete MGL command 'setsizescl'. At this, the similar C/C++/Fortran/... functions still working.
+
+
 2.4.1 Released 20 July 2017
 
 * Add 'beltc' plot, which is 'belt' with manual coloring.
@@ -119,7 +235,7 @@
 2.3.4 Released 13 February 2016
 
 * Add mglData::Pulse() for determining pulse parameters.
-* Add mglData::ScanFile() for getting formated data from textual file.
+* Add mglData::ScanFile() for getting formatted data from textual file.
 * Add mglData::SetList() for setting data from variable argument list of double values.
 * Add mglIFS2d() and mglIFS3d() for fractal generation using iterated function system (thanks to Diego Sejas Viscarra).
 * Add option to SetSize() for scaling only primitives but don't erase it.
@@ -262,8 +378,8 @@
   - Add new primitives (arc,polygon,rotated text) as mouse handled ones;
   - Add close button to data tabs;
   - Add button to stop script drawing  and stop() slot for QMathGL;
-  - Allow to delete/hide/unhide selected plot;
-  - Allow to move selected plot between inplots;
+  - allow one to delete/hide/unhide selected plot;
+  - allow one to move selected plot between inplots;
   - Improve NewCommand dialog -- now it replace the script command if user change arguments only;
   - MGL commands 'perspective' and 'fog' now work correctly in UDAV;
   - Update UDAV icons to use Oxygen ones.

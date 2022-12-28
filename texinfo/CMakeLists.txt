@@ -1,18 +1,9 @@
 configure_file(${MathGL2_SOURCE_DIR}/texinfo/version.texi.in ${MathGL2_BINARY_DIR}/texinfo/version.texi)
 
-set(MGL_EXTRA light pendelta)
-set(MGL_PNG alpha area aspect axial axis barh bars belt boxplot
-	box boxs candle chart cloud colorbar combined cones conta contd
-	contfa contf contf_xyz cont contv cont_xyz curvcoor cut dat_diff
-	dat_extra densa dens dens_xyz dew dots error error2 fall fit flow fonts
-	fog grad hist inplot label legend loglog map mark mesh mirror
-	molecule parser pde pipe plot primitives projection qo2d radar region schemes
-	several_light solve stem step stereo stfa style surf3a surf3c surf3ca surf3
-	surfa surfc surfca surf table tape tens ternary textmark text ticks tile tiles
-	torus traj triangulation triplot tube type0 type1 type2 vect vecta venn
-	projection5 mask correl refill ohlc ode indirect
-	pulse scanfile bifurcation lamerey pmap ifs2d ifs3d
-	flame2d detect dilate iris section apde earth )
+#set(MGL_EXTRA light pendelta)
+set(MGL_EXTRA )
+set(MGL_PNG_ONLY quality0 quality1 quality2 quality4 quality5 quality6 quality8 pendelta fexport) 
+set(MGL_PNG 3wave alpha apde area aspect axial axis background barh bars belt beltc bifurcation box boxplot boxs candle chart cloud colorbar combined cones cont cont3 cont_xyz contd contf contf3 contf_xyz conts contv correl curvcoor cut daisy dat_diff dat_extra data1 data2 dcont dens dens3 dens_xyz detect dew diffract dilate dots earth error error2 export fall fit flame2d flow flow3 fog fonts grad hist icon ifs2d ifs3d indirect inplot iris keep label lamerey legend light lines loglog map mark mask mesh minmax mirror molecule ode ohlc param1 param2 param3 paramv parser pde pipe plot pmap primitives projection projection5 pulse qo2d radar refill region scanfile schemes section several_light solve stem step stereo stfa style surf surf3 surf3a surf3c surf3ca surfa surfc surfca table tape tens ternary text text2 textmark ticks tile tiles torus traj triangulation triplot tube type0 type1 type2 vect vect3 venn )
 set(MGL_PNG_N )
 set(MGL_PNG_S )
 set(MGL_PNG_J )
@@ -31,16 +22,49 @@ file(COPY ${CMAKE_SOURCE_DIR}/examples/iris.dat DESTINATION ${MGL_OUT}/png)
 file(COPY ${CMAKE_SOURCE_DIR}/examples/iris.dat DESTINATION ${MGL_OUT}/small)
 file(COPY ${CMAKE_SOURCE_DIR}/examples/iris.dat DESTINATION ${MGL_OUT}/json)
 file(COPY ${CMAKE_SOURCE_DIR}/examples/iris.dat DESTINATION ${MGL_OUT}/pdf)
+file(COPY ${CMAKE_SOURCE_DIR}/udav_new.png DESTINATION ${MGL_OUT}/png)
+file(COPY ${CMAKE_SOURCE_DIR}/udav_new.png DESTINATION ${MGL_OUT}/small)
+file(COPY ${CMAKE_SOURCE_DIR}/udav_new.png DESTINATION ${MGL_OUT}/json)
+file(COPY ${CMAKE_SOURCE_DIR}/udav_new.png DESTINATION ${MGL_OUT}/pdf)
 file(COPY ${CMAKE_SOURCE_DIR}/examples/Equirectangular-projection.jpg DESTINATION ${MGL_OUT}/png)
 file(COPY ${CMAKE_SOURCE_DIR}/examples/Equirectangular-projection.jpg DESTINATION ${MGL_OUT}/small)
 file(COPY ${CMAKE_SOURCE_DIR}/examples/Equirectangular-projection.jpg DESTINATION ${MGL_OUT}/json)
 file(COPY ${CMAKE_SOURCE_DIR}/examples/Equirectangular-projection.jpg DESTINATION ${MGL_OUT}/pdf)
+file(COPY ${CMAKE_SOURCE_DIR}/examples/samples.cpp DESTINATION ${MGL_OUT})
+file(COPY ${CMAKE_SOURCE_DIR}/examples/wnd_samples.cpp DESTINATION ${MGL_OUT})
 
 set(UDAV_IMG udav_arg.png udav_calc.png udav_cmd.png udav_data.png udav_mask.png
 	udav_gen_set.png udav_help.png udav_light.png udav_main.png udav_opt.png udav_inplot.png
 	udav_pen.png udav_prop.png udav_sch.png udav_txt.png udav_var.png)
 foreach(SAMPLE ${UDAV_IMG})
 	file(COPY ${MGL_TEX}/udav/${SAMPLE} DESTINATION ${MGL_OUT}/udav/)
+endforeach(SAMPLE)
+
+add_custom_command(OUTPUT ${MGL_OUT}/samples.texi
+	COMMAND mgl_example -texi
+	DEPENDS mgl_example
+	WORKING_DIRECTORY ${MGL_OUT} )
+#add_custom_command(OUTPUT ${MGL_OUT}/time.texi
+#	COMMAND mgl_example -time
+#	DEPENDS mgl_example
+#	WORKING_DIRECTORY ${MGL_OUT} )
+#add_custom_command(OUTPUT ${MGL_OUT}/time_big.texi
+#	COMMAND mgl_example -time -big
+#	DEPENDS mgl_example
+#	WORKING_DIRECTORY ${MGL_OUT} )
+
+
+foreach(SAMPLE ${MGL_PNG_ONLY})
+	set(MGL_PNG_N ${MGL_PNG_N} ${MGL_OUT}/png/${SAMPLE}.png)
+	add_custom_command(OUTPUT ${MGL_OUT}/png/${SAMPLE}.png
+		COMMAND mgl_example -kind=${SAMPLE}
+		DEPENDS mgl_example
+		WORKING_DIRECTORY ${MGL_OUT}/png )
+	set(MGL_PNG_S ${MGL_PNG_S} ${MGL_OUT}/small/${SAMPLE}-sm.png)
+	add_custom_command(OUTPUT ${MGL_OUT}/small/${SAMPLE}-sm.png
+		COMMAND mgl_example -kind=${SAMPLE} -mini
+		DEPENDS mgl_example
+		WORKING_DIRECTORY ${MGL_OUT}/small )
 endforeach(SAMPLE)
 
 foreach(SAMPLE ${MGL_PNG})
@@ -84,8 +108,9 @@ foreach(SAMPLE ${MGL_EXTRA})
 		WORKING_DIRECTORY ${MGL_OUT}/small )
 endforeach(SAMPLE)
 
-set(list_texi_files_en overview_en.texi example_en.texi ex_mgl_en.texi parse_en.texi formats_en.texi udav_en.texi symbols_en.texi core_en.texi concept_en.texi widget_en.texi data_en.texi other_en.texi appendix_en.texi fdl.texi ${MathGL2_BINARY_DIR}/texinfo/version.texi time.texi time_big.texi )
-set(list_texi_files_ru overview_ru.texi example_ru.texi ex_mgl_ru.texi parse_ru.texi formats_ru.texi udav_ru.texi symbols_ru.texi core_ru.texi concept_ru.texi widget_ru.texi data_ru.texi other_ru.texi appendix_ru.texi fdl.texi ${MathGL2_BINARY_DIR}/texinfo/version.texi time.texi time_big.texi )
+# NOTE: direct generation of time*.texi is too slow :(
+set(list_texi_files_en overview_en.texi example_en.texi ex_mgl_en.texi parse_en.texi formats_en.texi udav_en.texi symbols_en.texi core_en.texi concept_en.texi widget_en.texi data_en.texi other_en.texi appendix_en.texi fdl.texi ${MathGL2_BINARY_DIR}/texinfo/version.texi time.texi time_big.texi ${MGL_OUT}/samples.texi )
+set(list_texi_files_ru overview_ru.texi example_ru.texi ex_mgl_ru.texi parse_ru.texi formats_ru.texi udav_ru.texi symbols_ru.texi core_ru.texi concept_ru.texi widget_ru.texi data_ru.texi other_ru.texi appendix_ru.texi fdl.texi ${MathGL2_BINARY_DIR}/texinfo/version.texi time.texi time_big.texi ${MGL_OUT}/samples.texi )
 
 add_custom_command(OUTPUT ${MGL_OUT}/mathgl_en.info
 	COMMAND ${findmi} ${MGL_TEX}/mathgl_en.texi

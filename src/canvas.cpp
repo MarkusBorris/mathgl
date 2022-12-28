@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -20,8 +20,6 @@
 #include <limits.h>
 #include "mgl2/font.h"
 #include "mgl2/canvas.h"
-//-----------------------------------------------------------------------------
-MGL_EXPORT std::string mglGlobalMess;	///< Buffer for receiving global messages
 //-----------------------------------------------------------------------------
 mglCanvas::mglCanvas(int w, int h) : mglBase()
 {
@@ -228,12 +226,12 @@ GifFileType *gif;*/
 	ax.Clear();	ay.Clear();	az.Clear();	ac.Clear();
 	mgl_clear_fft();		DefMaskAn=0;	ResetMask();
 	SetTickRotate(true);	SetTickSkip(true);
-	SetWarn(mglWarnNone,"");	mglGlobalMess = "";
+	SetWarn(mglWarnNone,"");	mgl_clear_global_warn();
 	ObjId = -1;	HighId = INT_MIN;
 	SetFunc(0,0);	CutOff(0);	Ternary(0);
 	Stop=false;	event_cb = NULL;	event_par=NULL;
 	SetRanges(mglPoint(-1,-1,-1,-1), mglPoint(1,1,1,1));
-	SetOrigin(NAN,NAN,NAN,NAN);
+	SetOrigin(NAN,NAN,NAN,NAN);	set(0, MGL_NO_ORIGIN);
 	SetBarWidth(0.7);	SetMarkSize(1);	SetArrowSize(1);
 	SetAlphaDef(0.5);		FontDef[0]=0;
 	SetTranspType(0);		SetMeshNum(0);	// NOTE: default MeshNum=0
@@ -247,9 +245,9 @@ GifFileType *gif;*/
 	SetPenPal("k-1");		Alpha(false);
 	stack.clear();	Restore();	DefColor('k');
 	SetPlotFactor(0);	Sub.clear();
-	InPlot(0,1,0,1,false);
+	InPlot(0,1,0,1,false);	clr(MGL_FULL_CURV);
 	SetTickLen(0);	SetCut(true);
-	AdjustTicks("xyzc",true);	Clf('w');
+	AdjustTicks("xyzc",true);	Clf(mglColor(1,1,1,0));
 
 	for(int i=0;i<10;i++)	{	AddLight(i, mglPoint(0,0,1));	Light(i,false);	}
 	Light(0,true);	Light(false);	SetDifLight(true);
@@ -263,7 +261,7 @@ mreal mglCanvas::FindOptOrg(char dir, int ind) const
 	static mglMatrix bb;
 	mglPoint nn[8]={mglPoint(0,0,0), mglPoint(0,0,1), mglPoint(0,1,0,0), mglPoint(0,1,1),
 					mglPoint(1,0,0), mglPoint(1,0,1), mglPoint(1,1,0), mglPoint(1,1,1)}, pp[8];
-	memcpy(pp, nn, 8*sizeof(mglPoint));
+	memcpy((void*)pp, nn, 8*sizeof(mglPoint));
 	// do nothing if transformation matrix is the same
 	if(B!=bb)
 	{
@@ -344,6 +342,55 @@ mreal mglCanvas::GetOrgZ(char dir, bool inv) const
 	return res;
 }
 //-----------------------------------------------------------------------------
+long mglCanvas::AddPairBnd(const mglPnt &q1, const mglPnt &q2)
+{
+	mglPnt q;
+	mreal p1[3],p2[3], x,y,z;
+	const float *b = B.ib, f = 1/(2*B.pf);
+	x = (q1.xx-B.x)/f;	y = (q1.yy-B.y)/f;	z = (q1.zz-B.z)/f;
+	p1[0] = x*b[0] + y*b[1] + z*b[2];
+	p1[1] = x*b[3] + y*b[4] + z*b[5];
+	p1[2] = x*b[6] + y*b[7] + z*b[8];
+	x = (q2.xx-B.x)/f;	y = (q2.yy-B.y)/f;	z = (q2.zz-B.z)/f;
+	p2[0] = x*b[0] + y*b[1] + z*b[2] - p1[0];
+	p2[1] = x*b[3] + y*b[4] + z*b[5] - p1[1];
+	p2[2] = x*b[6] + y*b[7] + z*b[8] - p1[2];
+	const mreal eps = 1e-5;
+	mreal s=1,ss;
+	if(fabs(p2[0])>eps)
+	{
+		ss = -(1+p1[0])/p2[0];	if(ss>eps && ss<s)	s=ss;
+		ss = (1-p1[0])/p2[0];	if(ss>eps && ss<s)	s=ss;
+	}
+	if(fabs(p2[1])>eps)
+	{
+		ss = -(1+p1[1])/p2[1];	if(ss>eps && ss<s)	s=ss;
+		ss = (1-p1[1])/p2[1];	if(ss>eps && ss<s)	s=ss;
+	}
+	if(fabs(p2[2])>eps)
+	{
+		ss = -(1+p1[2])/p2[2];	if(ss>eps && ss<s)	s=ss;
+		ss = (1-p1[2])/p2[2];	if(ss>eps && ss<s)	s=ss;
+	}
+	if(s>1-eps)	return -1;
+	q.x = q.xx = q1.xx + s*(q2.xx-q1.xx);
+	q.y = q.yy = q1.yy + s*(q2.yy-q1.yy);
+	q.z = q.zz = q1.zz + s*(q2.zz-q1.zz);
+	q.u = q1.u + s*(q2.u-q1.u);
+	q.v = q1.v + s*(q2.v-q1.v);
+	q.w = q1.w + s*(q2.w-q1.w);
+	q.r = q1.r + s*(q2.r-q1.r);
+	q.g = q1.g + s*(q2.g-q1.g);
+	q.b = q1.b + s*(q2.b-q1.b);
+	q.a = q1.a + s*(q2.a-q1.a);
+	q.c = q1.c + s*(q2.c-q1.c);
+	q.ta = q1.ta + s*(q2.ta-q1.ta);
+	long k;
+#pragma omp critical(pnt)
+	{k=Pnt.size();	MGL_PUSH(Pnt,q,mutexPnt);}
+	return k;
+}
+//-----------------------------------------------------------------------------
 //	Put primitives
 //-----------------------------------------------------------------------------
 #define MGL_MARK_PLOT	if(Quality&MGL_DRAW_LMEM)	\
@@ -373,9 +420,19 @@ void mglCanvas::mark_plot(long p, char type, mreal size)
 							a.n1 = p1;	a.n2 = p2;	a.w = pw;	a.angl=0;	add_prim(a);	}
 void mglCanvas::line_plot(long p1, long p2)
 {
-	if(PDef==0)	return;
-	if(p1<0 || p2<0 || mgl_isnan(Pnt[p1].x) || mgl_isnan(Pnt[p2].x) || SamePnt(p1,p2))	return;
-	if(p1>p2)	{	long kk=p1;	p1=p2;	p2=kk;	}	// rearrange start/end for proper dashing
+	if(PDef==0 || p1<0 || p2<0)	return;	// nothing to do
+	if(!(Flag&MGL_FAST_PRIM) && !(TernAxis&3))
+	{
+		if(p1>p2)	{	long kk=p1;	p1=p2;	p2=kk;	}	// rearrange start/end for proper dashing
+		const mglPnt &q1=Pnt[p1], &q2=Pnt[p2];
+		if(q1.x==q2.x && q1.y==q2.y)	return;	// the same points
+		if(mgl_isnan(q1.x) && mgl_isnum(q2.x))
+			p1 = AddPairBnd(q2,q1);
+		if(mgl_isnum(q1.x) && mgl_isnan(q2.x))
+			p2 = AddPairBnd(q1,q2);
+	}
+	if(p1<0 || p2<0 || mgl_isnan(Pnt[p1].x) || mgl_isnan(Pnt[p2].x))	return;
+
 	long pp1=p1,pp2=p2;
 	mreal pw = fabs(PenWidth)*sqrt(font_factor/400), d=0;
 	if(TernAxis&12) for(int i=0;i<4;i++)
@@ -384,14 +441,14 @@ void mglCanvas::line_plot(long p1, long p2)
 		{
 			d += hypot(Pnt[p1].x-Pnt[p2].x, Pnt[p1].y-Pnt[p2].y);
 			MGL_LINE_PLOT
-			pPos = fmod(pPos+d/pw/1.5, 16);
+			pPos = fmod(pPos+d/pw, 16);
 		}
 	}
 	else
 	{
 		d = hypot(Pnt[p1].x-Pnt[p2].x, Pnt[p1].y-Pnt[p2].y);
 		MGL_LINE_PLOT
-		pPos = fmod(pPos+d/pw/1.5, 16);
+		pPos = fmod(pPos+d/pw, 16);
 	}
 }
 //-----------------------------------------------------------------------------
@@ -400,36 +457,278 @@ void mglCanvas::line_plot(long p1, long p2)
 							trig_draw(Pnt[p1],Pnt[p2],Pnt[p3],true,&d);	}\
 						else{	mglPrim a(2);	a.n1 = p1;	a.n2 = p2;	a.n3 = p3;	\
 							a.m=mask;	a.angl=MaskAn;	a.w = pw;	add_prim(a);}
-void mglCanvas::trig_plot(long p1, long p2, long p3)
-{
-	if(p1<0 || p2<0 || p3<0 || mgl_isnan(Pnt[p1].x) || mgl_isnan(Pnt[p2].x) || mgl_isnan(Pnt[p3].x))	return;
-	if(SamePnt(p1,p2) || SamePnt(p1,p3))	return;
-	long pp1=p1,pp2=p2,pp3=p3;
-	mreal pw = fabs(PenWidth)*sqrt(font_factor/400);
-	if(TernAxis&12) for(int i=0;i<4;i++)
-	{	p1 = ProjScale(i, pp1);	p2 = ProjScale(i, pp2);
-		p3 = ProjScale(i, pp3);	if(p1>=0&&p2>=0&&p3>=0)	{MGL_TRIG_PLOT}	}
-	else	{	MGL_TRIG_PLOT	}
-}
-//-----------------------------------------------------------------------------
 #define MGL_QUAD_PLOT	if(Quality&MGL_DRAW_LMEM)	\
 						{	mglDrawReg d;	d.set(this,dr_x,dr_y,dr_p);	d.PenWidth=pw;	\
 							quad_draw(Pnt[p1],Pnt[p2],Pnt[p3],Pnt[p4],&d);	}\
 						else{	mglPrim a(3);	a.n1 = p1;	a.n2 = p2;	a.n3 = p3;	a.n4 = p4;	\
 							a.m=mask;	a.angl=MaskAn;	a.w = pw;	add_prim(a);	}
+#define MGL_ADD_TRIG	{	long pp1=p1,pp2=p2,pp3=p3;	\
+						mreal pw = fabs(PenWidth)*sqrt(font_factor/400);	\
+						if(TernAxis&12) for(int i=0;i<4;i++)	\
+						{	p1 = ProjScale(i, pp1);	p2 = ProjScale(i, pp2);	\
+							p3 = ProjScale(i, pp3);	if(p1>=0&&p2>=0&&p3>=0)	{MGL_TRIG_PLOT}	}	\
+						else	{	MGL_TRIG_PLOT	}	}
+#define MGL_ADD_QUAD	{	long pp1=p1,pp2=p2,pp3=p3,pp4=p4;	\
+						mreal pw = fabs(PenWidth)*sqrt(font_factor/400);		\
+						if(TernAxis&12) for(int i=0;i<4;i++)	\
+						{	p1 = ProjScale(i, pp1);	p2 = ProjScale(i, pp2);		\
+							p3 = ProjScale(i, pp3);	p4 = ProjScale(i, pp4);		\
+							if(p1>=0&&p2>=0&&p3>=0&&p4>=0)	{MGL_QUAD_PLOT}	}	\
+						else	{	MGL_QUAD_PLOT	}	}
+
+
+void mglCanvas::trig_plot(long p1, long p2, long p3)
+{
+	if(p1<0 || p2<0 || p3<0)	return;	// nothing to do
+	const mglPnt &q1=Pnt[p1], &q2=Pnt[p2], &q3=Pnt[p3];
+	long state = (mgl_isnan(q1.x)?1:0)+(mgl_isnan(q2.x)?2:0)+(mgl_isnan(q3.x)?4:0), st, p4;
+	if((Flag&MGL_FAST_PRIM) || (TernAxis&3))
+	{
+		if(!state)	MGL_ADD_TRIG
+	}
+	else switch(state)
+	{
+	case 0:	MGL_ADD_TRIG	break;
+	case 1:
+		p1 = AddPairBnd(q2,q1);
+		p4 = p3;
+		p3 = AddPairBnd(q3,q1);
+		st = ((p1>=0 && mgl_isnum(Pnt[p1].x))?0:1)+((p3>=0 && mgl_isnum(Pnt[p3].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p1 = p4;	MGL_ADD_TRIG	break;
+			case 2:	p3 = p4;	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 2:
+		p2 = AddPairBnd(q1,q2);
+		p4 = AddPairBnd(q3,q2);
+		st = ((p2>=0 && mgl_isnum(Pnt[p2].x))?0:1)+((p4>=0 && mgl_isnum(Pnt[p4].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p2 = p4;	MGL_ADD_TRIG	break;
+			case 2:	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 3:
+		p1 = AddPairBnd(q3,q1);
+		p2 = AddPairBnd(q3,q2);
+		if(p2>=0 && p1>=0 && mgl_isnum(Pnt[p2].x) && mgl_isnum(Pnt[p1].x))	// valid trig
+			MGL_ADD_TRIG
+		break;
+	case 4:
+		p3 = AddPairBnd(q1,q3);
+		p4 = AddPairBnd(q2,q3);
+		st = ((p3>=0 && mgl_isnum(Pnt[p3].x))?0:1)+((p4>=0 && mgl_isnum(Pnt[p4].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p3 = p4;	MGL_ADD_TRIG	break;
+			case 2:	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 5:
+		p1 = AddPairBnd(q2,q1);
+		p3 = AddPairBnd(q2,q3);
+		if(p1>=0 && p3>=0 && mgl_isnum(Pnt[p1].x) && mgl_isnum(Pnt[p3].x))	// valid trig
+			MGL_ADD_TRIG
+		break;
+	case 6:
+		p2 = AddPairBnd(q1,q2);
+		p3 = AddPairBnd(q1,q3);
+		if(p2>=0 && p3>=0 && mgl_isnum(Pnt[p2].x) && mgl_isnum(Pnt[p3].x))	// valid trig
+			MGL_ADD_TRIG
+		break;
+	}
+}
+//-----------------------------------------------------------------------------
 void mglCanvas::quad_plot(long p1, long p2, long p3, long p4)
 {
-	if(p1<0 || mgl_isnan(Pnt[p1].x) || SamePnt(p1,p2))	{	trig_plot(p4,p2,p3);	return;	}
-	if(p2<0 || mgl_isnan(Pnt[p2].x) || SamePnt(p2,p4))	{	trig_plot(p1,p4,p3);	return;	}
-	if(p3<0 || mgl_isnan(Pnt[p3].x) || SamePnt(p1,p3))	{	trig_plot(p1,p2,p4);	return;	}
-	if(p4<0 || mgl_isnan(Pnt[p4].x) || SamePnt(p3,p4))	{	trig_plot(p1,p2,p3);	return;	}
-	long pp1=p1,pp2=p2,pp3=p3,pp4=p4;
-	mreal pw = fabs(PenWidth)*sqrt(font_factor/400);
-	if(TernAxis&12) for(int i=0;i<4;i++)
-	{	p1 = ProjScale(i, pp1);	p2 = ProjScale(i, pp2);
-		p3 = ProjScale(i, pp3);	p4 = ProjScale(i, pp4);
-		if(p1>=0&&p2>=0&&p3>=0&&p4>=0)	{MGL_QUAD_PLOT}	}
-	else	{	MGL_QUAD_PLOT	}
+	if(p1<0)	{	trig_plot(p4,p2,p3);	return;	}
+	if(p2<0)	{	trig_plot(p1,p4,p3);	return;	}
+	if(p3<0)	{	trig_plot(p1,p2,p4);	return;	}
+	if(p4<0)	{	trig_plot(p1,p2,p3);	return;	}
+	const mglPnt &q1=Pnt[p1], &q2=Pnt[p2], &q3=Pnt[p3], &q4=Pnt[p4];
+	int state = (mgl_isnan(q1.x)?1:0)+(mgl_isnan(q2.x)?2:0)+(mgl_isnan(q3.x)?4:0)+(mgl_isnan(q4.x)?8:0), st;
+	if((Flag&MGL_FAST_PRIM) || (TernAxis&3))
+	{
+		switch(state)
+		{
+		case 0:	MGL_ADD_QUAD	break;
+		case 1:	p1 = p4;	MGL_ADD_TRIG	break;
+		case 2:	p2 = p4;	MGL_ADD_TRIG	break;
+		case 4:	p3 = p4;	MGL_ADD_TRIG	break;
+		case 8:	MGL_ADD_TRIG	break;
+		}
+	}
+	else switch(state)
+	{
+	case 0:	MGL_ADD_QUAD	break;
+	case 1:
+		p1 = p4;	MGL_ADD_TRIG	// valid trig
+		p1 = AddPairBnd(q2,q1);	p4=p3;	p3=p2;
+		p2 = AddPairBnd(q3,q1);
+		st = ((p1>=0 && mgl_isnum(Pnt[p1].x))?0:1)+((p2>=0 && mgl_isnum(Pnt[p2].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p1 = p4;	MGL_ADD_TRIG	break;
+			case 2:	p2 = p4;	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 2:
+		p2 = p4;	MGL_ADD_TRIG	// valid trig
+		p3 = AddPairBnd(q1,q2);
+		p4 = AddPairBnd(q4,q2);
+		st = ((p3>=0 && mgl_isnum(Pnt[p3].x))?0:1)+((p4>=0 && mgl_isnum(Pnt[p4].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p3 = p4;	MGL_ADD_TRIG	break;
+			case 2:	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 3:
+		p1 = AddPairBnd(q3,q1);
+		p2 = AddPairBnd(q4,q2);
+		st = ((p1>=0 && mgl_isnum(Pnt[p1].x))?0:1)+((p2>=0 && mgl_isnum(Pnt[p2].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p1 = p4;	MGL_ADD_TRIG	break;
+			case 2:	p2 = p4;	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 4:
+		p3 = p4;	MGL_ADD_TRIG	// valid trig
+		p2 = AddPairBnd(q1,q3);
+		p4 = AddPairBnd(q4,q3);
+		st = ((p2>=0 && mgl_isnum(Pnt[p2].x))?0:1)+((p4>=0 && mgl_isnum(Pnt[p4].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p2 = p4;	MGL_ADD_TRIG	break;
+			case 2:	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 5:
+		p1 = AddPairBnd(q2,q1);
+		p3 = AddPairBnd(q4,q3);
+		st = ((p1>=0 && mgl_isnum(Pnt[p1].x))?0:1)+((p3>=0 && mgl_isnum(Pnt[p3].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p1 = p4;	MGL_ADD_TRIG	break;
+			case 2:	p3 = p4;	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 6:
+		p2 = AddPairBnd(q1,q2);	p3=p4;
+		p4 = AddPairBnd(q4,q2);
+		st = ((p4>=0 && mgl_isnum(Pnt[p4].x))?0:1)+((p2>=0 && mgl_isnum(Pnt[p2].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	MGL_ADD_TRIG	break;
+			case 2:	p2 = p4;	MGL_ADD_TRIG	break;
+		}
+		p2 = AddPairBnd(q1,q3);
+		p4 = AddPairBnd(q4,q3);
+		st = ((p4>=0 && mgl_isnum(Pnt[p4].x))?0:1)+((p2>=0 && mgl_isnum(Pnt[p2].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	MGL_ADD_TRIG	break;
+			case 2:	p2 = p4;	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 7:
+		p1 = p4;
+		p2 = AddPairBnd(q4,q2);
+		p3 = AddPairBnd(q4,q3);
+		if(p3>=0 && p2>=0 && mgl_isnum(Pnt[p3].x) && mgl_isnum(Pnt[p2].x))	// valid trig
+			MGL_ADD_TRIG
+		break;
+	case 8:
+		MGL_ADD_TRIG
+		p1 = AddPairBnd(q2,q4);	p4=p3;	p3=p2;
+		p2 = AddPairBnd(q3,q4);
+		st = ((p1>=0 && mgl_isnum(Pnt[p1].x))?0:1)+((p2>=0 && mgl_isnum(Pnt[p2].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p1 = p4;	MGL_ADD_TRIG	break;
+			case 2:	p2 = p4;	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 9:
+		p1 = AddPairBnd(q3,q1);	p4=p2;
+		p2 = AddPairBnd(q2,q1);
+		st = ((p1>=0 && mgl_isnum(Pnt[p1].x))?0:1)+((p2>=0 && mgl_isnum(Pnt[p2].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p1 = p4;	MGL_ADD_TRIG	break;
+			case 2:	p2 = p4;	MGL_ADD_TRIG	break;
+		}
+		p1 = AddPairBnd(q3,q4);
+		p2 = AddPairBnd(q2,q4);
+		st = ((p1>=0 && mgl_isnum(Pnt[p1].x))?0:1)+((p2>=0 && mgl_isnum(Pnt[p2].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p1 = p4;	MGL_ADD_TRIG	break;
+			case 2:	p2 = p4;	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 10:
+		p2 = AddPairBnd(q1,q2);
+		p4 = AddPairBnd(q3,q4);
+		st = ((p2>=0 && mgl_isnum(Pnt[p2].x))?0:1)+((p4>=0 && mgl_isnum(Pnt[p4].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p2 = p4;	MGL_ADD_TRIG	break;
+			case 2:	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 11:
+		p1 = AddPairBnd(q3,q1);
+		p2 = AddPairBnd(q3,q4);
+		if(p1>=0 && p2>=0 && mgl_isnum(Pnt[p1].x) && mgl_isnum(Pnt[p2].x))	// valid trig
+			MGL_ADD_TRIG
+		break;
+	case 12:
+		p3 = AddPairBnd(q1,q3);
+		p4 = AddPairBnd(q2,q4);
+		st = ((p3>=0 && mgl_isnum(Pnt[p3].x))?0:1)+((p4>=0 && mgl_isnum(Pnt[p4].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p3 = p4;	MGL_ADD_TRIG	break;
+			case 2:	MGL_ADD_TRIG	break;
+		}
+		break;
+	case 13:
+		p1 = AddPairBnd(q2,q1);
+		p3 = AddPairBnd(q2,q4);
+		if(p3>=0 && p1>=0 && mgl_isnum(Pnt[p3].x) && mgl_isnum(Pnt[p1].x))	// valid trig
+			MGL_ADD_TRIG
+		break;
+	case 14:
+		p2 = AddPairBnd(q1,q2);
+		p3 = AddPairBnd(q1,q3);
+		st = ((p2>=0 && mgl_isnum(Pnt[p2].x))?0:1)+((p3>=0 && mgl_isnum(Pnt[p3].x))?0:2);
+		switch(st)
+		{
+			case 0:	MGL_ADD_QUAD	break;
+			case 1:	p2 = p4;	MGL_ADD_TRIG	break;
+			case 2:	p3 = p4;	MGL_ADD_TRIG	break;
+		}
+		break;
+	}
 }
 //-----------------------------------------------------------------------------
 mreal mglCanvas::text_plot(long p,const wchar_t *text,const char *font,mreal size,mreal sh,mreal col,bool rot)
@@ -482,7 +781,7 @@ pthread_mutex_lock(&mutexPtx);
 		}
 
 		int align;
-		mreal col1=col, col2=col;
+		float col1=col, col2=col;
 		if(mglGetStyle(font,0,&align))
 		{
 			col1 = AddTexture(font);
@@ -514,30 +813,32 @@ pthread_mutex_lock(&mutexPtx);
 			add_prim(a);
 		}
 
-		q.c=col1;	q.t=0;	Txt[long(col1)].GetC(col1,0,q);
-		q.u = q.v = NAN;	q.a=q.t=q.ta=1;
-		memset(Bt.b,0,9*sizeof(mreal));
+		q.c=col1;	q.ta=0;	Txt[long(col1)].GetC(col1,0,q);
+		q.u = q.v = NAN;	q.a=q.ta=1;
+		memset(Bt.b,0,9*sizeof(float));
 		Bt.b[0] = Bt.b[4] = Bt.b[8] = fscl;
-		mreal opf = Bt.pf;
+		Bt.ib[0] = Bt.ib[4] = Bt.ib[8] = 1./fscl;
+		float opf = Bt.pf;
 		Bt.RotateN(ftet,0,0,1);	Bt.pf = Bt.norot?1.55:opf;
 		if(strchr(font,'@'))	// draw box around text
 		{
 			long k1,k2,k3,k4;	mglPnt pt;	mglPoint pp;
-			w = fnt->Width(text,font);	h = fnt->Height(font);
-			mreal d=-w*align/2.-h*0.2;	w+=h*0.4;
-			pt = q;	pp.Set(d,-h*0.4);		PostScale(&Bt,pp);
+			float y1, y2;
+			w = fnt->Width(text,font, &y1,&y2);	h = fnt->Height(font);
+			float d=-w*align/2.-h*0.2;	w+=h*0.4;
+			pt = q;	pp.Set(d,y1-h*0.2);		PostScale(&Bt,pp);
 			pt.x=pt.xx=pp.x;	pt.y=pt.yy=pp.y;
 #pragma omp critical(pnt)
 			{k1=Pnt.size();	MGL_PUSH(Pnt,pt,mutexPnt);}
-			pt = q;	pp.Set(w+d,-h*0.4);		PostScale(&Bt,pp);
+			pt = q;	pp.Set(w+d,y1-h*0.2);		PostScale(&Bt,pp);
 			pt.x=pt.xx=pp.x;	pt.y=pt.yy=pp.y;
 #pragma omp critical(pnt)
 			{k2=Pnt.size();	MGL_PUSH(Pnt,pt,mutexPnt);}
-			pt = q;	pp.Set(d,h*1.2);			PostScale(&Bt,pp);
+			pt = q;	pp.Set(d,y2+h*0.2);			PostScale(&Bt,pp);
 			pt.x=pt.xx=pp.x;	pt.y=pt.yy=pp.y;
 #pragma omp critical(pnt)
 			{k3=Pnt.size();	MGL_PUSH(Pnt,pt,mutexPnt);}
-			pt = q;	pp.Set(w+d,h*1.2);		PostScale(&Bt,pp);
+			pt = q;	pp.Set(w+d,y2+h*0.2);		PostScale(&Bt,pp);
 			pt.x=pt.xx=pp.x;	pt.y=pt.yy=pp.y;
 #pragma omp critical(pnt)
 			{k4=Pnt.size();	MGL_PUSH(Pnt,pt,mutexPnt);}
@@ -584,7 +885,7 @@ void mglCanvas::Glyph(mreal x, mreal y, mreal f, int s, long j, mreal col)
 						else	add_prim(a);
 void mglCanvas::smbl_plot(long p1, char id, double size)
 {
-	if(p1<0)	return;
+	if(p1<0 || mgl_isnan(Pnt[p1].x))	return;
 	mglPnt q=Pnt[p1];
 	mreal ftet=NAN, ll = q.u*q.u+q.v*q.v;
 	if(mgl_isnan(ll) || !get(MGL_ENABLE_RTEXT))	ftet = 0;
@@ -637,6 +938,7 @@ void mglCanvas::InPlot(mreal x1,mreal x2,mreal y1,mreal y2, const char *st)
 	B.b[0] = Width*(x2-x1);	B.b[4] = Height*(y2-y1);
 	B.b[8] = sqrt(B.b[0]*B.b[4]);
 	B.z = (1.f-B.b[8]/(2*Depth))*Depth;
+	B.invert();
 	B1=B;	font_factor = B.b[0] < B.b[4] ? B.b[0] : B.b[4];
 
 	mglBlock p;	p.AmbBr = AmbBr;	p.DifBr = DifBr;	p.B = B;
@@ -658,6 +960,7 @@ void mglCanvas::InPlot(mglMatrix &M,mreal x1,mreal x2,mreal y1,mreal y2, bool re
 		M.b[0] = B1.b[0]*(x2-x1);	M.b[4] = B1.b[4]*(y2-y1);
 		M.b[8] = sqrt(M.b[0]*M.b[4]);
 		M.z = B1.z + (1.f-M.b[8]/(2*Depth))*B1.b[8];
+		M.invert();
 	}
 	else
 	{
@@ -666,11 +969,11 @@ void mglCanvas::InPlot(mglMatrix &M,mreal x1,mreal x2,mreal y1,mreal y2, bool re
 		M.b[0] = Width*(x2-x1);	M.b[4] = Height*(y2-y1);
 		M.b[8] = sqrt(M.b[0]*M.b[4]);
 		M.z = (1.f-M.b[8]/(2*Depth))*Depth;
-		B1=M;
+		M.invert();	B1=M;
 	}
 	inW=M.b[0];	inH=M.b[4];	ZMin=1;
 	inX=Width*x1;	inY=Height*y1;
-	font_factor = M.b[0] < M.b[4] ? M.b[0] : M.b[4];
+	if(!rel || !get(MGL_NO_SCALE_REL))	font_factor = M.b[0] < M.b[4] ? M.b[0] : M.b[4];
 
 	mglBlock p;	p.AmbBr = AmbBr;	p.DifBr = DifBr;	p.B = M;
 	for(int i=0;i<10;i++)	p.light[i] = light[i];
@@ -705,8 +1008,8 @@ void mglCanvas::Rotate(mreal tetz,mreal tetx,mreal tety)
 	B.Rotate(tetz,tetx,tety);
 	if(get(MGL_AUTO_FACTOR))
 	{
-		mreal w=(fabs(B.b[3])+fabs(B.b[4])+fabs(B.b[5]))/B1.b[4];
-		mreal h=(fabs(B.b[0])+fabs(B.b[1])+fabs(B.b[2]))/B1.b[0];
+		float w=(fabs(B.b[3])+fabs(B.b[4])+fabs(B.b[5]))/B1.b[4];
+		float h=(fabs(B.b[0])+fabs(B.b[1])+fabs(B.b[2]))/B1.b[0];
 		B.pf = 1.55+0.6147*(w<h ? (h-1):(w-1));
 	}
 	size_t n = Sub.size();	if(n>0)	Sub[n-1].B = B;
@@ -717,12 +1020,12 @@ void mglMatrix::Rotate(mreal tetz,mreal tetx,mreal tety)
 //	RotateN(TetX,1.,0.,0.);
 //	RotateN(TetY,0.,1.,0.);
 //	RotateN(TetZ,0.,0.,1.);
-	mreal R[9], O[9];
-	mreal cx=cos(tetx*M_PI/180), sx=-sin(tetx*M_PI/180), cy=cos(tety*M_PI/180), sy=-sin(tety*M_PI/180), cz=cos(tetz*M_PI/180), sz=-sin(tetz*M_PI/180);
+	float R[9], O[9];
+	float cx=cos(tetx*M_PI/180), sx=-sin(tetx*M_PI/180), cy=cos(tety*M_PI/180), sy=-sin(tety*M_PI/180), cz=cos(tetz*M_PI/180), sz=-sin(tetz*M_PI/180);
 	R[0] = cx*cy;			R[1] = -cy*sx;			R[2] = sy;
 	R[3] = cx*sy*sz+cz*sx;	R[4] = cx*cz-sx*sy*sz;	R[5] =-cy*sz;
 	R[6] = sx*sz-cx*cz*sy;	R[7] = cx*sz+cz*sx*sy;	R[8] = cy*cz;
-	memcpy(O,b,9*sizeof(mreal));
+	memcpy(O,b,9*sizeof(float));
 	b[0] = R[0]*O[0] + R[3]*O[1] + R[6]*O[2];
 	b[1] = R[1]*O[0] + R[4]*O[1] + R[7]*O[2];
 	b[2] = R[2]*O[0] + R[5]*O[1] + R[8]*O[2];
@@ -732,6 +1035,7 @@ void mglMatrix::Rotate(mreal tetz,mreal tetx,mreal tety)
 	b[6] = R[0]*O[6] + R[3]*O[7] + R[6]*O[8];
 	b[7] = R[1]*O[6] + R[4]*O[7] + R[7]*O[8];
 	b[8] = R[2]*O[6] + R[5]*O[7] + R[8]*O[8];
+	invert();
 }
 //-----------------------------------------------------------------------------
 void mglCanvas::RotateN(mreal Tet,mreal x,mreal y,mreal z)
@@ -739,8 +1043,8 @@ void mglCanvas::RotateN(mreal Tet,mreal x,mreal y,mreal z)
 	B.RotateN(Tet,x,y,z);
 	if(get(MGL_AUTO_FACTOR))
 	{
-		mreal w=(fabs(B.b[3])+fabs(B.b[4])+fabs(B.b[5]))/B1.b[4];
-		mreal h=(fabs(B.b[0])+fabs(B.b[1])+fabs(B.b[2]))/B1.b[0];
+		float w=(fabs(B.b[3])+fabs(B.b[4])+fabs(B.b[5]))/B1.b[4];
+		float h=(fabs(B.b[0])+fabs(B.b[1])+fabs(B.b[2]))/B1.b[0];
 		B.pf = 1.55+0.6147*(w<h ? (h-1):(w-1));
 	}
 	size_t n = Sub.size();	if(n>0)	Sub[n-1].B = B;
@@ -748,12 +1052,12 @@ void mglCanvas::RotateN(mreal Tet,mreal x,mreal y,mreal z)
 //-----------------------------------------------------------------------------
 void mglMatrix::RotateN(mreal Tet,mreal vx,mreal vy,mreal vz)
 {
-	mreal R[9],T[9],c=cos(Tet*M_PI/180),s=-sin(Tet*M_PI/180),r=1-c,n=sqrt(vx*vx+vy*vy+vz*vz);
+	float R[9],T[9],c=cos(Tet*M_PI/180),s=-sin(Tet*M_PI/180),r=1-c,n=sqrt(vx*vx+vy*vy+vz*vz);
 	vx/=n;	vy/=n;	vz/=n;
 	T[0] = vx*vx*r+c;		T[1] = vx*vy*r-vz*s;	T[2] = vx*vz*r+vy*s;
 	T[3] = vx*vy*r+vz*s;	T[4] = vy*vy*r+c;		T[5] = vy*vz*r-vx*s;
 	T[6] = vx*vz*r-vy*s;	T[7] = vy*vz*r+vx*s;	T[8] = vz*vz*r+c;
-	memcpy(R,b,9*sizeof(mreal));
+	memcpy(R,b,9*sizeof(float));
 	b[0] = T[0]*R[0] + T[3]*R[1] + T[6]*R[2];
 	b[1] = T[1]*R[0] + T[4]*R[1] + T[7]*R[2];
 	b[2] = T[2]*R[0] + T[5]*R[1] + T[8]*R[2];
@@ -763,6 +1067,7 @@ void mglMatrix::RotateN(mreal Tet,mreal vx,mreal vy,mreal vz)
 	b[6] = T[0]*R[6] + T[3]*R[7] + T[6]*R[8];
 	b[7] = T[1]*R[6] + T[4]*R[7] + T[7]*R[8];
 	b[8] = T[2]*R[6] + T[5]*R[7] + T[8]*R[8];
+	invert();
 }
 //-----------------------------------------------------------------------------
 void mglCanvas::View(mreal tetx,mreal tetz,mreal tety)
@@ -775,6 +1080,7 @@ void mglCanvas::Zoom(mreal x1, mreal y1, mreal x2, mreal y2)
 	x1=2*x1-1;	x2=2*x2-1;	y1=2*y1-1;	y2=2*y2-1;
 	Bp.b[0]=2/fabs(x2-x1);	Bp.b[4]=2/fabs(y2-y1);
 	Bp.x=(x1+x2)/fabs(x2-x1);Bp.y=(y1+y2)/fabs(y2-y1);
+	Bp.invert();
 }
 //-----------------------------------------------------------------------------
 int mglCanvas::GetSplId(long x,long y) const
@@ -810,15 +1116,17 @@ void mglCanvas::Aspect(mreal Ax,mreal Ay,mreal Az)
 	B.b[0] *= Ax;	B.b[3] *= Ax;	B.b[6] *= Ax;
 	B.b[1] *= Ay;	B.b[4] *= Ay;	B.b[7] *= Ay;
 	B.b[2] *= Az;	B.b[5] *= Az;	B.b[8] *= Az;
+	B.invert();
 	size_t n = Sub.size();	if(n>0)	Sub[n-1].B = B;
 }
 //-----------------------------------------------------------------------------
 void mglCanvas::Shear(mreal Sx,mreal Sy)
 {
-	mreal R[6], Fx=1+fabs(Sx)*inH/inW, Fy=1+fabs(Sy)*inW/inH;
-	memcpy(R,B.b,6*sizeof(mreal));
+	float Fx=1+fabs(Sx)*inH/inW, Fy=1+fabs(Sy)*inW/inH;
+	const float R[6]={B.b[0],B.b[1],B.b[2],B.b[3],B.b[4],B.b[5]};
 	B.b[0] = (R[0]+Sx*R[3])/Fx;	B.b[1] = (R[1]+Sx*R[4])/Fx;	B.b[2] = (R[2]+Sx*R[5])/Fx;
 	B.b[3] = (R[3]+Sy*R[0])/Fy;	B.b[4] = (R[4]+Sy*R[1])/Fy;	B.b[5] = (R[5]+Sy*R[2])/Fy;
+	B.invert();
 	size_t n = Sub.size();	if(n>0)	Sub[n-1].B = B;
 }
 //-----------------------------------------------------------------------------
@@ -919,8 +1227,9 @@ std::wstring MGL_EXPORT mgl_ftoa(double v, const char *fmt)
 	memmove(se+i+1,se+2+st+dig,le-dig);	le=strlen(se);
 	// add '+' sign if required
 	if(plus && !strchr("-0niNI",se[0]))
-	{	memmove(se+1,se,le+1);	se[0]='+';
-		memmove(sf+1,sf,lf+1);	sf[0]='+';	}
+	{	for(size_t i=le+1;i>0;i--)	se[i]=se[i-1];
+		for(size_t i=lf+1;i>0;i--)	sf[i]=sf[i-1];
+		se[0] = sf[0] = '+';	}
 	if((lf>le && !mglchr(fmt,'f')) || !strcmp(sf,"0") || !strcmp(sf,"-0"))	strcpy(sf,se);
 	lf = strlen(sf);
 	std::wstring res;	res.reserve(lf+8);
@@ -964,7 +1273,7 @@ void mglCanvas::Legend(const std::vector<mglText> &leg, mreal x, mreal y, const 
 	strcpy(ff,fmt?fmt:"");	strcat(ff,":L");	Push();
 	if((pA=strchr(ff,'A')))
 	{	*pA = ' ';	InPlot(0,1,0,1,false);	iw=B1.b[0];	ih=B1.b[4];	}
-	else if(mglchr(font,'A'))
+	else if(strchr(font,'A'))
 	{	InPlot(0,1,0,1,false);	iw=B1.b[0];	ih=B1.b[4];	}
 	else	{	iw=B1.b[0]/B1.pf;	ih=B1.b[4]/B1.pf;	}
 	// find sizes
@@ -985,7 +1294,7 @@ void mglCanvas::Legend(const std::vector<mglText> &leg, mreal x, mreal y, const 
 		nrow = 1+(n-1)/j;
 		ncol = (n+nrow-1)/nrow;
 	}
-	if(mglchr(font,'^'))	// use "external" positioning
+	if(strchr(font,'^'))	// use "external" positioning
 	{
 		x = x>=0.5 ? x*iw : x*iw-w*ncol-2*dx;
 		y = y>=0.5 ? y*ih : y*ih-h*nrow-2*dy;
@@ -1000,6 +1309,7 @@ void mglCanvas::Legend(const std::vector<mglText> &leg, mreal x, mreal y, const 
 	mglPoint p,q(NAN,NAN,NAN);
 
 	mreal cc = AddTexture(font);
+	SetMask("");
 	mreal c1,c2;	//=AddTexture(char(k1?k1:'w')), c2=AddTexture(char(k2?k2:'k'));
 	if(cc<2 || Txt[long(cc+0.5)].n==0)
 	{	c1 = AddTexture('w');	cc = c2 = AddTexture('k');	}
@@ -1145,8 +1455,8 @@ void mglCanvas::Title(const wchar_t *title,const char *stl,mreal size)
 	int align;
 	bool box=mglchr(stl,'#'), col = mglGetStyle(stl,0,&align);
 	align = align&3;
-	mreal y=inY+inH-h;
-	mglPoint p(inX + inW*align/2.,y,3*Depth),q(NAN,NAN,NAN);
+	mreal y=inY+inH-h, zpos = 0;//3*Depth;
+	mglPoint p(inX + inW*align/2.,y,zpos),q(NAN,NAN,NAN);
 	mglMatrix M=B;	M.norot=true;
 	if(title)	text_plot(AddPnt(&M,p,-1,q,-1,0),title,stl,size);
 	if(box)	//	draw boungind box
@@ -1155,10 +1465,10 @@ void mglCanvas::Title(const wchar_t *title,const char *stl,mreal size)
 		if((Flag&3)==2 && !col)	{	mreal cc=c1;	c2=c1;	c1=cc;	}
 		else if((Flag&3)==2)	c1=AddTexture('k');
 		long k1,k2,k3,k4;
-		k1=AddPnt(&M,mglPoint(inX,y-h*0.4,3*Depth),c1,q,-1,0);
-		k2=AddPnt(&M,mglPoint(inX+inW,y-h*0.4,3*Depth),c1,q,-1,0);
-		k3=AddPnt(&M,mglPoint(inX,y+h,3*Depth),c1,q,-1,0);
-		k4=AddPnt(&M,mglPoint(inX+inW,y+h,3*Depth),c1,q,-1,0);
+		k1=AddPnt(&M,mglPoint(inX,y-h*0.4,zpos),c1,q,-1,0);
+		k2=AddPnt(&M,mglPoint(inX+inW,y-h*0.4,zpos),c1,q,-1,0);
+		k3=AddPnt(&M,mglPoint(inX,y+h,zpos),c1,q,-1,0);
+		k4=AddPnt(&M,mglPoint(inX+inW,y+h,zpos),c1,q,-1,0);
 		quad_plot(k1,k2,k3,k4);
 		k1=CopyNtoC(k1,c2);	k2=CopyNtoC(k2,c2);
 		k3=CopyNtoC(k3,c2);	k4=CopyNtoC(k4,c2);
@@ -1188,7 +1498,7 @@ void mglCanvas::StartAutoGroup (const char *lbl)
 //-----------------------------------------------------------------------------
 void mglCanvas::EndGroup()
 {
-	LoadState();
+	LoadState();	SetMask("");
 	if(Quality&MGL_DRAW_LMEM)
 	{
 		Pnt.clear();	Prm.clear();	Ptx.clear();	ClearPrmInd();
@@ -1217,11 +1527,11 @@ void mglCanvas::Push()
 //-----------------------------------------------------------------------------
 void mglCanvas::Pop()
 {
-	B = stack.back(); 
+	B = stack.back();
 #if MGL_HAVE_PTHREAD
-	pthread_mutex_lock(&m);
+	pthread_mutex_lock(&mutexStk);
 	stack.pop_back();
-	pthread_mutex_unlock(&m);
+	pthread_mutex_unlock(&mutexStk);
 #else
 #pragma omp critical(stk)
 	stack.pop_back();

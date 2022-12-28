@@ -2,7 +2,7 @@
  * Copyright (C) 2007-2014 Alexey Balakin <mathgl.abalakin@gmail.ru>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
+ * modify it under the terms of the GNU Lesser General Public License 
  * as published by the Free Software Foundation
  *
  * This program is distributed in the hope that it will be useful,

@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -40,7 +40,7 @@ extern "C" {
 #endif
 /// Get integer power of x
 double MGL_EXPORT_CONST mgl_ipow(double x,int n);
-double MGL_EXPORT mgl_ipow_(mreal *x,int *n);
+double MGL_EXPORT_PURE mgl_ipow_(mreal *x,int *n);
 /// Get number of seconds since 1970 for given string
 double MGL_EXPORT mgl_get_time(const char *time, const char *fmt);
 double MGL_EXPORT mgl_get_time_(const char *time, const char *fmt,int,int);
@@ -119,6 +119,10 @@ int MGL_EXPORT mgl_data_read_range_(uintptr_t *d, const char *fname, mreal *n1, 
 /// Read data from tab-separated text files with auto determining size which filenames are satisfied to template (like "t_*.dat")
 int MGL_EXPORT mgl_data_read_all(HMDT dat, const char *templ, int as_slice);
 int MGL_EXPORT mgl_data_read_all_(uintptr_t *d, const char *fname, int *as_slice,int l);
+/// Read data from binary file of type: 0 - double, 1 - float, 2 - long double, 3 - long int, 4 - int, 5 - short int, 6 - char.
+/** NOTE: this function may not correctly read binary files written in different CPU kind! */
+int MGL_EXPORT mgl_data_read_bin(HMDT dat, const char *fname, int type);
+int MGL_EXPORT mgl_data_read_bin_(uintptr_t *d, const char *fname,int *type,int l);
 /// Import data array from PNG file according color scheme
 void MGL_EXPORT mgl_data_import(HMDT dat, const char *fname, const char *scheme,mreal v1,mreal v2);
 void MGL_EXPORT mgl_data_import_(uintptr_t *dat, const char *fname, const char *scheme,mreal *v1,mreal *v2,int,int);
@@ -148,6 +152,14 @@ void MGL_EXPORT mgl_data_norm_slice_(uintptr_t *dat, mreal *v1,mreal *v2,char *d
 /// Limit the data to be inside [-v,v], keeping the original sign
 void MGL_EXPORT mgl_data_limit(HMDT dat, mreal v);
 void MGL_EXPORT mgl_data_limit_(uintptr_t *dat, mreal *v);
+/// Project the periodical data to range [v1,v2] (like mod() function). Separate branches by NAN if sep=true.
+void MGL_EXPORT mgl_data_coil(HMDT dat, mreal v1, mreal v2, int sep);
+void MGL_EXPORT mgl_data_coil_(uintptr_t *dat, mreal *v1, mreal *v2, int *sep);
+/// Keep the data sign/value along line i and j in given direction. 
+/** Parameter "how" may contain: 'x','y' or 'z' for direction (default is 'y'); 'a' for keeping amplitude instead of sign.*/
+void MGL_EXPORT mgl_data_keep(HMDT dat, const char *how, long i, long j);
+void MGL_EXPORT mgl_data_keep_(uintptr_t *d, const char *how, long *i, long *j, int);
+
 /// Get sub-array of the data with given fixed indexes
 HMDT MGL_EXPORT mgl_data_subdata(HCDT dat, long xx,long yy,long zz);
 uintptr_t MGL_EXPORT mgl_data_subdata_(uintptr_t *dat, int *xx,int *yy,int *zz);
@@ -165,10 +177,11 @@ uintptr_t MGL_EXPORT mgl_data_section_(uintptr_t *d, uintptr_t *ids, const char 
 /** If section id is negative then reverse order is used (i.e. -1 give last section). */
 HMDT MGL_EXPORT mgl_data_section_val(HCDT dat, long id, char dir, mreal val);
 uintptr_t MGL_EXPORT mgl_data_section_val_(uintptr_t *d, int *id, const char *dir, mreal *val,int);
+/// Get contour lines for dat[i,j]=val. NAN values separate the the curves
+HMDT MGL_EXPORT mgl_data_conts(mreal val, HCDT dat);
+/// Evaluate formula 'str' for given list of variables.
+HMDT MGL_EXPORT mgl_formula_calc(const char *str, long n, ...);
 
-/// Set names for columns (slices)
-void MGL_EXPORT mgl_data_set_id(HMDT d, const char *id);
-void MGL_EXPORT mgl_data_set_id_(uintptr_t *dat, const char *id,int l);
 /// Equidistantly fill the data to range [x1,x2] in direction dir
 void MGL_EXPORT mgl_data_fill(HMDT dat, mreal x1,mreal x2,char dir);
 void MGL_EXPORT mgl_data_fill_(uintptr_t *dat, mreal *x1,mreal *x2,const char *dir,int);
@@ -272,7 +285,7 @@ uintptr_t MGL_EXPORT mgl_data_tridmat_(uintptr_t *A, uintptr_t *B, uintptr_t *C,
 /// Returns pointer to data element [i,j,k]
 MGL_EXPORT mreal *mgl_data_value(HMDT dat, long i,long j,long k);
 /// Returns pointer to internal data array
-MGL_EXPORT mreal *mgl_data_data(HMDT dat);
+MGL_EXPORT_PURE mreal *mgl_data_data(HMDT dat);
 
 /// Gets the x-size of the data.
 long MGL_EXPORT mgl_data_get_nx(HCDT d);
@@ -312,12 +325,30 @@ void MGL_EXPORT mgl_data_smooth_(uintptr_t *dat, const char *dirs, mreal *delta,
 /// Get array which is result of summation in given direction or directions
 HMDT MGL_EXPORT mgl_data_sum(HCDT dat, const char *dir);
 uintptr_t MGL_EXPORT mgl_data_sum_(uintptr_t *dat, const char *dir,int);
+/// Get array of positions of first value large val
+HMDT MGL_EXPORT mgl_data_first_dir(HCDT dat, const char *dir, double val);
+uintptr_t MGL_EXPORT mgl_data_first_dir_(uintptr_t *d, const char *dir, double *val,int l);
+/// Get array of positions of last value large val
+HMDT MGL_EXPORT mgl_data_last_dir(HCDT dat, const char *dir, double val);
+uintptr_t MGL_EXPORT mgl_data_last_dir_(uintptr_t *d, const char *dir, double *val,int l);
 /// Get array which is result of maximal values in given direction or directions
 HMDT MGL_EXPORT mgl_data_max_dir(HCDT dat, const char *dir);
 uintptr_t MGL_EXPORT mgl_data_max_dir_(uintptr_t *dat, const char *dir,int);
 /// Get array which is result of minimal values in given direction or directions
 HMDT MGL_EXPORT mgl_data_min_dir(HCDT dat, const char *dir);
 uintptr_t MGL_EXPORT mgl_data_min_dir_(uintptr_t *dat, const char *dir,int);
+/// Get positions of local maximums and minimums
+HMDT MGL_EXPORT mgl_data_minmax(HCDT dat);
+uintptr_t MGL_EXPORT mgl_data_minmax_(uintptr_t *dat);
+/// Get indexes of a set of connected surfaces for set of values {a_ijk,b_ijk} as dependent on j,k
+/** NOTE: not optimized for general case!!! */
+HMDT MGL_EXPORT mgl_data_connect(HCDT a, HCDT b);
+uintptr_t MGL_EXPORT mgl_data_connect_(uintptr_t *a, uintptr_t *b);
+/// Resort data values according found connected surfaces for set of values {a_ijk,b_ijk} as dependent on j,k
+/** NOTE: not optimized for general case!!! */
+void MGL_EXPORT mgl_data_connect_r(HMDT a, HMDT b);
+void MGL_EXPORT mgl_data_connect_r_(uintptr_t *a, uintptr_t *b);
+
 /// Cumulative summation the data in given direction or directions
 void MGL_EXPORT mgl_data_cumsum(HMDT dat, const char *dir);
 void MGL_EXPORT mgl_data_cumsum_(uintptr_t *dat, const char *dir,int);
@@ -505,24 +536,63 @@ mreal MGL_EXPORT mgl_find_root_txt_(const char *func, mreal *ini, const char *va
 /// Find roots for nonlinear equation defined by textual formula
 HMDT MGL_EXPORT mgl_data_roots(const char *func, HCDT ini, char var_id);
 uintptr_t MGL_EXPORT mgl_data_roots_(const char *func, uintptr_t *ini, const char *var_id,int,int);
+/// Find roots for set of nonlinear equations defined by textual formulas
+HMDT MGL_EXPORT mgl_find_roots_txt(const char *func, const char *vars, HCDT ini);
+uintptr_t MGL_EXPORT mgl_find_roots_txt_(const char *func, const char *vars, uintptr_t *ini,int,int);
+/// Find roots for set of nonlinear equations defined by function
+int MGL_EXPORT mgl_find_roots(size_t n, void (*func)(const mreal *x, mreal *f, void *par), mreal *x0, void *par);
 
-//-----------------------------------------------------------------------------
-/// Create HMEX object for expression evaluating
-HMEX MGL_EXPORT mgl_create_expr(const char *expr);
-uintptr_t MGL_EXPORT mgl_create_expr_(const char *expr, int);
-/// Delete HMEX object
-void MGL_EXPORT mgl_delete_expr(HMEX ex);
-void MGL_EXPORT mgl_delete_expr_(uintptr_t *ex);
-/// Return value of expression for given x,y,z variables
-double MGL_EXPORT mgl_expr_eval(HMEX ex, double x, double y,double z);
-double MGL_EXPORT mgl_expr_eval_(uintptr_t *ex, mreal *x, mreal *y, mreal *z);
-/// Return value of expression for given variables
-double MGL_EXPORT mgl_expr_eval_v(HMEX ex, mreal *vars);
-/// Return value of expression differentiation over variable dir for given x,y,z variables
-double MGL_EXPORT mgl_expr_diff(HMEX ex, char dir, double x, double y,double z);
-double MGL_EXPORT mgl_expr_diff_(uintptr_t *ex, const char *dir, mreal *x, mreal *y, mreal *z, int);
-/// Return value of expression differentiation over variable dir for given variables
-double MGL_EXPORT mgl_expr_diff_v(HMEX ex, char dir, mreal *vars);
+/// Gets integer random numbers of uniform distribution in range [lo,hi]
+mreal MGL_EXPORT mgl_rnd_integer(long lo, long hi);
+double MGL_EXPORT mgl_rnd_integer_(int *lo, int *hi);
+/// Gets random numbers of uniform distribution in range [lo,hi]
+mreal MGL_EXPORT mgl_rnd_uniform(mreal lo, mreal hi);
+double MGL_EXPORT mgl_rnd_uniform_(double *lo, double *hi);
+/// Gets random numbers of Bernoulli distribution
+mreal MGL_EXPORT mgl_rnd_bernoulli(mreal p);
+double MGL_EXPORT mgl_rnd_bernoulli_(double *p);
+/// Gets random numbers of binomial distribution
+long MGL_EXPORT mgl_rnd_binomial(long trials, mreal p);
+int MGL_EXPORT mgl_rnd_binomial_(int *trials, double *p);
+/// Gets random numbers of gaussian distribution
+mreal MGL_EXPORT mgl_rnd_gaussian(mreal mu, mreal sigma);
+double MGL_EXPORT mgl_rnd_gaussian_(double *mu, double *sigma);
+/// Gets random numbers of exponential distribution
+mreal MGL_EXPORT mgl_rnd_exponential(mreal lambda);
+double MGL_EXPORT mgl_rnd_exponential_(double *lambda);
+/// Gets random numbers of discrete distribution according A. It assumes A to be 1d.
+long MGL_EXPORT mgl_rnd_discrete(HCDT A);
+double MGL_EXPORT mgl_rnd_discrete_(uintptr_t *d);
+
+/// Fills data by integer random numbers of uniform distribution in range [lo,hi]
+void MGL_EXPORT mgl_data_rnd_integer(HMDT d, long lo, long hi);
+void MGL_EXPORT mgl_data_rnd_integer_(uintptr_t *d, int *lo, int *hi);
+/// Fills data by random numbers of uniform distribution in range [lo,hi]
+void MGL_EXPORT mgl_data_rnd_uniform(HMDT d, mreal lo, mreal hi);
+void MGL_EXPORT mgl_data_rnd_uniform_(uintptr_t *d, double *lo, double *hi);
+/// Fills data by random numbers of bernoulli distribution
+void MGL_EXPORT mgl_data_rnd_bernoulli(HMDT d, mreal p);
+void MGL_EXPORT mgl_data_rnd_bernoulli_(uintptr_t *d, double *p);
+/// Fills data by random numbers of binomial distribution
+void MGL_EXPORT mgl_data_rnd_binomial(HMDT d, long trials, mreal p);
+void MGL_EXPORT mgl_data_rnd_binomial_(uintptr_t *d, double *p);
+/// Fills data by random numbers of gaussian distribution
+void MGL_EXPORT mgl_data_rnd_gaussian(HMDT d, mreal mu, mreal sigma);
+void MGL_EXPORT mgl_data_rnd_gaussian_(uintptr_t *d, double *mu, double *s);
+/// Fills data by random numbers of exponential distribution
+void MGL_EXPORT mgl_data_rnd_exponential(HMDT d, mreal lambda);
+void MGL_EXPORT mgl_data_rnd_exponential_(uintptr_t *d, double *l);
+/// Fills data by random numbers of discrete distribution according A
+void MGL_EXPORT mgl_data_rnd_discrete(HMDT d, HCDT A);
+void MGL_EXPORT mgl_data_rnd_discrete_(uintptr_t *d, uintptr_t *A);
+/// Shuffles elements or slices of data array
+void MGL_EXPORT mgl_shuffle(HMDT d, char dir);
+void MGL_EXPORT mgl_shuffle_(uintptr_t *d, char *dir, int);
+/// Fills data by fractional brownian motions along x-direction
+void MGL_EXPORT mgl_data_brownian(HMDT d, mreal y1, mreal y2, mreal sigma, mreal alpha);
+void MGL_EXPORT mgl_data_brownian_(uintptr_t *d, double *y1, double *y2, double *sigma, double *alpha);
+
+
 //-----------------------------------------------------------------------------
 #ifdef __cplusplus
 }

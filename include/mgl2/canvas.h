@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -68,7 +68,7 @@ class mglCanvas;
 /// Structure for drawing region
 struct MGL_EXPORT mglDrawReg
 {
-	mglDrawReg() {	memset(this,0,sizeof(mglDrawReg));	}
+	mglDrawReg() : PDef(0),angle(0),ObjId(0),PenWidth(0),pPos(0) ,x1(0),x2(0),y1(0),y2(0) {}
 	mglDrawReg(const mglDrawReg &aa) : PDef(aa.PDef),angle(aa.angle),ObjId(aa.ObjId),PenWidth(aa.PenWidth),pPos(aa.pPos) ,x1(aa.x1),x2(aa.x2),y1(aa.y1),y2(aa.y2)	{}
 #if MGL_HAVE_RVAL
 	mglDrawReg(mglDrawReg &&aa) : PDef(aa.PDef),angle(aa.angle),ObjId(aa.ObjId),PenWidth(aa.PenWidth),pPos(aa.pPos) ,x1(aa.x1),x2(aa.x2),y1(aa.y1),y2(aa.y2)	{}
@@ -77,7 +77,7 @@ struct MGL_EXPORT mglDrawReg
 	{	PDef = p.n3;	pPos = p.s;	ObjId = p.id;	PenWidth=p.w;	angle = p.angl;
 		if(p.type==2 || p.type==3) PDef = p.m;	}
 	inline const mglDrawReg &operator=(const mglDrawReg &aa)
-	{	memcpy(this,&aa,sizeof(mglDrawReg));	return aa;	}
+	{	PDef=aa.PDef;	angle=aa.angle;	ObjId=aa.ObjId;	PenWidth=aa.PenWidth;	pPos=aa.pPos;	x1=aa.x1;	x2=aa.x2;	y1=aa.y1;	y2=aa.y2;	return aa;	}
 	union
 	{
 		uint64_t PDef;
@@ -108,7 +108,7 @@ struct MGL_EXPORT mglDrawDat
 	std::vector<mglTexture> Txt;	///< Pointer to textures
 };
 #if defined(_MSC_VER)
-template class MGL_EXPORT std::vector<mglDrawDat>;
+MGL_EXTERN template class MGL_EXPORT std::vector<mglDrawDat>;
 #endif
 //-----------------------------------------------------------------------------
 union mglRGBA	{	uint32_t c; unsigned char r[4];	};
@@ -204,8 +204,16 @@ using mglBase::Light;
 
 	/// Rasterize current plot and set it as background image
 	void Rasterize();
-	/// Load image for background from file
+	/// Load image for background from file (basic variant)
 	void LoadBackground(const char *fname, double alpha=1);
+	/// Load image for background from file. 
+	/** Parameter 'how' can be:
+	 *   'a' for filling current subplot only;
+	 *   's' for spline-based resizing;
+	 *   'f' for fixing aspect ratio at resizing;
+	 *   'c' for centering image;
+	 *   't' for tessellate image. */
+	void LoadBackground(const char *fname, const char *how, double alpha=1);
 	/// Fill background image by specified color
 	void FillBackground(const mglColor &cc);
 
@@ -216,7 +224,7 @@ using mglBase::Light;
 	mglPoint CalcXYZ(int xs, int ys, bool real=false) const MGL_FUNC_PURE;
 	/// Calculate screen point {xs,ys} for 3D coordinate {x,y,z}
 	void CalcScr(mglPoint p, int *xs, int *ys) const;
-	mglPoint CalcScr(mglPoint p) const;
+	mglPoint CalcScr(const mglPoint &p) const;
 	/// Set object/subplot id
 	inline void SetObjId(long id)	{	ObjId = id;	}
 	/// Get object id
@@ -291,7 +299,7 @@ using mglBase::Light;
 	/// Set the ticks parameters
 	void SetTicks(char dir, mreal d=0, int ns=0, mreal org=NAN, const wchar_t *lbl=0);
 	/// Auto adjust ticks
-	void AdjustTicks(const char *dir="xyzc", bool force=false, std::string stl="");
+	void AdjustTicks(const char *dir="xyzc", bool force=false, const std::string &stl="");
 	/// Tune ticks
 	inline void SetTuneTicks(int tune, mreal pos=1.15)
 	{	TuneTicks = tune;	FactorPos = pos;	}
@@ -311,11 +319,11 @@ using mglBase::Light;
 	void Labelw(char dir, const wchar_t *text, mreal pos=0, const char *opt="");
 
 	/// Draw colorbar at edge of axis
-	void Colorbar(const char *sch=0);
-	void Colorbar(const char *sch, mreal x, mreal y, mreal w, mreal h);
+	void Colorbar(const char *sch=0, const char *opt=0);
+	void Colorbar(const char *sch, mreal x, mreal y, mreal w, mreal h, const char *opt=0);
 	/// Draw colorbar at edge of axis for manual colors
-	void Colorbar(HCDT v, const char *sch=0);
-	void Colorbar(HCDT v, const char *sch, mreal x, mreal y, mreal w, mreal h);
+	void Colorbar(HCDT v, const char *sch=0, const char *opt=0);
+	void Colorbar(HCDT v, const char *sch, mreal x, mreal y, mreal w, mreal h, const char *opt=0);
 
 	/// Draw legend of accumulated strings at position (x, y) by font with size
 	inline void Legend(mreal x, mreal y, const char *font="#", const char *opt="")
@@ -386,6 +394,10 @@ protected:
 	mreal FogDist;		///< Inverse fog distance (fog ~ exp(-FogDist*Z))
 	mreal FogDz;		///< Relative shift of fog
 
+	inline mglAxis &GetAxis(unsigned ch)
+	{	mglAxis *aa[3]={&ax,&ay,&az};	ch-='x';	return ch<3?*(aa[ch]):ac;	}
+	inline HMEX GetFormula(unsigned ch)
+	{	HMEX aa[3]={fx,fy,fz};	ch-='x';	return ch<3?aa[ch]:fa;	}
 	/// Auto adjust ticks
 	void AdjustTicks(mglAxis &aa, bool ff);
 	/// Prepare labels for ticks
@@ -406,6 +418,8 @@ protected:
 	bool ScalePoint(const mglMatrix *M, mglPoint &p, mglPoint &n, bool use_nan=true) const;
 	void LightScale(const mglMatrix *M);	///< Additionally scale positions of light sources
 	void LightScale(const mglMatrix *M, mglLight &l);	///< Additionally scale positions of light
+	/// Add crossing point at the boundary and straight line between q1, q2. At this q1 should be inside.
+	long AddPairBnd(const mglPnt &q1, const mglPnt &q2);
 	/// Push drawing data (for frames only). NOTE: can be VERY large
 	long PushDrwDat();
 	/// Retur color for primitive depending lighting
@@ -482,7 +496,7 @@ private:
 	float pen_delta;	///< delta pen width (dpw) -- the size of semi-transparent region for lines, marks, ...
 
 	/// Draw generic colorbar
-	void colorbar(HCDT v, const mreal *s, int where, mreal x, mreal y, mreal w, mreal h, bool text);
+	void colorbar(HCDT v, const mreal *s, int where, mreal x, mreal y, mreal w, mreal h, bool text, const char *opt=0);
 	/// Draw labels for ticks
 	void DrawLabels(mglAxis &aa, bool inv=false, const mglMatrix *M=0);
 	/// Get label style
@@ -491,7 +505,7 @@ private:
 	void tick_draw(mglPoint o, mglPoint d1, mglPoint d2, int f);
 	mreal FindOptOrg(char dir, int ind) const MGL_FUNC_PURE;
 	/// Transform mreal color and alpha to bits format
-	unsigned char* col2int(const mglPnt &p, unsigned char *r, int obj_id) const;
+	void col2int(const mglPnt &p, unsigned char *r, int obj_id) const;
 	/// Combine colors in 2 plane.
 	void combine(unsigned char *c1, const unsigned char *c2) const;
 	/// Fast drawing of line between 2 points

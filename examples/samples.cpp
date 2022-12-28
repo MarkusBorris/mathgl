@@ -31,11 +31,12 @@ struct mglSample	/// Structure for list of samples
 	const char *name;
 	void (*func)(mglGraph*);
 	const char *mgl;
+	const char *info;
 };
 //-----------------------------------------------------------------------------
 //		MGL functions for preparing data
 //-----------------------------------------------------------------------------
-const char *mmgl_dat_prepare = "\nstop\n\nfunc 'prepare1d'\n\
+const char *mmgl_dat_prepare = "\nfunc 'prepare1d'\n\
 new y 50 3\nmodify y '0.7*sin(2*pi*x)+0.5*cos(3*pi*x)+0.2*sin(pi*x)'\n\
 modify y 'sin(2*pi*x)' 1\nmodify y 'cos(2*pi*x)' 2\n\
 new x1 50 'x'\nnew x2 50 '0.05-0.03*cos(pi*x)'\n\
@@ -183,13 +184,13 @@ const char *mmgl_mask="new a 10 10 'x'\n"
 "subplot 5 4 11 '':title '\"<\" mask':dens a '3<'\n"
 "subplot 5 4 12 '':title '\">\" mask':dens a '3>'\n"
 "subplot 5 4 13 '':title '\"j\" mask':dens a '3j'\n"
-"subplot 5 4 14 '':title '\"-;\\\" mask':dens a '3;\\ '\n"
+"subplot 5 4 14 '':title '\"-;\\\" mask':dens a '3\\;'\n"
 "subplot 5 4 15 '':title '\"d\" mask':dens a '3d'\n"
 "subplot 5 4 16 '':title '\"D\" mask':dens a '3D'\n"
 "subplot 5 4 17 '':title '\"*\" mask':dens a '3*'\n"
-"subplot 5 4 18 '':title '\"^\" mask':dens a '3^'\n"
+"subplot 5 4 18 '':title '\"\\^\" mask':dens a '3^'\n"
 "subplot 5 4 19 '':title 'manual mask'\n"
-"mask '+' 'ff00182424f800':dens a '3+'";
+"mask '+' '24242424FF0101FF':dens a '3+'";
 void smgl_mask(mglGraph *gr)
 {
 	mglData a(10,10);	a.Fill(-1,1);
@@ -211,9 +212,9 @@ void smgl_mask(mglGraph *gr)
 	gr->SubPlot(5,4,15,"");	gr->Title("'d' mask");	gr->Dens(a,"3d");
 	gr->SubPlot(5,4,16,"");	gr->Title("'D' mask");	gr->Dens(a,"3D");
 	gr->SubPlot(5,4,17,"");	gr->Title("'*' mask");	gr->Dens(a,"3*");
-	gr->SubPlot(5,4,18,"");	gr->Title("'^' mask");	gr->Dens(a,"3^");
+	gr->SubPlot(5,4,18,"");	gr->Title("'\\^' mask");	gr->Dens(a,"3^");
 	gr->SubPlot(5,4,19,"");	gr->Title("manual mask");
-	gr->SetMask('+', "ff00182424f80000");	gr->Dens(a,"3+");
+	gr->SetMask('+', "24242424FF0101FF");	gr->Dens(a,"3+");
 }
 //-----------------------------------------------------------------------------
 const char *mmgl_export="new a 100 100 'x^2*y':new b 100 100\n"
@@ -754,8 +755,9 @@ const char *mmgl_text="call 'prepare1d'\nsubplot 2 2 0 ''\ntext 0 1 'Text can be
 "text 0 -0.6 'Easy to change indexes ^{up} _{down} @{center}'\n"
 "text 0 -1 'It parse TeX: \\int \\alpha \\cdot \\\n\\sqrt3{sin(\\pi x)^2 + \\gamma_{i_k}} dx'\n"
 "subplot 2 2 1 ''\n text 0 0.5 '\\sqrt{\\frac{\\alpha^{\\gamma^2}+\\overset 1{\\big\\infty}}{\\sqrt3{2+b}}}' '@' -2\n"
-"text 0 -0.3 'Text can be printed\\n{}on several lines'\n"
-"text 0 -0.7 'or with color gradient' 'BbcyrR'\n"
+"text 0 -0.1 'More text position: \\frac{a}{b}, \\dfrac{a}{b}, [\\stack{a}{bbb}], [\\stackl{a}{bbb}], [\\stackr{a}{bbb}], \\sup{a}{sup}, \\sub{a}{sub}'"
+"text 0 -0.5 'Text can be printed\\n{}on several lines'\n"
+"text 0 -0.9 'or with color gradient' 'BbcyrR'\n"
 "subplot 2 2 2 '':box:plot y(:,0)\ntext y 'This is very very long string drawn along a curve' 'k'\ntext y 'Another string drawn above a curve' 'Tr'\n"
 "subplot 2 2 3 '':line -1 -1 1 -1 'rA':text 0 -1 1 -1 'Horizontal'\n"
 "line -1 -1 1 1 'rA':text 0 0 1 1 'At angle' '@'\nline -1 -1 -1 1 'rA':text -1 0 -1 1 'Vertical'";
@@ -775,8 +777,9 @@ void smgl_text(mglGraph *gr)	// text drawing
 
 	gr->SubPlot(2,2,1,"");
 	gr->Puts(mglPoint(0,0.5), "\\sqrt{\\frac{\\alpha^{\\gamma^2}+\\overset 1{\\big\\infty}}{\\sqrt3{2+b}}}", "@", -2);
-	gr->Puts(mglPoint(0,-0.3),"Text can be printed\non several lines");
-	gr->Puts(mglPoint(0,-0.7),"or with col\bor gradient","BbcyrR");
+	gr->Puts(mglPoint(0,-0.1),"More text position: \\frac{a}{b}, \\dfrac{a}{b}, [\\stack{a}{bbb}], [\\stackl{a}{bbb}], [\\stackr{a}{bbb}], \\sup{a}{sup}, \\sub{a}{sub}");
+	gr->Puts(mglPoint(0,-0.5),"Text can be printed\non several lines");
+	gr->Puts(mglPoint(0,-0.9),"or with col\bor gradient","BbcyrR");
 
 	gr->SubPlot(2,2,2,"");
 	mglData y;	mgls_prepare1d(&y);
@@ -832,6 +835,21 @@ void smgl_fonts(mglGraph *gr)	// font typefaces
 	gr->LoadFont("schola");		gr->Puts(mglPoint(0,h-8*d), "schola font");
 	gr->LoadFont("termes");		gr->Puts(mglPoint(0,h-9*d), "termes font");
 	gr->LoadFont("");
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_background="define $f udav_new.png\n#background '$f' 's'\n"
+"subplot 2 2 0 '':box\nbackground '$f' 'a'\ntext 0.5 0.1 'Default' 'a'\n"
+"subplot 2 2 1 '':box\nbackground '$f' 'ca'\ntext 0.5 0.1 'Centering' 'a'\n"
+"subplot 2 2 2 '':box\nbackground '$f' 'ma'\ntext 0.5 0.1 'Mosaic' 'a'\n"
+"subplot 2 2 3 '':box\nbackground '$f' 'sa'\ntext 0.5 0.1 'Scaling' 'a'";
+void smgl_background(mglGraph *gr)
+{
+	const char *fname = "udav_new.png";
+	gr->SubPlot(2,2,0,"");	gr->Box();	gr->LoadBackground(fname,"a");	gr->Puts(0.5,0.1,"Default","a");
+	gr->SubPlot(2,2,1,"");	gr->Box();	gr->LoadBackground(fname,"ca");	gr->Puts(0.5,0.1,"Centering","a");
+	gr->SubPlot(2,2,2,"");	gr->Box();	gr->LoadBackground(fname,"ma");	gr->Puts(0.5,0.1,"Mosaic","a");
+	gr->SubPlot(2,2,3,"");	gr->Box();	gr->LoadBackground(fname,"sa");	gr->Puts(0.5,0.1,"Scaling","a");
+	//gr->LoadBackground(fname,"s");
 }
 //-----------------------------------------------------------------------------
 const char *mmgl_bars="new ys 10 3 '0.8*sin(pi*(x+y/4+1.25))+0.2*rnd':origin 0 0 0\n"
@@ -1388,8 +1406,8 @@ void smgl_pde(mglGraph *gr)	// PDE sample
 	gr->Puts(mglPoint(0, 0.95), "Equation: ik_0\\partial_zu + \\Delta u + x\\cdot u + i \\frac{x+z}{2}\\cdot u = 0\nabsorption: (x+z)/2 for x+z>0");
 }
 //-----------------------------------------------------------------------------
-const char *mmgl_conta="call 'prepare3d'\ntitle 'Cont3 sample':rotate 50 60:box\ncont3 c 'x':cont3 c:cont3 c 'z'";
-void smgl_conta(mglGraph *gr)
+const char *mmgl_cont3="call 'prepare3d'\ntitle 'Cont3 sample':rotate 50 60:box\ncont3 c 'x':cont3 c:cont3 c 'z'";
+void smgl_cont3(mglGraph *gr)
 {
 	mglData c;	mgls_prepare3d(&c);
 	if(big!=3)	gr->Title("Cont3 sample");
@@ -1397,9 +1415,9 @@ void smgl_conta(mglGraph *gr)
 	gr->Cont3(c,"x");	gr->Cont3(c);	gr->Cont3(c,"z");
 }
 //-----------------------------------------------------------------------------
-const char *mmgl_contfa="call 'prepare3d'\ntitle 'Cont3 sample':rotate 50 60:box:light on\n"
+const char *mmgl_contf3="call 'prepare3d'\ntitle 'Cont3 sample':rotate 50 60:box:light on\n"
 "contf3 c 'x':contf3 c:contf3 c 'z'\ncont3 c 'xk':cont3 c 'k':cont3 c 'zk'";
-void smgl_contfa(mglGraph *gr)
+void smgl_contf3(mglGraph *gr)
 {
 	mglData c;	mgls_prepare3d(&c);
 	if(big!=3)	gr->Title("ContF3 sample");
@@ -1408,9 +1426,9 @@ void smgl_contfa(mglGraph *gr)
 	gr->Cont3(c,"kx");	gr->Cont3(c,"k");	gr->Cont3(c,"kz");
 }
 //-----------------------------------------------------------------------------
-const char *mmgl_densa="call 'prepare3d'\ntitle 'Dens3 sample':rotate 50 60:alpha on:alphadef 0.7\n"
+const char *mmgl_dens3="call 'prepare3d'\ntitle 'Dens3 sample':rotate 50 60:alpha on:alphadef 0.7\n"
 "origin 0 0 0:box:axis '_xyz'\ndens3 c 'x':dens3 c ':y':dens3 c 'z'";
-void smgl_densa(mglGraph *gr)
+void smgl_dens3(mglGraph *gr)
 {
 	mglData c;	mgls_prepare3d(&c);
 	if(big!=3)	gr->Title("Dens3 sample");
@@ -1470,7 +1488,7 @@ void smgl_cloud(mglGraph *gr)
 //-----------------------------------------------------------------------------
 const char *mmgl_cont="call 'prepare2d'\nlist v -0.5 -0.15 0 0.15 0.5\nsubplot 2 2 0:title 'Cont plot (default)':rotate 50 60:box:cont a\n"
 "subplot 2 2 1:title 'manual levels':rotate 50 60:box:cont v a\n"
-"subplot 2 2 2:title '\"\\_\" style':rotate 50 60:box:cont a '_'\n"
+"subplot 2 2 2:title '\"\\_\" and \".\" styles':rotate 50 60:box:cont a '_':cont a '_.2k'\n"
 "subplot 2 2 3 '':title '\"t\" style':box:cont a 't'";
 void smgl_cont(mglGraph *gr)
 {
@@ -1480,8 +1498,8 @@ void smgl_cont(mglGraph *gr)
 	if(big==3)	return;
 	gr->SubPlot(2,2,1);	gr->Title("manual levels");
 	gr->Rotate(50,60);	gr->Box();	gr->Cont(v,a);
-	gr->SubPlot(2,2,2);	gr->Title("'\\_' style");
-	gr->Rotate(50,60);	gr->Box();	gr->Cont(a,"_");
+	gr->SubPlot(2,2,2);	gr->Title("'\\_' and '.' styles");
+	gr->Rotate(50,60);	gr->Box();	gr->Cont(a,"_");	gr->Cont(a,"_.2k");
 	gr->SubPlot(2,2,3,"");	gr->Title("'t' style");
 	gr->Box();	gr->Cont(a,"t");
 }
@@ -1664,6 +1682,40 @@ void smgl_surf3ca(mglGraph *gr)
 	gr->Box();	gr->Surf3CA(c,d,c);
 }
 //-----------------------------------------------------------------------------
+const char *mmgl_dcont="call 'prepare3d'\ntitle 'DCont plot':rotate 50 60:light on:alpha on:box:surf3 c 0 'r':surf3 d 0 'b'\ndcont 0 c d '2k'";
+void smgl_dcont(mglGraph *gr)
+{
+	mglData c,d,v;	mgls_prepare3d(&c,&d);
+	if(big!=3)	gr->Title("DCont plot");
+	gr->Rotate(50,60);	gr->Light(true);	gr->Alpha(true);
+	gr->Box();	gr->Surf3(0,c,"r");	gr->Surf3(0,d,"b");
+	gr->DCont(v,c,d,"2k");
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_daisy="title 'Advanced formulas'\nnew b 256 256 'dsum(fn1(_i*pi/5),10)\\exp(-64*(x*cos(_1)-y*sin(_1))^2-16*(0.5+y*cos(_1)+x*sin(_1))^2)'\ncrange b:dens b 'BbwrR'";
+void smgl_daisy(mglGraph *gr)
+{
+	if(big!=3)	gr->Title("Advanced formulas");
+	mglData b(256,256);
+	gr->Fill(b,"dsum(fn1(_i*pi/5),10)\\exp(-64*(x*cos(_1)-y*sin(_1))^2-16*(0.5+y*cos(_1)+x*sin(_1))^2)");
+	gr->SetRange('c',b);	gr->Dens(b,"BbwrR");
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_keep="yrange 0 pi\nnew !a 100 300 'exp(-6*x^2+10i*(x+y^2))'"
+"subplot 2 1 0 '':box\ndens real(a) 'BbwrR'\ntext 1.1 0.5 '\to' 'a'"
+"keep a 'y' 50\nsubplot 2 1 1 '':box\ndens real(a) 'BbwrR'";
+void smgl_keep(mglGraph *gr)
+{
+	gr->SetRange('y',0,M_PI);
+	mglDataC a(100,300);	gr->Fill(a,"exp(-6*x^2+10i*(x+y^2))");
+	gr->SubPlot(2,1,0,"");	gr->Box();
+	gr->Dens(a.Real(),"BbwrR");
+	gr->Puts(1.1,0.5,"\\to","a");
+	a.Keep("y",50);
+	gr->SubPlot(2,1,1,"");	gr->Box();
+	gr->Dens(a.Real(),"BbwrR");
+}
+//-----------------------------------------------------------------------------
 const char *mmgl_cut="call 'prepare2d'\ncall 'prepare3d'\nsubplot 2 2 0:title 'Cut on (default)':rotate 50 60:light on:box:surf a; zrange -1 0.5\n"
 "subplot 2 2 1:title 'Cut off':rotate 50 60:box:surf a; zrange -1 0.5; cut off\n"
 "subplot 2 2 2:title 'Cut in box':rotate 50 60:box:alpha on\ncut 0 -1 -1 1 0 1.1:surf3 c\ncut 0 0 0 0 0 0\t# restore back\n"
@@ -1690,6 +1742,23 @@ void smgl_traj(mglGraph *gr)
 	mglData x,y,y1,y2;	mgls_prepare1d(&y,&y1,&y2,&x);
 	if(big!=3)	{gr->SubPlot(1,1,0,"");	gr->Title("Traj plot");}
 	gr->Box();	gr->Plot(x,y);	gr->Traj(x,y,y1,y2);
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_lines="subplot 1 1 0 '':title 'Lines plot'\n"
+"new x1 11 '0.3*cos(pi*i/5)'\nnew y1 11 '0.3*sin(pi*i/5)'\nnew x2 11 '0.7*cos(pi*i/5)'\nnew y2 11 '0.7*sin(pi*i/5)'\nplot x1 y1\nlines x1 y1 x2 y2 '_A'";
+void smgl_lines(mglGraph *gr)
+{
+	mglData x1(11),y1(11),x2(11),y2(11);
+	for(long i=0;i<11;i++)
+	{
+		x1.a[i] = 0.3*cos(M_PI*i/5);
+		y1.a[i] = 0.3*sin(M_PI*i/5);
+		x2.a[i] = 0.7*cos(M_PI*i/5);
+		y2.a[i] = 0.7*sin(M_PI*i/5);
+	}
+	if(big!=3)	{gr->SubPlot(1,1,0,"");	gr->Title("Lines plot");}
+	gr->Plot(x1,y1);
+	gr->Lines(x1,y1,x2,y2,"_A");
 }
 //-----------------------------------------------------------------------------
 const char *mmgl_mesh="call 'prepare2d'\ntitle 'Mesh plot':rotate 50 60:box:mesh a";
@@ -1731,26 +1800,64 @@ void smgl_surf(mglGraph *gr)
 	gr->Rotate(50,60);	gr->Box();	gr->Surf(x,y,z,"BbwrR");
 }
 //-----------------------------------------------------------------------------
-const char *mmgl_parser="title 'MGL parser sample'\ncall 'sample'\nstop\nfunc 'sample'\n"
-"new dat 100 'sin(2*pi*(x+1))'\nplot dat; xrange 0 1\nbox\naxis\n"
-"xlabel 'x'\nylabel 'y'\nbox\nfor $0 -1 1 0.1\nif $0<0\n"
-"line 0 0 -1 $0 'r':else:line 0 0 -1 $0 'g'\nendif\nnext";
+const char *mmgl_parser="title 'MGL parser sample'\n# call function\ncall 'sample'\n"
+"\n# ordinary for-loop\nfor $0 -1 1 0.1\n"
+"if $0<0:line 0 0 1 $0 'r':else:line 0 0 1 $0 'g':endif\nnext\n"
+"\n# if-elseif-else\nfor $i -1 1 0.5\nif $i<0\ntext 1.1 $i '$i' 'b'\n"
+"elseif $i>0\ntext 1.1 $i '$i' 'r'\nelse\ntext 1.1 $i '$i'\nendif\nnext\n"
+"\n# ordinary do-while\ndo\ndefnum $i $i-0.2\nline 0 0 $i 1 'b'\nwhile $i>0\n"
+"\n# do-next-break\ndo\ndefnum $i $i-0.2\nif $i<-1 then break\nline 0 0 $i 1 'm'\nnext\n"
+"\n# for-while-continue\nfor $i -5 10\ntext $i/5 1.1 'a'+($i+5)\nif $i<0\n"
+"text $i/5-0.06 1.1 '--' 'b'\nelseif mod($i,2)=0\ntext $i/5-0.06 1.1 '~' 'r'\n"
+"else\n# NOTE: 'continue' bypass the 'while'!\ncontinue\nendif\n"
+"# NOTE: 'while' limit the actual number of iterations\nwhile $i<5\n"
+"\n# nested loops\nfor $i 0 1 0.1\nfor $j 0 1 0.1\nball $i $j\n"
+"if $j>0.5 then continue\nball $i $j 'b+'\nnext\nnext\n"
+"\nfunc 'sample'\nnew dat 100 'sin(2*pi*(i/99+1))'\nplot dat;xrange -1 0\n"
+"box:axis\nxlabel 'x':ylabel 'y'\nreturn";
 void smgl_parser(mglGraph *gr)	// example of MGL parsing
-{
+{	// NOTE: MGL version show much more variants of loops and conditions.
 	gr->Title("MGL parser sample");
 	double a[100];   // let a_i = sin(4*pi*x), x=0...1
-	for(int i=0;i<100;i++)a[i]=sin(4*M_PI*i/99);
+	for(int i=0;i<100;i++)a[i]=sin(2*M_PI*i/99);
 	mglParse *parser = new mglParse;
+	// Add MGL variable and set yours data to it.
 	mglData *d = dynamic_cast<mglData*>(parser->AddVar("dat"));
-	if(d)	d->Set(a,100); // set data to variable
-	parser->Execute(gr, "plot dat; xrange 0 1\nbox\naxis");
-	// you may break script at any line do something
-	// and continue after that
+	if(d)	d->Set(a,100);
+	parser->Execute(gr, "plot dat; xrange -1 0\nbox\naxis");
+	// You may break script at any line do something
+	// and continue after that.
 	parser->Execute(gr, "xlabel 'x'\nylabel 'y'\nbox");
-	// also you may use cycles or conditions in script
+	// Also you may use cycles or conditions in script.
 	parser->Execute(gr, "for $0 -1 1 0.1\nif $0<0\n"
-		"line 0 0 -1 $0 'r':else:line 0 0 -1 $0 'g'\n"
+		"line 0 0 1 $0 'r':else:line 0 0 1 $0 'g'\n"
 		"endif\nnext");
+	// You may use for or do-while loops as C/C++ one
+	double i=1;
+	do	{
+		char buf[64];	sprintf(buf,"line 0 0 %g 1 'b'",i);
+		parser->Execute(gr, buf);	i=i-0.2;
+	} while(i>0);
+	// or as MGL one.
+	parser->Execute(gr, "for $i -1 1 0.5\n"
+		"if $i<0\ntext 1.1 $i '$i' 'b'\n"
+		"elseif $i>0\ntext 1.1 $i '$i' 'r'\n"
+		"else\ntext 1.1 $i '$i'\nendif\nnext\n");
+	// There are 'break' and 'continue' commands in MGL too.
+	// NOTE: 'next' act as "while(1)" in do-while loops.
+	parser->Execute(gr, "do\ndefnum $i $i-0.2\n"
+		"if $i<-1 then break\nline 0 0 $i 1 'm'\nnext\n");
+	// One issue with 'continue' -- it bypass 'while' checking
+	parser->Execute(gr, "for $i -5 10\ntext $i/5 1.1 'a'+($i+5)\nif $i<0\n"
+		"text $i/5-0.06 1.1 '--' 'b'\n"
+		"elseif mod($i,2)=0\ntext $i/5-0.06 1.1 '~' 'r'\n"
+		"else\ncontinue\nendif\n"
+		// NOTE: 'while' limit the actual number of iterations in for-loop.
+		"while $i<5\n");
+	// Finally, MGL support nested loops too.
+	parser->Execute(gr, "for $i 0 1 0.1\nfor $j 0 1 0.1\nball $i $j\n"
+		"if $j>0.5 then continue\nball $i $j 'b+'\nnext\nnext\n");
+	// Clean up memory.
 	delete parser;
 }
 //-----------------------------------------------------------------------------
@@ -1760,6 +1867,14 @@ void smgl_belt(mglGraph *gr)
 	mglData a;	mgls_prepare2d(&a);
 	if(big!=3)	gr->Title("Belt plot");
 	gr->Rotate(50,60);	gr->Box();	gr->Belt(a);
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_beltc="call 'prepare2d'\ntitle 'BeltC plot':rotate 50 60:box:beltc a b";
+void smgl_beltc(mglGraph *gr)
+{
+	mglData a,b;	mgls_prepare2d(&a,&b);
+	if(big!=3)	gr->Title("BeltC plot");
+	gr->Rotate(50,60);	gr->Box();	gr->BeltC(a,b);
 }
 //-----------------------------------------------------------------------------
 const char *mmgl_dens="call 'prepare2d'\nnew a1 30 40 3 '0.6*sin(2*pi*x+pi*(z+1)/2)*sin(3*pi*y+pi*z) + 0.4*cos(3*pi*(x*y)+pi*(z+1)^2/2)'\n"
@@ -1865,12 +1980,12 @@ void smgl_fit(mglGraph *gr)	// nonlinear fitting
 //	gr->SetRanges(mglPoint(-1,-1,-1),mglPoint(1,1,1));	gr->SetOrigin(0,0,0);
 }
 //-----------------------------------------------------------------------------
-const char *mmgl_vecta="call 'prepare3v'\nsubplot 2 1 0:title 'Vect3 sample':rotate 50 60\n"
+const char *mmgl_vect3="call 'prepare3v'\nsubplot 2 1 0:title 'Vect3 sample':rotate 50 60\n"
 "origin 0 0 0:box:axis '_xyz'\nvect3 ex ey ez 'x':vect3 ex ey ez:vect3 ex ey ez 'z'\n"
 "subplot 2 1 1:title '\"f\" style':rotate 50 60\n"
 "origin 0 0 0:box:axis '_xyz'\nvect3 ex ey ez 'fx':vect3 ex ey ez 'f':vect3 ex ey ez 'fz'\n"
 "grid3 ex 'Wx':grid3 ex 'W':grid3 ex 'Wz'";
-void smgl_vecta(mglGraph *gr)
+void smgl_vect3(mglGraph *gr)
 {
 	mglData ex,ey,ez;	mgls_prepare3v(&ex,&ey,&ez);
 	if(big!=3)	{	gr->SubPlot(2,1,0);	gr->Title("Vect3 sample");	}
@@ -1896,9 +2011,12 @@ void smgl_vect(mglGraph *gr)
 	gr->Box();	gr->Vect(a,b);
 	if(big==3)	return;
 	gr->SubPlot(3,2,1,"");	gr->Title("'.' style; '=' style");	gr->Box();	gr->Vect(a,b,"=.");
-	gr->SubPlot(3,2,2,"");	gr->Title("'f' style");	gr->Box();	gr->Vect(a,b,"f");
-	gr->SubPlot(3,2,3,"");	gr->Title("'>' style");	gr->Box();	gr->Vect(a,b,">");
-	gr->SubPlot(3,2,4,"");	gr->Title("'<' style");	gr->Box();	gr->Vect(a,b,"<");
+	gr->SubPlot(3,2,2,"");	gr->Title("'f' style");
+	gr->Box();	gr->Vect(a,b,"f");
+	gr->SubPlot(3,2,3,"");	gr->Title("'>' style");
+	gr->Box();	gr->Vect(a,b,">");
+	gr->SubPlot(3,2,4,"");	gr->Title("'<' style");
+	gr->Box();	gr->Vect(a,b,"<");
 	mglData ex,ey,ez;	mgls_prepare3v(&ex,&ey,&ez);
 	gr->SubPlot(3,2,5);	gr->Title("3d variant");	gr->Rotate(50,60);
 	gr->Box();	gr->Vect(ex,ey,ez);
@@ -1906,7 +2024,7 @@ void smgl_vect(mglGraph *gr)
 //-----------------------------------------------------------------------------
 const char *mmgl_flow="call 'prepare2v'\ncall 'prepare3v'\nsubplot 2 2 0 '':title 'Flow plot (default)':box:flow a b\n"
 "subplot 2 2 1 '':title '\"v\" style':box:flow a b 'v'\n"
-"subplot 2 2 2 '':title 'from edges only':box:flow a b '#'\n"
+"subplot 2 2 2 '':title '\"#\" and \".\" styles':box:flow a b '#':flow a b '.2k'\n"
 "subplot 2 2 3:title '3d variant':rotate 50 60:box:flow ex ey ez";
 void smgl_flow(mglGraph *gr)
 {
@@ -1914,11 +2032,32 @@ void smgl_flow(mglGraph *gr)
 	if(big!=3)	{gr->SubPlot(2,2,0,"");	gr->Title("Flow plot (default)");}
 	gr->Box();	gr->Flow(a,b);
 	if(big==3)	return;
-	gr->SubPlot(2,2,1,"");	gr->Title("'v' style");	gr->Box();	gr->Flow(a,b,"v");
-	gr->SubPlot(2,2,2,"");	gr->Title("'\\#' style");	gr->Box();	gr->Flow(a,b,"#");
+	gr->SubPlot(2,2,1,"");	gr->Title("'v' style");
+	gr->Box();	gr->Flow(a,b,"v");
+	gr->SubPlot(2,2,2,"");	gr->Title("'\\#' and '.' styles");
+	gr->Box();	gr->Flow(a,b,"#");	gr->Flow(a,b,".2k");
 	mglData ex,ey,ez;	mgls_prepare3v(&ex,&ey,&ez);
 	gr->SubPlot(2,2,3);	gr->Title("3d variant");	gr->Rotate(50,60);
 	gr->Box();	gr->Flow(ex,ey,ez);
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_flow3="call 'prepare3v'\n"
+"subplot 2 2 0:title 'Flow3 plot (default)':rotate 50 60:box\nflow3 ex ey ez\n"
+"subplot 2 2 1:title '\"v\" style, from boundary':rotate 50 60:box\nflow3 ex ey ez 'v' 0\n"
+"subplot 2 2 2:title '\"t\" style':rotate 50 60:box\nflow3 ex ey ez 't' 0\n"
+"subplot 2 2 3:title 'from \\i z planes':rotate 50 60:box\nflow3 ex ey ez 'z' 0\nflow3 ex ey ez 'z' 9";
+void smgl_flow3(mglGraph *gr)
+{
+	mglData ex,ey,ez;	mgls_prepare3v(&ex,&ey,&ez);
+	if(big!=3)	{gr->SubPlot(2,2,0);	gr->Title("Flow3 plot (default)");}
+	gr->Rotate(50,60);	gr->Box();		gr->Flow3(ex,ey,ez);
+	if(big==3)	return;
+	gr->SubPlot(2,2,1);	gr->Title("'v' style, from boundary");
+	gr->Rotate(50,60);	gr->Box();	gr->Flow3(ex,ey,ez,"v",0);
+	gr->SubPlot(2,2,2);	gr->Title("'t' style");
+	gr->Rotate(50,60);	gr->Box();	gr->Flow3(ex,ey,ez,"t",0);
+	gr->SubPlot(2,2,3);	gr->Title("from \\i z planes");
+	gr->Rotate(50,60);	gr->Box();	gr->Flow3(ex,ey,ez,"z",0);	gr->Flow3(ex,ey,ez,"z",9);
 }
 //-----------------------------------------------------------------------------
 const char *mmgl_pipe="call 'prepare2v'\ncall 'prepare3v'\nsubplot 2 2 0 '':title 'Pipe plot (default)':light on:box:pipe a b\n"
@@ -2093,7 +2232,7 @@ void smgl_axis(mglGraph *gr)
 	gr->InPlot(0,0.5,0,0.5);	gr->SetRanges(1,0,4,0);	gr->FPlot("4*x^2");
 }
 //-----------------------------------------------------------------------------
-const char *mmgl_ticks="subplot 3 3 0:title 'Usual axis'\naxis\n\n"
+const char *mmgl_ticks="subplot 3 3 0:title 'Usual axis with \":\" style'\naxis ':'\n\n"
 "subplot 3 3 1:title 'Too big/small range'\nranges -1000 1000 0 0.001:axis\n\n"
 "subplot 3 3 2:title 'LaTeX-like labels'\naxis 'F!'\n\n"
 "subplot 3 3 3:title 'Too narrow range'\nranges 100 100.1 10 10.01:axis\n\n"
@@ -2105,12 +2244,12 @@ const char *mmgl_ticks="subplot 3 3 0:title 'Usual axis'\naxis\n\n"
 "subplot 3 3 7:title 'Manual ticks'\nranges -pi pi 0 2\n"
 "xtick pi 3 '\\pi'\nxtick 0.886 'x^*' on # note this will disable subticks drawing\n"
 "# or you can use\n#xtick -pi '\\pi' -pi/2 '-\\pi/2' 0 '0' 0.886 'x^*' pi/2 '\\pi/2' pi 'pi'\n"
-"# or you can use\n#list v -pi -pi/2 0 0.886 pi/2 pi:xtick v '-\\pi\\n-\\pi/2\\n{}0\\n{}x^*\\n\\pi/2\\n\\pi'\n"
+"list v 0 0.5 1 2:ytick v '0\n0.5\n1\n2'\n"
 "axis:grid:fplot '2*cos(x^2)^2' 'r2'\n\n"
 "subplot 3 3 8:title 'Time ticks'\nxrange 0 3e5:ticktime 'x':axis";
 void smgl_ticks(mglGraph *gr)
 {
-	gr->SubPlot(3,3,0);	gr->Title("Usual axis");	gr->Axis();
+	gr->SubPlot(3,3,0);	gr->Title("Usual axis with ':' style");	gr->Axis(":");
 	gr->SubPlot(3,3,1);	gr->Title("Too big/small range");
 	gr->SetRanges(-1000,1000,0,0.001);	gr->Axis();
 	gr->SubPlot(3,3,2);	gr->Title("LaTeX-like labels");
@@ -2130,8 +2269,8 @@ void smgl_ticks(mglGraph *gr)
 	gr->SubPlot(3,3,7);	gr->Title("Manual ticks");	gr->SetRanges(-M_PI,M_PI, 0, 2);
 	gr->SetTicks('x',M_PI,0,0,"\\pi");	gr->AddTick('x',0.886,"x^*");
 	// alternatively you can use following lines
-	//double val[]={-M_PI, -M_PI/2, 0, 0.886, M_PI/2, M_PI};
-	//gr->SetTicksVal('x', mglData(6,val), "-\\pi\n-\\pi/2\n0\nx^*\n\\pi/2\n\\pi");
+	double val[]={0, 0.5, 1, 2};
+	gr->SetTicksVal('y', mglData(4,val), "0\n0.5\n1\n2");
 	gr->Axis();	gr->Grid();	gr->FPlot("2*cos(x^2)^2", "r2");
 	gr->SubPlot(3,3,8);	gr->Title("Time ticks");	gr->SetRange('x',0,3e5);
 	gr->SetTicksTime('x',0);	gr->Axis();
@@ -2208,13 +2347,17 @@ const char *mmgl_primitives="subplot 2 2 0 '':title 'Line, Curve, Rhomb, Ellipse
 "line -1 -1 -0.5 1 'qAI'\ncurve -0.6 -1 1 1 0 1 1 1 'rA'\nball 0 -0.5 '*':ball 1 -0.1 '*'\n"
 "rhomb 0 0.4 1 0.9 0.2 'b#'\nrhomb 0 0 1 0.4 0.2 'cg@'\n"
 "ellipse 0 -0.5 1 -0.1 0.2 'u#'\nellipse 0 -1 1 -0.6 0.2 'm@'\n\n"
-"light on\nsubplot 2 2 1:title 'Face[xyz]':rotate 50 60:box\n"
+"subplot 2 3 1 '':title 'Arc, Polygon, Symbol';size -1.2\n"
+"arc -0.6 0 -0.6 0.3 180 '2kA':ball -0.6 0\npolygon 0 0 0 0.4 6 'r'\n"
+"new x 50 'cos(3*pi*x)':new y 50 'sin(pi*x)'\n"
+"addsymbol 'a' x y\nsymbol 0.7 0 'a'\n\n"
+"light on\nsubplot 2 3 3 '<^>' 0 -0.2:title 'Face[xyz]';size -1.5:rotate 50 60:box\n"
 "facex 1 0 -1 1 1 'r':facey -1 -1 -1 1 1 'g':facez 1 -1 -1 -1 1 'b'\n"
 "face -1 -1 1 -1 1 1 1 -1 0 1 1 1 'bmgr'\n\n"
-"subplot 2 2 3 '':title 'Cone'\n"
-"cone -0.7 -0.3 0 -0.7 0.7 0.5 0.2 0.1 'b':text -0.7 -0.7 'no edges\\n(default)'\n"
-"cone 0 -0.3 0 0 0.7 0.5 0.2 0.1 'g@':text 0 -0.7 'with edges\\n('\\@' style)'\n"
-"cone 0.7 -0.3 0 0.7 0.7 0.5 0.2 0.1 'ry':text 0.7 -0.7 '\"arrow\" with\\n{}gradient'\n\n"
+"subplot 2 3 5 '':title 'Cone';size -1.5\n"
+"cone -0.7 -0.3 0 -0.7 0.7 0.5 0.2 0.1 'b':text -0.7 -0.7 'no edges\\n(default)';size -1.5\n"
+"cone 0 -0.3 0 0 0.7 0.5 0.2 0.1 'g@':text 0 -0.7 'with edges\\n(\"\\@\" style)';size -1.5\n"
+"cone 0.7 -0.3 0 0.7 0.7 0.5 0.2 0 'Ggb':text 0.7 -0.7 '\"arrow\" with\\n{}gradient';size -1.5\n"
 "subplot 2 2 2 '':title 'Sphere and Drop'\nline -0.9 0 1 0.9 0 1\n"
 "text -0.9 0.4 'sh=0':drop -0.9 0 0 1 0.5 'r' 0:ball -0.9 0 1 'k'\n"
 "text -0.3 0.6 'sh=0.33':drop -0.3 0 0 1 0.5 'r' 0.33:ball -0.3 0 1 'k'\n"
@@ -2235,20 +2378,27 @@ void smgl_primitives(mglGraph *gr)	// flag #
 	gr->Ellipse(mglPoint(0,-1),mglPoint(1,-0.6),0.2,"m@");
 	gr->Mark(mglPoint(0,-0.5),"*");	gr->Mark(mglPoint(1,-0.1),"*");
 
+	gr->SubPlot(2,3,1,"");	gr->Title("Arc, Polygon, Symbol","", -1.2*2);
+	gr->Arc(mglPoint(-0.6,0), mglPoint(-0.6,0.3), 180, "2kA");	gr->Ball(-0.6,0);
+	gr->Polygon(mglPoint(), mglPoint(0,0.4), 6, "r");
+	mglData x(50), y(50);	gr->Fill(x,"cos(3*pi*x)");	gr->Fill(y,"sin(pi*x)");
+	gr->DefineSymbol('a',x,y);	gr->Symbol(mglPoint(0.7),'a');
+
 	gr->Light(true);
-	gr->SubPlot(2,2,1);	gr->Title("Face[xyz]");	gr->Rotate(50,60);	gr->Box();
+	gr->SubPlot(2,3,3,"<^>",0,-0.2);	gr->Title("Face[xyz]", "", -1.5*2);
+	gr->Rotate(50,60);	gr->Box();
 	gr->FaceX(mglPoint(1,0,-1),1,1,"r");
 	gr->FaceY(mglPoint(-1,-1,-1),1,1,"g");
 	gr->FaceZ(mglPoint(1,-1,-1),-1,1,"b");
 	gr->Face(mglPoint(-1,-1,1),mglPoint(-1,1,1),mglPoint(1,-1,0),mglPoint(1,1,1),"bmgr");
 
-	gr->SubPlot(2,2,3,"");	gr->Title("Cone");
+	gr->SubPlot(2,3,5,"");	gr->Title("Cone", "", -1.5*2);
 	gr->Cone(mglPoint(-0.7,-0.3),mglPoint(-0.7,0.7,0.5),0.2,0.1,"b");
-	gr->Puts(mglPoint(-0.7,-0.7),"no edges\n(default)");
+	gr->Puts(mglPoint(-0.7,-0.7),"no edges\n(default)","", -1.5);
 	gr->Cone(mglPoint(0,-0.3),mglPoint(0,0.7,0.5),0.2,0.1,"g@");
-	gr->Puts(mglPoint(0,-0.7),"with edges\n('\\@' style)");
+	gr->Puts(mglPoint(0,-0.7),"with edges\n('\\@' style)","", -1.5);
 	gr->Cone(mglPoint(0.7,-0.3),mglPoint(0.7,0.7,0.5),0.2,0,"ry");
-	gr->Puts(mglPoint(0.7,-0.7),"'arrow' with\ngradient");
+	gr->Puts(mglPoint(0.7,-0.7),"'arrow' with\ngradient","", -1.5);
 
 	gr->SubPlot(2,2,2,"");	gr->Title("Sphere and Drop");	gr->Alpha(false);
 	gr->Puts(mglPoint(-0.9,0.4),"sh=0");		gr->Ball(mglPoint(-0.9,0,1),'k');
@@ -2336,10 +2486,11 @@ void smgl_colorbar(mglGraph *gr)
 const char *mmgl_legend="addlegend 'sin(\\pi {x^2})' 'b':addlegend 'sin(\\pi x)' 'g*'\n"
 "addlegend 'sin(\\pi \\sqrt{x})' 'rd':addlegend 'jsut text' ' ':addlegend 'no indent for this' ''\n"
 "subplot 2 2 0 '':title 'Legend (default)':box:legend\n"
+"legend 1 0.5 '^':text 0.49 0.88 'Style \"\\^\"' 'A:L'\n"
 "legend 3 'A#':text 0.75 0.65 'Absolute position' 'A'\n"
 "subplot 2 2 2 '':title 'coloring':box:legend 0 'r#':legend 1 'Wb#':legend 2 'ygr#'\n"
 "subplot 2 2 3 '':title 'manual position':box\n"
-"legend 0.5 1:text 0.5 0.55 'at x=0.5, y=1' 'a'\n"
+"legend 0.5 1:text 0.5 0.5 'at x=0.5, y=1' 'a'\n"
 "legend 1 '#-':text 0.75 0.25 'Horizontal legend' 'a'";
 void smgl_legend(mglGraph *gr)
 {
@@ -2351,13 +2502,14 @@ void smgl_legend(mglGraph *gr)
 	if(big!=3)	{gr->SubPlot(2,2,0,"");	gr->Title("Legend (default)");}
 	gr->Box();	gr->Legend();
 	if(big==3)	return;
+	gr->Legend(1,0.5,"^");	gr->Puts(0.49, 0.88, "Style '\\^'","A:L");
 	gr->Legend(3,"A#");
 	gr->Puts(mglPoint(0.75,0.65),"Absolute position","A");
 	gr->SubPlot(2,2,2,"");	gr->Title("coloring");	gr->Box();
 	gr->Legend(0,"r#");	gr->Legend(1,"Wb#");	gr->Legend(2,"ygr#");
 	gr->SubPlot(2,2,3,"");	gr->Title("manual position");	gr->Box();
 	gr->Legend(0.5,1);
-	gr->Puts(mglPoint(0.5,0.55),"at x=0.5, y=1","a");
+	gr->Puts(mglPoint(0.5,0.5),"at x=0.5, y=1","a");
 	gr->Legend(1,"#-");
 	gr->Puts(mglPoint(0.75,0.25),"Horizontal legend","a");
 }
@@ -2767,6 +2919,26 @@ void smgl_ifs2d(mglGraph *gr)
 	gr->Axis();	gr->Plot(f.SubData(0), f.SubData(1),"r#o ","size 0.05");
 }
 //-----------------------------------------------------------------------------
+const char *mmgl_icon="setsize 200 200\nzrange 0 2\n\ndefine $s 0.8\nnew x 200 '$s*(x+1)/2*sin(2*pi*x)'\n"
+"new y 200 '$s*(x+1)/2*cos(2*pi*x)'\nnew z 200 '$s*(2-(x+1))+0.1'\n"
+"new r 200 '0.02+0.07*(x+1)'\n\nsubplot 1 1 0 '#'\nfsurf 'v*cos(2*pi*u)' 'v*sin(2*pi*u)-0.05' 'v/2' 'Yyyww'\n"
+"light on\nrotate 65 80\ntube x y z+0.15 r\ndefine $r 0.13\n"
+"fsurf '0+$r*cos(2*pi*u)*cos(2*pi*v)' '0.03+$r*cos(2*pi*u)*sin(2*pi*v)' '2*$s+0.25+$r*sin(2*pi*u)' 'r'\n"
+"define $r 0.155\nfsurf '$r*cos(2*pi*u)*cos(2*pi*v)' '$s+$r*cos(2*pi*u)*sin(2*pi*v)' '0.25+$r*sin(2*pi*u)' 'b'\n";
+void smgl_icon(mglGraph *gr)
+{
+	gr->SetSize(200,200);	gr->SetRange('z',0,2);
+	mglData x(200);	gr->Fill(x,"0.8*(x+1)/2*sin(2*pi*x)");
+	mglData y(200);	gr->Fill(y,"0.8*(x+1)/2*cos(2*pi*x)");
+	mglData z(200);	gr->Fill(z,"0.8*(2-(x+1))+0.25");
+	mglData r(200);	gr->Fill(r,"0.02+0.07*(x+1)");
+	gr->SubPlot(1,1,0,"#");
+	gr->FSurf("v*cos(2*pi*u)","v*sin(2*pi*u)-0.05","v/2","Yyyww");
+	gr->Light(true);	gr->Rotate(65,80);	gr->Tube(x,y,z,r);
+	gr->FSurf("0.13*cos(2*pi*u)*cos(2*pi*v)","0.03+0.13*cos(2*pi*u)*sin(2*pi*v)","1.85+0.13*sin(2*pi*u)","r");
+	gr->FSurf("0.155*cos(2*pi*u)*cos(2*pi*v)","0.8+0.155*cos(2*pi*u)*sin(2*pi*v)","0.25+0.155*sin(2*pi*u)","b");
+}
+//-----------------------------------------------------------------------------
 const char *mmgl_ifs3d="list A [0,0,0,0,.18,0,0,0,0,0,0,0,.01] [.85,0,0,0,.85,.1,0,-0.1,0.85,0,1.6,0,.85]\\\n"
 "\t[.2,-.2,0,.2,.2,0,0,0,0.3,0,0.8,0,.07] [-.2,.2,0,.2,.2,0,0,0,0.3,0,0.8,0,.07]\n"
 "ifs3d f A 100000\ntitle 'IFS 3d sample':rotate 50 60\n"
@@ -3000,7 +3172,7 @@ const char *mmgl_earth="import dat 'Equirectangular-projection.jpg' 'BbGYw' -1 1
 "subplot 1 1 0 '<>':title 'Earth in 3D':rotate 40 60\n"
 "copy phi dat 'pi*x':copy tet dat 'pi*y/2'\n"
 "copy x cos(tet)*cos(phi)\ncopy y cos(tet)*sin(phi)\ncopy z sin(tet)\n\n"
-"light on\nsurfc x y z dat 'BbGYw'\ncontp [-0.5,-0.5] x y z dat 'y'";
+"light on\nsurfc x y z dat 'BbGYw'\ncontp [-0.51,-0.51] x y z dat 'y'";
 void smgl_earth(mglGraph *gr)
 {
 	mglData dat;	dat.Import("Equirectangular-projection.jpg","BbGYw",-1,1);
@@ -3018,142 +3190,508 @@ void smgl_earth(mglGraph *gr)
 	if(big!=3)	gr->Title("Earth in 3D");
 	gr->Rotate(40,60);	gr->Light(true);
 	gr->SurfC(x,y,z,dat,"BbGYw");
-	mglData vals(2);	vals.a[0]=-0.5;
+	mglData vals(1);	vals.a[0]=-0.51;
 	gr->ContP(vals, x,y,z,dat,"y");
+}
+//-----------------------------------------------------------------------------
+#define all_prims_str "subplot 3 2 0:define y 0.95\n\
+define d 0.3:define x0 0.2:define x1 0.5:define x2 0.6\n\
+line x0 1-0*d x1 1-0*d 'k-':text x2 y-0*d 'Solid `-`' ':rL'\n\
+line x0 1-1*d x1 1-1*d 'k|':text x2 y-1*d 'Long Dash `|`' ':rL'\n\
+line x0 1-2*d x1 1-2*d 'k;':text x2 y-2*d 'Dash 1;`' ':rL'\n\
+line x0 1-3*d x1 1-3*d 'k=':text x2 y-3*d 'Small dash `=`' ':rL'\n\
+line x0 1-4*d x1 1-4*d 'kj':text x2 y-4*d 'Dash-dot `j`' ':rL'\n\
+line x0 1-5*d x1 1-5*d 'ki':text x2 y-5*d 'Small dash-dot `i`' ':rL'\n\
+line x0 1-6*d x1 1-6*d 'k:':text x2 y-6*d 'Dots `:`' ':rL'\n\
+line x0 1-7*d x1 1-7*d 'k ':text x2 y-7*d 'None ``' ':rL'\n\
+define d 0.25:define x0 -0.8:define x1 -1:define x2 -0.05\n\
+ball x1 5*d 'k.':text x0 5*d '.' ':rL'\n\
+ball x1 4*d 'k+':text x0 4*d '+' ':rL'\n\
+ball x1 3*d 'kx':text x0 3*d 'x' ':rL'\n\
+ball x1 2*d 'k*':text x0 2*d '*' ':rL'\n\
+ball x1 d 'ks':text x0 d 's' ':rL'\n\
+ball x1 0 'kd':text x0 0 'd' ':rL'\n\
+ball x1 -d 0 'ko':text x0 y-d 'o' ':rL'\n\
+ball x1 -2*d 0 'k^':text x0 -2*d '\\^' ':rL'\n\
+ball x1 -3*d 0 'kv':text x0 -3*d 'v' ':rL'\n\
+ball x1 -4*d 0 'k<':text x0 -4*d '<' ':rL'\n\
+ball x1 -5*d 0 'k>':text x0 -5*d '>' ':rL'\n\n\
+define x0 -0.3:define x1 -0.5\n\
+ball x1 5*d 'k#.':text x0 5*d '\\#.' ':rL'\n\
+ball x1 4*d 'k#+':text x0 4*d '\\#+' ':rL'\n\
+ball x1 3*d 'k#x':text x0 3*d '\\#x' ':rL'\n\
+ball x1 2*d 'k#*':text x0 2*d '\\#*' ':rL'\n\
+ball x1 d 'k#s':text x0 d '\\#s' ':rL'\n\
+ball x1 0 'k#d':text x0 0 '\\#d' ':rL'\n\
+ball x1 -d 0 'k#o':text x0 -d '\\#o' ':rL'\n\
+ball x1 -2*d 0 'k#^':text x0 -2*d '\\#\\^' ':rL'\n\
+ball x1 -3*d 0 'k#v':text x0 -3*d '\\#v' ':rL'\n\
+ball x1 -4*d 0 'k#<':text x0 -4*d '\\#<' ':rL'\n\
+ball x1 -5*d 0 'k#>':text x0 -5*d '\\#>' ':rL'\n\n\
+subplot 3 2 1\ndefine a 0.1:define b 0.4:define c 0.5\n\
+line a 1 b 1 'k-A':text c 1 'Style `A` or `A\\_`' ':rL'\n\
+line a 0.8 b 0.8 'k-V':text c 0.8 'Style `V` or `V\\_`' ':rL'\n\
+line a 0.6 b 0.6 'k-K':text c 0.6 'Style `K` or `K\\_`' ':rL'\n\
+line a 0.4 b 0.4 'k-I':text c 0.4 'Style `I` or `I\\_`' ':rL'\n\
+line a 0.2 b 0.2 'k-D':text c 0.2 'Style `D` or `D\\_`' ':rL'\n\
+line a 0 b 0 'k-S':text c 0 'Style `S` or `S\\_`' ':rL'\n\
+line a -0.2 b -0.2 'k-O':text c -0.2 'Style `O` or `O\\_`' ':rL'\n\
+line a -0.4 b -0.4 'k-T':text c -0.4 'Style `T` or `T\\_`' ':rL'\n\
+line a -0.6 b -0.6 'k-_':text c -0.6 'Style `\\_` or none' ':rL'\n\
+line a -0.8 b -0.8 'k-AS':text c -0.8 'Style `AS`' ':rL'\n\
+line a -1 b -1 'k-_A':text c -1 'Style `\\_A`' ':rL'\n\n\
+define a -1:define b -0.7:define c -0.6\n\
+line a 1 b 1 'kAA':text c 1 'Style `AA`' ':rL'\n\
+line a 0.8 b 0.8 'kVV':text c 0.8 'Style `VV`' ':rL'\n\
+line a 0.6 b 0.6 'kKK':text c 0.6 'Style `KK`' ':rL'\n\
+line a 0.4 b 0.4 'kII':text c 0.4 'Style `II`' ':rL'\n\
+line a 0.2 b 0.2 'kDD':text c 0.2 'Style `DD`' ':rL'\n\
+line a 0 b 0 'kSS':text c 0 'Style `SS`' ':rL'\n\
+line a -0.2 b -0.2 'kOO':text c -0.2 'Style `OO`' ':rL'\n\
+line a -0.4 b -0.4 'kTT':text c -0.4 'Style `TT`' ':rL'\n\
+line a -0.6 b -0.6 'k-__':text c -0.6 'Style `\\_\\_`' ':rL'\n\
+line a -0.8 b -0.8 'k-VA':text c -0.8 'Style `VA`' ':rL'\n\
+line a -1 b -1 'k-AV':text c -1 'Style `AV`' ':rL'\n\n\
+subplot 3 2 2\n#LENUQ\n\n\
+facez -1 -1 0 0.4 0.3 'L#':text -0.8 -0.9 'L' 'w:C' -1.4\n\
+facez -0.6 -1 0 0.4 0.3 'E#':text -0.4 -0.9 'E' 'w:C' -1.4\n\
+facez -0.2 -1 0 0.4 0.3 'N#':text 0 -0.9 'N' 'w:C' -1.4\n\
+facez 0.2 -1 0 0.4 0.3 'U#':text 0.4 -0.9 'U' 'w:C' -1.4\n\
+facez 0.6 -1 0 0.4 0.3 'Q#':text 0.8 -0.9 'Q' 'w:C' -1.4\n\
+#lenuq\nfacez -1 -0.7 0 0.4 0.3 'l#':text -0.8 -0.6 'l' 'k:C' -1.4\n\
+facez -0.6 -0.7 0 0.4 0.3 'e#':text -0.4 -0.6 'e' 'k:C' -1.4\n\
+facez -0.2 -0.7 0 0.4 0.3 'n#':text 0 -0.6 'n' 'k:C' -1.4\n\
+facez 0.2 -0.7 0 0.4 0.3 'u#':text 0.4 -0.6 'u' 'k:C' -1.4\n\
+facez 0.6 -0.7 0 0.4 0.3 'q#':text 0.8 -0.6 'q' 'k:C' -1.4\n\
+#CMYkP\nfacez -1 -0.4 0 0.4 0.3 'C#':text -0.8 -0.3 'C' 'w:C' -1.4\n\
+facez -0.6 -0.4 0 0.4 0.3 'M#':text -0.4 -0.3 'M' 'w:C' -1.4\n\
+facez -0.2 -0.4 0 0.4 0.3 'Y#':text 0 -0.3 'Y' 'w:C' -1.4\n\
+facez 0.2 -0.4 0 0.4 0.3 'k#':text 0.4 -0.3 'k' 'w:C' -1.4\n\
+facez 0.6 -0.4 0 0.4 0.3 'P#':text 0.8 -0.3 'P' 'w:C' -1.4\n\
+#cmywp\nfacez -1 -0.1 0 0.4 0.3 'c#':text -0.8 0 'c' 'k:C' -1.4\n\
+facez -0.6 -0.1 0 0.4 0.3 'm#':text -0.4 0 'm' 'k:C' -1.4\n\
+facez -0.2 -0.1 0 0.4 0.3 'y#':text 0 0 'y' 'k:C' -1.4\n\
+facez 0.2 -0.1 0 0.4 0.3 'w#':text 0.4 0 'w' 'k:C' -1.4\n\
+facez 0.6 -0.1 0 0.4 0.3 'p#':text 0.8 0 'p' 'k:C' -1.4\n\
+#BGRHW\nfacez -1 0.2 0 0.4 0.3 'B#':text -0.8 0.3 'B' 'w:C' -1.4\n\
+facez -0.6 0.2 0 0.4 0.3 'G#':text -0.4 0.3 'G' 'w:C' -1.4\n\
+facez -0.2 0.2 0 0.4 0.3 'R#':text 0 0.3 'R' 'w:C' -1.4\n\
+facez 0.2 0.2 0 0.4 0.3 'H#':text 0.4 0.3 'H' 'w:C' -1.4\n\
+facez 0.6 0.2 0 0.4 0.3 'W#':text 0.8 0.3 'W' 'w:C' -1.4\n\
+#bgrhw\nfacez -1 0.5 0 0.4 0.3 'b#':text -0.8 0.6 'b' 'k:C' -1.4\n\
+facez -0.6 0.5 0 0.4 0.3 'g#':text -0.4 0.6 'g' 'k:C' -1.4\n\
+facez -0.2 0.5 0 0.4 0.3 'r#':text 0 0.6 'r' 'k:C' -1.4\n\
+facez 0.2 0.5 0 0.4 0.3 'h#':text 0.4 0.6 'h' 'k:C' -1.4\n\
+facez 0.6 0.5 0 0.4 0.3 'w#':text 0.8 0.6 'w' 'k:C' -1.4\n\
+#brighted\nfacez -1 0.8 0 0.4 0.3 '{r1}#':text -0.8 0.9 '\\{r1\\}' 'w:C' -1.4\n\
+facez -0.6 0.8 0 0.4 0.3 '{r3}#':text -0.4 0.9 '\\{r3\\}' 'w:C' -1.4\n\
+facez -0.2 0.8 0 0.4 0.3 '{r5}#':text 0 0.9 '\\{r5\\}' 'k:C' -1.4\n\
+facez 0.2 0.8 0 0.4 0.3 '{r7}#':text 0.4 0.9 '\\{r7\\}' 'k:C' -1.4\n\
+facez 0.6 0.8 0 0.4 0.3 '{r9}#':text 0.8 0.9 '\\{r9\\}' 'k:C' -1.4\n\
+# HEX\nfacez -1 -1.3 0 1 0.3 '{xff9966}#':text -0.5 -1.2 '\\{xff9966\\}' 'k:C' -1.4\n\
+facez 0 -1.3 0 1 0.3 '{x83CAFF}#':text 0.5 -1.2 '\\{x83caff\\}' 'k:C' -1.4\n\n\
+subplot 3 2 3\nfor $i 0 9\nline -1 0.2*$i-1 1 0.2*$i-1 'r','0'+$i\n\
+text 1.05 0.2*$i-1 '0'+$i ':L'\nnext\n\n\
+subplot 3 2 4:title 'TriPlot sample':rotate 50 60\n\
+list tt 0 1 2 | 0 1 3 | 0 2 3 | 1 2 3\n\
+list xt -1 1 0 0:list yt -1 -1 1 0:list zt -1 -1 -1 1:light on\n\
+triplot tt xt yt zt 'b':triplot tt xt yt zt 'k#'\n\n\
+subplot 3 2 5:new r 4 'i+1':ranges 1 4 1 4\naxis:mark r r 's':plot r 'b'\n"
+void all_prims(mglGraph *gr)	// test drawing of all kinds
+{
+	gr->SubPlot(3,2,0);
+	double d,x1,x2,x0,y=0.95;
+	d=0.3, x0=0.2, x1=0.5, x2=0.6;
+	gr->Line(mglPoint(x0,1-0*d),mglPoint(x1,1-0*d),"k-");	gr->Puts(mglPoint(x2,y-0*d),"Solid '-'",":rL");
+	gr->Line(mglPoint(x0,1-1*d),mglPoint(x1,1-1*d),"k|");	gr->Puts(mglPoint(x2,y-1*d),"Long Dash '|'",":rL");
+	gr->Line(mglPoint(x0,1-2*d),mglPoint(x1,1-2*d),"k;");	gr->Puts(mglPoint(x2,y-2*d),"Dash ';'",":rL");
+	gr->Line(mglPoint(x0,1-3*d),mglPoint(x1,1-3*d),"k=");	gr->Puts(mglPoint(x2,y-3*d),"Small dash '='",":rL");
+	gr->Line(mglPoint(x0,1-4*d),mglPoint(x1,1-4*d),"kj");	gr->Puts(mglPoint(x2,y-4*d),"Dash-dot 'j'",":rL");
+	gr->Line(mglPoint(x0,1-5*d),mglPoint(x1,1-5*d),"ki");	gr->Puts(mglPoint(x2,y-5*d),"Small dash-dot 'i'",":rL");
+	gr->Line(mglPoint(x0,1-6*d),mglPoint(x1,1-6*d),"k:");	gr->Puts(mglPoint(x2,y-6*d),"Dots ':'",":rL");
+	gr->Line(mglPoint(x0,1-7*d),mglPoint(x1,1-7*d),"k ");	gr->Puts(mglPoint(x2,y-7*d),"None ' '",":rL");
+
+	d=0.25; x1=-1; x0=-0.8;	y = -0.05;
+	gr->Mark(mglPoint(x1,5*d),"k.");	gr->Puts(mglPoint(x0,y+5*d),"'.'",":rL");
+	gr->Mark(mglPoint(x1,4*d),"k+");	gr->Puts(mglPoint(x0,y+4*d),"'+'",":rL");
+	gr->Mark(mglPoint(x1,3*d),"kx");	gr->Puts(mglPoint(x0,y+3*d),"'x'",":rL");
+	gr->Mark(mglPoint(x1,2*d),"k*");	gr->Puts(mglPoint(x0,y+2*d),"'*'",":rL");
+	gr->Mark(mglPoint(x1,d),"ks");		gr->Puts(mglPoint(x0,y+d),"'s'",":rL");
+	gr->Mark(mglPoint(x1,0),"kd");		gr->Puts(mglPoint(x0,y),"'d'",":rL");
+	gr->Mark(mglPoint(x1,-d,0),"ko");	gr->Puts(mglPoint(x0,y-d),"'o'",":rL");
+	gr->Mark(mglPoint(x1,-2*d,0),"k^");	gr->Puts(mglPoint(x0,y-2*d),"'\\^'",":rL");
+	gr->Mark(mglPoint(x1,-3*d,0),"kv");	gr->Puts(mglPoint(x0,y-3*d),"'v'",":rL");
+	gr->Mark(mglPoint(x1,-4*d,0),"k<");	gr->Puts(mglPoint(x0,y-4*d),"'<'",":rL");
+	gr->Mark(mglPoint(x1,-5*d,0),"k>");	gr->Puts(mglPoint(x0,y-5*d),"'>'",":rL");
+
+	d=0.25; x1=-0.5; x0=-0.3;	y = -0.05;
+	gr->Mark(mglPoint(x1,5*d),"k#.");	gr->Puts(mglPoint(x0,y+5*d),"'\\#.'",":rL");
+	gr->Mark(mglPoint(x1,4*d),"k#+");	gr->Puts(mglPoint(x0,y+4*d),"'\\#+'",":rL");
+	gr->Mark(mglPoint(x1,3*d),"k#x");	gr->Puts(mglPoint(x0,y+3*d),"'\\#x'",":rL");
+	gr->Mark(mglPoint(x1,2*d),"k#*");	gr->Puts(mglPoint(x0,y+2*d),"'\\#*'",":rL");
+	gr->Mark(mglPoint(x1,d),"k#s");		gr->Puts(mglPoint(x0,y+d),"'\\#s'",":rL");
+	gr->Mark(mglPoint(x1,0),"k#d");		gr->Puts(mglPoint(x0,y),"'\\#d'",":rL");
+	gr->Mark(mglPoint(x1,-d,0),"k#o");	gr->Puts(mglPoint(x0,y-d),"'\\#o'",":rL");
+	gr->Mark(mglPoint(x1,-2*d,0),"k#^");	gr->Puts(mglPoint(x0,y-2*d),"'\\#\\^'",":rL");
+	gr->Mark(mglPoint(x1,-3*d,0),"k#v");	gr->Puts(mglPoint(x0,y-3*d),"'\\#v'",":rL");
+	gr->Mark(mglPoint(x1,-4*d,0),"k#<");	gr->Puts(mglPoint(x0,y-4*d),"'\\#<'",":rL");
+	gr->Mark(mglPoint(x1,-5*d,0),"k#>");	gr->Puts(mglPoint(x0,y-5*d),"'\\#>'",":rL");
+
+	gr->SubPlot(3,2,1);
+	double a=0.1,b=0.4,c=0.5;
+	gr->Line(mglPoint(a,1),mglPoint(b,1),"k-A");		gr->Puts(mglPoint(c,1),"Style 'A' or 'A\\_'",":rL");
+	gr->Line(mglPoint(a,0.8),mglPoint(b,0.8),"k-V");	gr->Puts(mglPoint(c,0.8),"Style 'V' or 'V\\_'",":rL");
+	gr->Line(mglPoint(a,0.6),mglPoint(b,0.6),"k-K");	gr->Puts(mglPoint(c,0.6),"Style 'K' or 'K\\_'",":rL");
+	gr->Line(mglPoint(a,0.4),mglPoint(b,0.4),"k-I");	gr->Puts(mglPoint(c,0.4),"Style 'I' or 'I\\_'",":rL");
+	gr->Line(mglPoint(a,0.2),mglPoint(b,0.2),"k-D");	gr->Puts(mglPoint(c,0.2),"Style 'D' or 'D\\_'",":rL");
+	gr->Line(mglPoint(a,0),mglPoint(b,0),"k-S");		gr->Puts(mglPoint(c,0),"Style 'S' or 'S\\_'",":rL");
+	gr->Line(mglPoint(a,-0.2),mglPoint(b,-0.2),"k-O");	gr->Puts(mglPoint(c,-0.2),"Style 'O' or 'O\\_'",":rL");
+	gr->Line(mglPoint(a,-0.4),mglPoint(b,-0.4),"k-T");	gr->Puts(mglPoint(c,-0.4),"Style 'T' or 'T\\_'",":rL");
+	gr->Line(mglPoint(a,-0.6),mglPoint(b,-0.6),"k-_");	gr->Puts(mglPoint(c,-0.6),"Style '\\_' or none",":rL");
+	gr->Line(mglPoint(a,-0.8),mglPoint(b,-0.8),"k-AS");	gr->Puts(mglPoint(c,-0.8),"Style 'AS'",":rL");
+	gr->Line(mglPoint(a,-1),mglPoint(b,-1),"k-_A");		gr->Puts(mglPoint(c,-1),"Style '\\_A'",":rL");
+
+	a=-1;	b=-0.7;	c=-0.6;
+	gr->Line(mglPoint(a,1),mglPoint(b,1),"kAA");		gr->Puts(mglPoint(c,1),"Style 'AA'",":rL");
+	gr->Line(mglPoint(a,0.8),mglPoint(b,0.8),"kVV");	gr->Puts(mglPoint(c,0.8),"Style 'VV'",":rL");
+	gr->Line(mglPoint(a,0.6),mglPoint(b,0.6),"kKK");	gr->Puts(mglPoint(c,0.6),"Style 'KK'",":rL");
+	gr->Line(mglPoint(a,0.4),mglPoint(b,0.4),"kII");	gr->Puts(mglPoint(c,0.4),"Style 'II'",":rL");
+	gr->Line(mglPoint(a,0.2),mglPoint(b,0.2),"kDD");	gr->Puts(mglPoint(c,0.2),"Style 'DD'",":rL");
+	gr->Line(mglPoint(a,0),mglPoint(b,0),"kSS");		gr->Puts(mglPoint(c,0),"Style 'SS'",":rL");
+	gr->Line(mglPoint(a,-0.2),mglPoint(b,-0.2),"kOO");	gr->Puts(mglPoint(c,-0.2),"Style 'OO'",":rL");
+	gr->Line(mglPoint(a,-0.4),mglPoint(b,-0.4),"kTT");	gr->Puts(mglPoint(c,-0.4),"Style 'TT'",":rL");
+	gr->Line(mglPoint(a,-0.6),mglPoint(b,-0.6),"k-__");	gr->Puts(mglPoint(c,-0.6),"Style '\\_\\_'",":rL");
+	gr->Line(mglPoint(a,-0.8),mglPoint(b,-0.8),"k-VA");	gr->Puts(mglPoint(c,-0.8),"Style 'VA'",":rL");
+	gr->Line(mglPoint(a,-1),mglPoint(b,-1),"k-AV");		gr->Puts(mglPoint(c,-1),"Style 'AV'",":rL");
+
+	gr->SubPlot(3,2,2);
+	//#LENUQ
+	gr->FaceZ(mglPoint(-1,	-1), 0.4, 0.3, "L#");	gr->Puts(mglPoint(-0.8,-0.9), "L", "w:C", -1.4);
+	gr->FaceZ(mglPoint(-0.6,-1), 0.4, 0.3, "E#");	gr->Puts(mglPoint(-0.4,-0.9), "E", "w:C", -1.4);
+	gr->FaceZ(mglPoint(-0.2,-1), 0.4, 0.3, "N#");	gr->Puts(mglPoint(0,  -0.9), "N", "w:C", -1.4);
+	gr->FaceZ(mglPoint(0.2,	-1), 0.4, 0.3, "U#");	gr->Puts(mglPoint(0.4,-0.9), "U", "w:C", -1.4);
+	gr->FaceZ(mglPoint(0.6,	-1), 0.4, 0.3, "Q#");	gr->Puts(mglPoint(0.8,-0.9), "Q", "w:C", -1.4);
+	//#lenuq
+	gr->FaceZ(mglPoint(-1,	-0.7), 0.4, 0.3, "l#");	gr->Puts(mglPoint(-0.8,-0.6), "l", "k:C", -1.4);
+	gr->FaceZ(mglPoint(-0.6,-0.7), 0.4, 0.3, "e#");	gr->Puts(mglPoint(-0.4,-0.6), "e", "k:C", -1.4);
+	gr->FaceZ(mglPoint(-0.2,-0.7), 0.4, 0.3, "n#");	gr->Puts(mglPoint(0,  -0.6), "n", "k:C", -1.4);
+	gr->FaceZ(mglPoint(0.2,	-0.7), 0.4, 0.3, "u#");	gr->Puts(mglPoint(0.4,-0.6), "u", "k:C", -1.4);
+	gr->FaceZ(mglPoint(0.6,	-0.7), 0.4, 0.3, "q#");	gr->Puts(mglPoint(0.8,-0.6), "q", "k:C", -1.4);
+	//#CMYkP
+	gr->FaceZ(mglPoint(-1,	-0.4), 0.4, 0.3, "C#");	gr->Puts(mglPoint(-0.8,-0.3), "C", "w:C", -1.4);
+	gr->FaceZ(mglPoint(-0.6,-0.4), 0.4, 0.3, "M#");	gr->Puts(mglPoint(-0.4,-0.3), "M", "w:C", -1.4);
+	gr->FaceZ(mglPoint(-0.2,-0.4), 0.4, 0.3, "Y#");	gr->Puts(mglPoint(0,  -0.3), "Y", "w:C", -1.4);
+	gr->FaceZ(mglPoint(0.2,	-0.4), 0.4, 0.3, "k#");	gr->Puts(mglPoint(0.4,-0.3), "k", "w:C", -1.4);
+	gr->FaceZ(mglPoint(0.6,	-0.4), 0.4, 0.3, "P#");	gr->Puts(mglPoint(0.8,-0.3), "P", "w:C", -1.4);
+	//#cmywp
+	gr->FaceZ(mglPoint(-1,	-0.1), 0.4, 0.3, "c#");	gr->Puts(mglPoint(-0.8, 0), "c", "k:C", -1.4);
+	gr->FaceZ(mglPoint(-0.6,-0.1), 0.4, 0.3, "m#");	gr->Puts(mglPoint(-0.4, 0), "m", "k:C", -1.4);
+	gr->FaceZ(mglPoint(-0.2,-0.1), 0.4, 0.3, "y#");	gr->Puts(mglPoint(0,   0), "y", "k:C", -1.4);
+	gr->FaceZ(mglPoint(0.2,	-0.1), 0.4, 0.3, "w#");	gr->Puts(mglPoint(0.4, 0), "w", "k:C", -1.4);
+	gr->FaceZ(mglPoint(0.6,	-0.1), 0.4, 0.3, "p#");	gr->Puts(mglPoint(0.8, 0), "p", "k:C", -1.4);
+	//#BGRHW
+	gr->FaceZ(mglPoint(-1,	0.2), 0.4, 0.3, "B#");	gr->Puts(mglPoint(-0.8, 0.3), "B", "w:C", -1.4);
+	gr->FaceZ(mglPoint(-0.6,0.2), 0.4, 0.3, "G#");	gr->Puts(mglPoint(-0.4, 0.3), "G", "w:C", -1.4);
+	gr->FaceZ(mglPoint(-0.2,0.2), 0.4, 0.3, "R#");	gr->Puts(mglPoint(0,   0.3), "R", "w:C", -1.4);
+	gr->FaceZ(mglPoint(0.2,	0.2), 0.4, 0.3, "H#");	gr->Puts(mglPoint(0.4, 0.3), "H", "w:C", -1.4);
+	gr->FaceZ(mglPoint(0.6,	0.2), 0.4, 0.3, "W#");	gr->Puts(mglPoint(0.8, 0.3), "W", "w:C", -1.4);
+	//#bgrhw
+	gr->FaceZ(mglPoint(-1,	0.5), 0.4, 0.3, "b#");	gr->Puts(mglPoint(-0.8, 0.6), "b", "k:C", -1.4);
+	gr->FaceZ(mglPoint(-0.6,0.5), 0.4, 0.3, "g#");	gr->Puts(mglPoint(-0.4, 0.6), "g", "k:C", -1.4);
+	gr->FaceZ(mglPoint(-0.2,0.5), 0.4, 0.3, "r#");	gr->Puts(mglPoint(0,   0.6), "r", "k:C", -1.4);
+	gr->FaceZ(mglPoint(0.2,	0.5), 0.4, 0.3, "h#");	gr->Puts(mglPoint(0.4, 0.6), "h", "k:C", -1.4);
+	gr->FaceZ(mglPoint(0.6,	0.5), 0.4, 0.3, "w#");	gr->Puts(mglPoint(0.8, 0.6), "w", "k:C", -1.4);
+	//#brighted
+	gr->FaceZ(mglPoint(-1,	0.8), 0.4, 0.3, "{r1}#");	gr->Puts(mglPoint(-0.8, 0.9), "\\{r1\\}", "w:C", -1.4);
+	gr->FaceZ(mglPoint(-0.6,0.8), 0.4, 0.3, "{r3}#");	gr->Puts(mglPoint(-0.4, 0.9), "\\{r3\\}", "w:C", -1.4);
+	gr->FaceZ(mglPoint(-0.2,0.8), 0.4, 0.3, "{r5}#");	gr->Puts(mglPoint(0,   0.9), "\\{r5\\}", "k:C", -1.4);
+	gr->FaceZ(mglPoint(0.2,	0.8), 0.4, 0.3, "{r7}#");	gr->Puts(mglPoint(0.4, 0.9), "\\{r7\\}", "k:C", -1.4);
+	gr->FaceZ(mglPoint(0.6,	0.8), 0.4, 0.3, "{r9}#");	gr->Puts(mglPoint(0.8, 0.9), "\\{r9\\}", "k:C", -1.4);
+	// HEX
+	gr->FaceZ(mglPoint(-1, -1.3), 1, 0.3, "{xff9966}#");	gr->Puts(mglPoint(-0.5,-1.2), "\\{xff9966\\}", "k:C", -1.4);
+	gr->FaceZ(mglPoint(0,  -1.3), 1, 0.3, "{x83CAFF}#");	gr->Puts(mglPoint( 0.5,-1.2), "\\{x83CAFF\\}", "k:C", -1.4);
+
+	gr->SubPlot(3,2,3);
+	char stl[3]="r1", txt[4]="'1'";
+	for(int i=0;i<10;i++)
+	{
+		txt[1]=stl[1]='0'+i;
+		gr->Line(mglPoint(-1,0.2*i-1),mglPoint(1,0.2*i-1),stl);
+		gr->Puts(mglPoint(1.05,0.2*i-1),txt,":L");
+	}
+
+	gr->SubPlot(3,2,4);	gr->Title("TriPlot sample");	gr->Rotate(50,60);
+	double t[] = {0,1,2, 0,1,3, 0,2,3, 1,2,3};
+	double xt[] = {-1,1,0,0}, yt[] = {-1,-1,1,0}, zt[] = {-1,-1,-1,1};
+	mglData tt(4,3,t), uu(4,xt), vv(4,yt), ww(4,zt);
+	gr->TriPlot(tt,uu,vv,ww,"b");
+	gr->TriPlot(tt,uu,vv,ww,"k#");
+
+	gr->SubPlot(3,2,5);
+	mglData r(4);	r.Fill(1,4);
+	gr->SetRanges(1,4,1,4);	gr->Axis();
+	gr->Mark(r,r,"s");
+	gr->Plot(r,"b");
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_minmax="define $p 30\n"
+"new h 300 300 '-sqrt(1-x^2-y^2)*(3*x*y^2*$p-x^3*$p+6*y)/(3*sqrt(2))+x*y+(y^2+x^2)*$p/3 -7*(y^2+x^2)^2*$p/24+y^2+3*x^2'\n"
+"\nminmax e h\nsubplot 1 1 0 '':title 'MinMax sample'\ncrange h:dens h:box\n"
+"fplot 'sin(2*pi*t)' 'cos(2*pi*t)' '0' 'k'\nplot e(0)*2-1 e(1)*2-1 '. c'";
+void smgl_minmax(mglGraph *gr)	// test minmax
+{
+	mglData h(300,300);
+	gr->Fill(h,"-sqrt(1-x^2-y^2)*(3*x*y^2*30-x^3*30+6*y)/(3*sqrt(2))+x*y+(y^2+x^2)*10 -7*(y^2+x^2)^2*30/24+y^2+3*x^2");
+	mglData e=h.MinMax();
+	if(big!=3)	{	gr->SubPlot(1,1,0,"");	gr->Title("MinMax sample");	}
+	gr->SetRange('c',h);	gr->Dens(h);	gr->Box();
+	gr->FPlot("sin(2*pi*t)","cos(2*pi*t)","0","k");
+	e*=2;	e-=1;
+	gr->Plot(e(0),e(1),". c");
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_conts="new a 10 10 'sin(2*pi*x*y)'\ntitle 'Conts sample':rotate 40 60:box\n"
+"dens a '#'\ncont [0,0] a 'r'\nconts r 0 a\nplot 2*r(0)-1 2*r(1)-1 1+r(2) '2c'";
+void smgl_conts(mglGraph *gr)	// test conts
+{
+	mglData a(10,10);	gr->Fill(a,"sin(2*pi*x*y)");
+	mglData v, r=a.Conts(0);
+	if(big!=3)	{	gr->Title("Conts sample");	}
+	gr->Rotate(40,60);	gr->Box();
+	gr->Dens(a,"#");	gr->Cont(v,a,"r");
+	mglData x(r.ny),y(r.ny),z(r.ny);
+	for(long i=0;i<x.nx;i++)	{	x[i]=r[r.nx*i]*2-1;	y[i]=r[r.nx*i+1]*2-1;	z[i]=1;	}
+	gr->Plot(x,y,z,"2c");
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_fexport=all_prims_str
+"write 'fexport.jpg':#write 'fexport.png'\nwrite 'fexport.bmp':write 'fexport.tga'\n"
+"write 'fexport.eps':write 'fexport.svg'\nwrite 'fexport.gif':write 'fexport.xyz'\n"
+"write 'fexport.stl':write 'fexport.off'\nwrite 'fexport.tex':write 'fexport.obj'\n"
+"write 'fexport.prc':write 'fexport.json'\nwrite 'fexport.mgld'";
+void smgl_fexport(mglGraph *gr)	// test file export
+{
+	all_prims(gr);
+	gr->WriteJPEG("fexport.jpg");
+//	gr->WritePNG("fexport.png");
+	gr->WriteBMP("fexport.bmp");
+	gr->WriteTGA("fexport.tga");
+	gr->WriteEPS("fexport.eps");
+	gr->WriteSVG("fexport.svg");
+	gr->WriteGIF("fexport.gif");
+
+	gr->WriteXYZ("fexport.xyz");
+	gr->WriteSTL("fexport.stl");
+	gr->WriteOFF("fexport.off");
+	gr->WriteTEX("fexport.tex");
+	gr->WriteOBJ("fexport.obj");
+	gr->WritePRC("fexport.prc");
+	gr->WriteJSON("fexport.json");
+
+	gr->ExportMGLD("fexport.mgld");
+	gr->Clf();
+	gr->ImportMGLD("fexport.mgld");
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_quality0="quality 0\n"
+all_prims_str;
+void smgl_quality0(mglGraph *gr)	// test file export
+{
+	gr->SetQuality(0);	all_prims(gr);
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_quality1="quality 1\n"
+all_prims_str;
+void smgl_quality1(mglGraph *gr)	// test file export
+{
+	gr->SetQuality(1);	all_prims(gr);	
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_quality2="quality 2\n"
+all_prims_str;
+void smgl_quality2(mglGraph *gr)	// test file export
+{
+	gr->SetQuality(2);	all_prims(gr);	
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_quality4="quality 4\n"
+all_prims_str;
+void smgl_quality4(mglGraph *gr)	// test file export
+{
+	gr->SetQuality(4);	all_prims(gr);	
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_quality5="quality 5\n"
+all_prims_str;
+void smgl_quality5(mglGraph *gr)	// test file export
+{
+	gr->SetQuality(5);	all_prims(gr);	
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_quality6="quality 6\n"
+all_prims_str;
+void smgl_quality6(mglGraph *gr)	// test file export
+{
+	gr->SetQuality(6);	all_prims(gr);	
+}
+//-----------------------------------------------------------------------------
+const char *mmgl_quality8="quality 8\n"
+all_prims_str;
+void smgl_quality8(mglGraph *gr)	// test file export
+{
+	gr->SetQuality(8);	all_prims(gr);	
 }
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 mglSample samp[] = {
-	{"3wave", smgl_3wave, mmgl_3wave},
-	{"alpha", smgl_alpha, mmgl_alpha},
-	{"apde", smgl_apde, mmgl_apde},
-	{"area", smgl_area, mmgl_area},
-	{"aspect", smgl_aspect, mmgl_aspect},
-	{"axial", smgl_axial, mmgl_axial},
-	{"axis", smgl_axis, mmgl_axis},
-	{"barh", smgl_barh, mmgl_barh},
-	{"bars", smgl_bars, mmgl_bars},
-	{"belt", smgl_belt, mmgl_belt},
-	{"bifurcation", smgl_bifurcation, mmgl_bifurcation},
-	{"box", smgl_box, mmgl_box},
-	{"boxplot", smgl_boxplot, mmgl_boxplot},
-	{"boxs", smgl_boxs, mmgl_boxs},
-	{"candle", smgl_candle, mmgl_candle},
-	{"chart", smgl_chart, mmgl_chart},
-	{"cloud", smgl_cloud, mmgl_cloud },
-	{"colorbar", smgl_colorbar, mmgl_colorbar},
-	{"combined", smgl_combined, mmgl_combined },
-	{"cones", smgl_cones, mmgl_cones},
-	{"cont", smgl_cont, mmgl_cont},
-	{"cont_xyz", smgl_cont_xyz, mmgl_cont_xyz},
-	{"conta", smgl_conta, mmgl_conta},
-	{"contd", smgl_contd, mmgl_contd},
-	{"contf", smgl_contf, mmgl_contf},
-	{"contf_xyz", smgl_contf_xyz, mmgl_contf_xyz},
-	{"contfa", smgl_contfa, mmgl_contfa},
-	{"contv", smgl_contv, mmgl_contv},
-	{"correl", smgl_correl, mmgl_correl},
-//	{"crust", smgl_crust, mmgl_crust},	// TODO: open after triangulation
-	{"curvcoor", smgl_curvcoor, mmgl_curvcoor},
-	{"cut", smgl_cut, mmgl_cut},
-	{"dat_diff", smgl_dat_diff, mmgl_dat_diff},
-	{"dat_extra", smgl_dat_extra, mmgl_dat_extra },
-	{"data1", smgl_data1, mmgl_data1},
-	{"data2", smgl_data2, mmgl_data2},
-	{"dens", smgl_dens, mmgl_dens},
-	{"dens_xyz", smgl_dens_xyz, mmgl_dens_xyz},
-	{"densa", smgl_densa, mmgl_densa},
-	{"detect", smgl_detect, mmgl_detect},
-	{"dew", smgl_dew, mmgl_dew},
-	{"diffract", smgl_diffract, mmgl_diffract},
-	{"dilate", smgl_dilate, mmgl_dilate},
-	{"dots", smgl_dots, mmgl_dots},
-	{"earth", smgl_earth, mmgl_earth},
-	{"error", smgl_error, mmgl_error},
-	{"error2", smgl_error2, mmgl_error2},
-	{"export", smgl_export, mmgl_export},
-	{"fall", smgl_fall, mmgl_fall},
-	{"fit", smgl_fit, mmgl_fit},
-	{"flame2d", smgl_flame2d, mmgl_flame2d},
-	{"flow", smgl_flow, mmgl_flow},
-	{"fog", smgl_fog, mmgl_fog},
-	{"fonts", smgl_fonts, mmgl_fonts},
-	{"grad", smgl_grad, mmgl_grad},
-	{"hist", smgl_hist, mmgl_hist},
-	{"ifs2d", smgl_ifs2d, mmgl_ifs2d},
-	{"ifs3d", smgl_ifs3d, mmgl_ifs3d},
-	{"indirect",smgl_indirect,mmgl_indirect},
-	{"inplot", smgl_inplot, mmgl_inplot},
-	{"iris", smgl_iris, mmgl_iris},
-	{"label", smgl_label, mmgl_label},
-	{"lamerey", smgl_lamerey, mmgl_lamerey},
-	{"legend", smgl_legend, mmgl_legend },
-	{"light", smgl_light, mmgl_light},
-	{"loglog", smgl_loglog, mmgl_loglog},
-	{"map", smgl_map, mmgl_map},
-	{"mark", smgl_mark, mmgl_mark},
-	{"mask", smgl_mask, mmgl_mask},
-	{"mesh", smgl_mesh, mmgl_mesh},
-	{"mirror", smgl_mirror, mmgl_mirror },
-	{"molecule", smgl_molecule, mmgl_molecule },
-	{"ode", smgl_ode, mmgl_ode},
-	{"ohlc", smgl_ohlc, mmgl_ohlc},
-	{"param1", smgl_param1, mmgl_param1},
-	{"param2", smgl_param2, mmgl_param2},
-	{"param3", smgl_param3, mmgl_param3},
-	{"paramv", smgl_paramv, mmgl_paramv},
-	{"parser", smgl_parser, mmgl_parser},
-	{"pde", smgl_pde, mmgl_pde},
-	{"pendelta", smgl_pendelta, mmgl_pendelta},
-	{"pipe", smgl_pipe, mmgl_pipe},
-	{"plot", smgl_plot, mmgl_plot},
-	{"pmap", smgl_pmap, mmgl_pmap},
-	{"primitives", smgl_primitives, mmgl_primitives },
-	{"projection", smgl_projection, mmgl_projection },
-	{"projection5", smgl_projection5, mmgl_projection5 },
-	{"pulse", smgl_pulse, mmgl_pulse },
-	{"qo2d", smgl_qo2d, mmgl_qo2d},
-	{"radar", smgl_radar, mmgl_radar},
-	{"refill", smgl_refill, mmgl_refill},
-	{"region", smgl_region, mmgl_region},
-	{"scanfile", smgl_scanfile, mmgl_scanfile },
-	{"schemes", smgl_schemes, mmgl_schemes },
-	{"section", smgl_section, mmgl_section},
-	{"several_light", smgl_several_light, mmgl_several_light },
-	{"solve", smgl_solve, mmgl_solve},
-	{"stem", smgl_stem, mmgl_stem},
-	{"step", smgl_step, mmgl_step},
-	{"stereo", smgl_stereo, mmgl_stereo},
-	{"stfa", smgl_stfa, mmgl_stfa},
-	{"style", smgl_style, mmgl_style },
-	{"surf", smgl_surf, mmgl_surf},
-	{"surf3", smgl_surf3, mmgl_surf3},
-	{"surf3a", smgl_surf3a, mmgl_surf3a},
-	{"surf3c", smgl_surf3c, mmgl_surf3c},
-	{"surf3ca", smgl_surf3ca, mmgl_surf3ca},
-	{"surfa", smgl_surfa, mmgl_surfa},
-	{"surfc", smgl_surfc, mmgl_surfc},
-	{"surfca", smgl_surfca, mmgl_surfca},
-	{"table", smgl_table, mmgl_table},
-	{"tape", smgl_tape, mmgl_tape},
-	{"tens", smgl_tens, mmgl_tens},
-	{"ternary", smgl_ternary, mmgl_ternary },
-	{"text", smgl_text, mmgl_text},
-	{"text2", smgl_text2, mmgl_text2},
-	{"textmark", smgl_textmark, mmgl_textmark},
-	{"ticks", smgl_ticks, mmgl_ticks},
-	{"tile", smgl_tile, mmgl_tile},
-	{"tiles", smgl_tiles, mmgl_tiles},
-	{"torus", smgl_torus, mmgl_torus },
-	{"traj", smgl_traj, mmgl_traj},
-	{"triangulation",smgl_triangulation, mmgl_triangulation },
-	{"triplot", smgl_triplot, mmgl_triplot},
-	{"tube", smgl_tube, mmgl_tube},
-	{"type0", smgl_type0, mmgl_type0},
-	{"type1", smgl_type1, mmgl_type1},
-	{"type2", smgl_type2, mmgl_type2},
-	{"vect", smgl_vect, mmgl_vect},
-	{"vecta", smgl_vecta, mmgl_vecta},
-	{"venn", smgl_venn, mmgl_venn},
-{"", NULL, NULL}};
+	{"3wave", smgl_3wave, mmgl_3wave, "Example of complex @ref{ode} on basis of 3-wave decay."},
+	{"alpha", smgl_alpha, mmgl_alpha, "Example of @ref{light} and @ref{alpha} (transparency)."},
+	{"apde", smgl_apde, mmgl_apde,  "Comparison of advanced PDE solver (@ref{apde}) and ordinary one (@ref{pde})."},
+	{"area", smgl_area, mmgl_area, "Function @ref{area} fill the area between curve and axis plane. It support gradient filling if 2 colors per curve is specified."}, 
+	{"aspect", smgl_aspect, mmgl_aspect, "Example of @ref{subplot}, @ref{inplot}, @ref{rotate}, @ref{aspect}, @ref{shear}."},
+	{"axial", smgl_axial, mmgl_axial, "Function @ref{axial} draw surfaces of rotation for contour lines. You can draw wire surfaces (@samp{#} style) or ones rotated in other directions (@samp{x}, @samp{z} styles)."},
+	{"axis", smgl_axis, mmgl_axis, "Different forms of @ref{axis} position."},
+	{"background", smgl_background, mmgl_background, "Load @ref{background} from an image file."},
+	{"barh", smgl_barh, mmgl_barh, "Function @ref{barh} is the similar to @ref{bars} but draw horizontal bars."},
+	{"bars", smgl_bars, mmgl_bars, "Function @ref{bars} draw vertical bars. It have a lot of options: bar-above-bar (@samp{a} style), fall like (@samp{f} style), 2 colors for positive and negative values, wired bars (@samp{#} style), 3D variant."},
+	{"belt", smgl_belt, mmgl_belt, "Function @ref{belt} draw surface by belts. You can use @samp{x} style for drawing lines in other direction."},
+	{"beltc", smgl_beltc, mmgl_beltc, "Function @ref{beltc} draw surface by belts. You can use @samp{x} style for drawing lines in other direction."},
+	{"bifurcation", smgl_bifurcation, mmgl_bifurcation, "Function @ref{bifurcation} draw Bifurcation diagram for multiple stationary points of the map (like logistic map)."},
+	{"box", smgl_box, mmgl_box, "Different styles of bounding @ref{box}."},
+	{"boxplot", smgl_boxplot, mmgl_boxplot, "Function @ref{boxplot} draw box-and-whisker diagram."},
+	{"boxs", smgl_boxs, mmgl_boxs, "Function @ref{boxs} draw surface by boxes. You can use @samp{#} for drawing wire plot."},
+	{"candle", smgl_candle, mmgl_candle, "Function @ref{candle} draw candlestick chart. This is a combination of a line-chart and a bar-chart, in that each bar represents the range of price movement over a given time interval."},
+	{"chart", smgl_chart, mmgl_chart, "Function @ref{chart} draw colored boxes with width proportional to data values. Use @samp{ } for empty box. It produce well known pie chart if drawn in polar coordinates."},
+	{"cloud", smgl_cloud, mmgl_cloud , "Function @ref{cloud} draw cloud-like object which is less transparent for higher data values. Similar plot can be created using many (about 10...20 -- @code{surf3a a a;value 10}) isosurfaces @ref{surf3a}."},
+	{"colorbar", smgl_colorbar, mmgl_colorbar, "Example of @ref{colorbar} position and styles."},
+	{"combined", smgl_combined, mmgl_combined , "Example of several plots in the same axis."},
+	{"cones", smgl_cones, mmgl_cones, "Function @ref{cones} is similar to @ref{bars} but draw cones."},
+	{"cont", smgl_cont, mmgl_cont, "Function @ref{cont} draw contour lines for surface. You can select automatic (default) or manual levels for contours, print contour labels, draw it on the surface (default) or at plane (as @code{Dens})."},
+	{"cont3", smgl_cont3, mmgl_cont3, "Function @ref{contf3} draw ordinary contour lines but at slices of 3D data. "},
+	{"cont_xyz", smgl_cont_xyz, mmgl_cont_xyz, "Functions @ref{contz}, @ref{conty}, @ref{contx} draw contour lines on plane perpendicular to corresponding axis. One of possible application is drawing projections of 3D field."},
+	{"contd", smgl_contd, mmgl_contd, "Function @ref{contd} is similar to @ref{contf} but with manual contour colors."},
+	{"contf", smgl_contf, mmgl_contf, "Function @ref{contf} draw filled contours.  You can select automatic (default) or manual levels for contours."},
+	{"contf3", smgl_contf3, mmgl_contf3, "Function @ref{contf3} draw ordinary filled contours but at slices of 3D data. "},
+	{"contf_xyz", smgl_contf_xyz, mmgl_contf_xyz, "Functions @ref{contfz}, @ref{contfy}, @ref{contfx}, draw filled contours on plane perpendicular to corresponding axis. One of possible application is drawing projections of 3D field."},
+	{"conts", smgl_conts, mmgl_conts, "Function @ref{conts} get contour coordinate as data array."},
+	{"contv", smgl_contv, mmgl_contv, "Function @ref{contv} draw vertical cylinders (belts) at contour lines."},
+	{"correl", smgl_correl, mmgl_correl, "Test of correlation function (@ref{correl})."},
+//	{"crust", smgl_crust, mmgl_crust, ""},	// TODO: open after triangulation
+	{"curvcoor", smgl_curvcoor, mmgl_curvcoor, "Some common curvilinear coordinates."},
+	{"cut", smgl_cut, mmgl_cut, "Example of point cutting (@ref{cut}."},
+	{"daisy", smgl_daisy, mmgl_daisy, "Example of subfunctions and summation in textual formulas."},
+	{"dat_diff", smgl_dat_diff, mmgl_dat_diff, "Example of @ref{diff} and @ref{integrate}."},
+	{"dat_extra", smgl_dat_extra, mmgl_dat_extra , "Example of @ref{envelop}, @ref{sew}, @ref{smooth} and @ref{resize}."},
+	{"data1", smgl_data1, mmgl_data1, ""},
+	{"data2", smgl_data2, mmgl_data2, ""},
+	{"dcont", smgl_dcont, mmgl_dcont, "Function @ref{dcont} draw lines of intersections of two isosurfaces."},
+	{"dens", smgl_dens, mmgl_dens, "Function @ref{dens} draw density plot (also known as color-map) for surface."},
+	{"dens3", smgl_dens3, mmgl_dens3, "Function @ref{dens3} draw ordinary density plots but at slices of 3D data."},
+	{"dens_xyz", smgl_dens_xyz, mmgl_dens_xyz, "Functions @ref{densz}, @ref{densy}, @ref{densx} draw density plot on plane perpendicular to corresponding axis. One of possible application is drawing projections of 3D field."},
+	{"detect", smgl_detect, mmgl_detect, "Example of curve @ref{detect}."},
+	{"dew", smgl_dew, mmgl_dew, "Function @ref{dew} is similar to @ref{vect} but use drops instead of arrows."},
+	{"diffract", smgl_diffract, mmgl_diffract, ""},
+	{"dilate", smgl_dilate, mmgl_dilate, "Example of @ref{dilate} and @ref{erode}."},
+	{"dots", smgl_dots, mmgl_dots, "Function @ref{dots} is another way to draw irregular points. @code{Dots} use color scheme for coloring (see @ref{Color scheme})."},
+	{"earth", smgl_earth, mmgl_earth, "Example of Earth map by using @ref{import}."},
+	{"error", smgl_error, mmgl_error, "Function @ref{error} draw error boxes around the points. You can draw default boxes or semi-transparent symbol (like marker, see @ref{Line styles}). Also you can set individual color for each box. See also @ref{error2 sample}."},
+	{"error2", smgl_error2, mmgl_error2, "Example of @ref{error} kinds."},
+	{"export", smgl_export, mmgl_export, "Example of data @ref{export} and @ref{import}."},
+	{"fall", smgl_fall, mmgl_fall, "Function @ref{fall} draw waterfall surface. You can use @ref{meshnum} for changing number of lines to be drawn. Also you can use @samp{x} style for drawing lines in other direction."},
+	{"fexport", smgl_fexport, mmgl_fexport, "Example of @ref{write} to different file formats."},
+	{"fit", smgl_fit, mmgl_fit, "Example of nonlinear @ref{fit}."},
+	{"flame2d", smgl_flame2d, mmgl_flame2d, "Function @ref{flame2d} generate points for flame fractals in 2d case."},
+	{"flow", smgl_flow, mmgl_flow, "Function @ref{flow} is another standard way to visualize vector fields -- it draw lines (threads) which is tangent to local vector field direction. MathGL draw threads from edges of bounding box and from central slices. Sometimes it is not most appropriate variant -- you may want to use @code{flowp} to specify manual position of threads. The color scheme is used for coloring (see @ref{Color scheme}). At this warm color corresponds to normal flow (like attractor), cold one corresponds to inverse flow (like source)."}, // TODO @ref{flowp}
+	{"flow3", smgl_flow3, mmgl_flow3, "Function @ref{flow3} draw flow threads, which start from given plane."},
+	{"fog", smgl_fog, mmgl_fog, "Example of @ref{fog}."},
+	{"fonts", smgl_fonts, mmgl_fonts, "Example of @ref{font} typefaces."},
+	{"grad", smgl_grad, mmgl_grad, "Function @ref{grad} draw gradient lines for matrix."},
+	{"hist", smgl_hist, mmgl_hist, "Example of @ref{hist} (histogram)."},
+	{"icon", smgl_icon, mmgl_icon, "Default UDAV and mgllab icon."},
+	{"ifs2d", smgl_ifs2d, mmgl_ifs2d, "Function @ref{ifs2d} generate points for fractals using iterated function system in 2d case."},
+	{"ifs3d", smgl_ifs3d, mmgl_ifs3d, "Function @ref{ifs3d} generate points for fractals using iterated function system in 3d case."},
+	{"indirect",smgl_indirect,mmgl_indirect, "Comparison of @ref{subdata} vs @ref{evaluate}/"},
+	{"inplot", smgl_inplot, mmgl_inplot, "Example of @ref{inplot}, @ref{multiplot}, @ref{columnplot}, @ref{gridplot}, @ref{shearplot}, @ref{stickplot}."},
+	{"iris", smgl_iris, mmgl_iris, "Function @ref{iris} draw Iris plot for columns of data array."},
+	{"keep", smgl_keep, mmgl_keep, "Function @ref{keep} conserve initial phase along specified direction(s)."},
+	{"label", smgl_label, mmgl_label, "Function @ref{label} print text at data points. The string may contain @samp{%x}, @samp{%y}, @samp{%z} for x-, y-, z-coordinates of points, @samp{%n} for point index."},
+	{"lamerey", smgl_lamerey, mmgl_lamerey, "Function @ref{lamerey} draw Lamerey diagram."},
+	{"legend", smgl_legend, mmgl_legend , "Example of @ref{legend} styles."},
+	{"light", smgl_light, mmgl_light, "Example of @ref{light} with different types."},
+	{"lines", smgl_lines, mmgl_lines, "Function @ref{lines} draw a set of lines."},
+	{"loglog", smgl_loglog, mmgl_loglog, "Example of log- and log-log- axis labels."},
+	{"map", smgl_map, mmgl_map, "Example of @ref{map}."},
+	{"mark", smgl_mark, mmgl_mark, "Example of @ref{mark}."},
+	{"mask", smgl_mask, mmgl_mask, "Example of @ref{mask} kinds."},
+	{"mesh", smgl_mesh, mmgl_mesh, "Function @ref{mesh} draw wired surface. You can use @ref{meshnum} for changing number of lines to be drawn."},
+	{"minmax", smgl_minmax, mmgl_minmax, "Function @ref{minmax} get position of local minimums and maximums."},
+	{"mirror", smgl_mirror, mmgl_mirror , "Example of using options."},
+	{"molecule", smgl_molecule, mmgl_molecule , "Example of drawing molecules."},
+	{"ode", smgl_ode, mmgl_ode, "Example of phase plain created by @ref{ode} solving, contour lines (@ref{cont}) and @ref{flow} threads."},
+	{"ohlc", smgl_ohlc, mmgl_ohlc, "Function @ref{ohlc} draw Open-High-Low-Close diagram. This diagram show vertical line for between maximal(high) and minimal(low) values, as well as horizontal lines before/after vertical line for initial(open)/final(close) values of some process."},
+	{"param1", smgl_param1, mmgl_param1, "Example of parametric plots for 1D data."},
+	{"param2", smgl_param2, mmgl_param2, "Example of parametric plots for 2D data."},
+	{"param3", smgl_param3, mmgl_param3, "Example of parametric plots for 3D data."},
+	{"paramv", smgl_paramv, mmgl_paramv, "Example of parametric plots for vector fields."},
+	{"parser", smgl_parser, mmgl_parser, "Basic MGL script."},
+	{"pde", smgl_pde, mmgl_pde, "Example of @ref{pde} solver."},
+	{"pendelta", smgl_pendelta, mmgl_pendelta, "Example of @ref{pendelta} for lines and glyphs smoothing."},
+	{"pipe", smgl_pipe, mmgl_pipe, "Function @ref{pipe} is similar to @ref{flow} but draw pipes (tubes) which radius is proportional to the amplitude of vector field. The color scheme is used for coloring (see @ref{Color scheme}). At this warm color corresponds to normal flow (like attractor), cold one corresponds to inverse flow (like source)."},
+	{"plot", smgl_plot, mmgl_plot, "Function @ref{plot} is most standard way to visualize 1D data array. By default, @code{Plot} use colors from palette. However, you can specify manual color/palette, and even set to use new color for each points by using @samp{!} style. Another feature is @samp{ } style which draw only markers without line between points."},
+	{"pmap", smgl_pmap, mmgl_pmap, "Function @ref{pmap} draw Poincare map -- show intersections of the curve and the surface."},
+	{"primitives", smgl_primitives, mmgl_primitives , "Example of primitives: @ref{line}, @ref{curve}, @ref{rhomb}, @ref{ellipse}, @ref{face}, @ref{sphere}, @ref{drop}, @ref{cone}."},
+	{"projection", smgl_projection, mmgl_projection , "Example of plot projection (@ref{ternary}=4)."},
+	{"projection5", smgl_projection5, mmgl_projection5 , "Example of plot projection in ternary coordinates (@ref{ternary}=5)."},
+	{"pulse", smgl_pulse, mmgl_pulse , "Example of @ref{pulse} parameter determining."},
+	{"qo2d", smgl_qo2d, mmgl_qo2d, "Example of PDE solving by quasioptical approach @ref{qo2d}."},
+	{"quality0", smgl_quality0, mmgl_quality0, "Show all kind of primitives in @ref{quality}=0."},
+	{"quality1", smgl_quality1, mmgl_quality1, "Show all kind of primitives in @ref{quality}=1."},
+	{"quality2", smgl_quality2, mmgl_quality2, "Show all kind of primitives in @ref{quality}=2."},
+	{"quality4", smgl_quality4, mmgl_quality4, "Show all kind of primitives in @ref{quality}=4."},
+	{"quality5", smgl_quality5, mmgl_quality5, "Show all kind of primitives in @ref{quality}=5."},
+	{"quality6", smgl_quality6, mmgl_quality6, "Show all kind of primitives in @ref{quality}=6."},
+	{"quality8", smgl_quality8, mmgl_quality8, "Show all kind of primitives in @ref{quality}=8."},
+	{"radar", smgl_radar, mmgl_radar, "The @ref{radar} plot is variant of @ref{plot}, which make plot in polar coordinates and draw radial rays in point directions. If you just need a plot in polar coordinates then I recommend to use @ref{Curvilinear coordinates} or @ref{plot} in parametric form with @code{x=r*cos(fi); y=r*sin(fi);}."},
+	{"refill", smgl_refill, mmgl_refill, "Example of @ref{refill} and @ref{gspline}."},
+	{"region", smgl_region, mmgl_region, "Function @ref{region} fill the area between 2 curves. It support gradient filling if 2 colors per curve is specified. Also it can fill only the region y1<y<y2 if style @samp{i} is used."},
+	{"scanfile", smgl_scanfile, mmgl_scanfile , "Example of @ref{scanfile} for reading 'named' data."},
+	{"schemes", smgl_schemes, mmgl_schemes , "Example of popular color schemes."},
+	{"section", smgl_section, mmgl_section, "Example of @ref{section} to separate data and @ref{join} it back."},
+	{"several_light", smgl_several_light, mmgl_several_light , "Example of using several @ref{light} sources."},
+	{"solve", smgl_solve, mmgl_solve, "Example of @ref{solve} for root finding."},
+	{"stem", smgl_stem, mmgl_stem, "Function @ref{stem} draw vertical bars. It is most attractive if markers are drawn too."},
+	{"step", smgl_step, mmgl_step, "Function @ref{step} plot data as stairs. At this stairs can be centered if sizes are differ by 1."},
+	{"stereo", smgl_stereo, mmgl_stereo, "Example of stereo image of @ref{surf}."},
+	{"stfa", smgl_stfa, mmgl_stfa, "Example of @ref{stfa}."},
+	{"style", smgl_style, mmgl_style , "Example of colors and styles for plots."},
+	{"surf", smgl_surf, mmgl_surf, "Function @ref{surf} is most standard way to visualize 2D data array. @code{Surf} use color scheme for coloring (see @ref{Color scheme}). You can use @samp{#} style for drawing black meshes on the surface."},
+	{"surf3", smgl_surf3, mmgl_surf3, "Function @ref{surf3} is one of most suitable (for my opinion) functions to visualize 3D data. It draw the isosurface(s) -- surface(s) of constant amplitude (3D analogue of contour lines). You can draw wired isosurfaces if specify @samp{#} style."},
+	{"surf3a", smgl_surf3a, mmgl_surf3a, "Function @ref{surf3c} is similar to @ref{surf3} but its transparency is determined by another data."},
+	{"surf3c", smgl_surf3c, mmgl_surf3c, "Function @ref{surf3c} is similar to @ref{surf3} but its coloring is determined by another data."},
+	{"surf3ca", smgl_surf3ca, mmgl_surf3ca, "Function @ref{surf3c} is similar to @ref{surf3} but its coloring and transparency is determined by another data arrays."},
+	{"surfa", smgl_surfa, mmgl_surfa, "Function @ref{surfa} is similar to @ref{surf} but its transparency is determined by another data."},
+	{"surfc", smgl_surfc, mmgl_surfc, "Function @ref{surfc} is similar to @ref{surf} but its coloring is determined by another data."},
+	{"surfca", smgl_surfca, mmgl_surfca, "Function @ref{surfca} is similar to @ref{surf} but its coloring and transparency is determined by another data arrays."},
+	{"table", smgl_table, mmgl_table, "Function @ref{table} draw table with data values."},
+	{"tape", smgl_tape, mmgl_tape, "Function @ref{tape} draw tapes which rotate around the curve as transverse orts of accompanied coordinates."},
+	{"tens", smgl_tens, mmgl_tens, "Function @ref{tens} is variant of @ref{plot} with smooth coloring along the curves. At this, color is determined as for surfaces (see @ref{Color scheme})."},
+	{"ternary", smgl_ternary, mmgl_ternary , "Example of @ref{ternary} coordinates."},
+	{"text", smgl_text, mmgl_text, "Example of @ref{text} possibilities."},
+	{"text2", smgl_text2, mmgl_text2, "Example of @ref{text} along curve."},
+	{"textmark", smgl_textmark, mmgl_textmark, "Function @ref{textmark} is similar to @ref{mark} but draw text instead of markers."},
+	{"ticks", smgl_ticks, mmgl_ticks, "Example of @ref{axis} ticks."},
+	{"tile", smgl_tile, mmgl_tile, "Function @ref{tile} draw surface by tiles."},
+	{"tiles", smgl_tiles, mmgl_tiles, "Function @ref{tiles} is similar to @ref{tile} but tile sizes is determined by another data. This allows one to simulate transparency of the plot."},
+	{"torus", smgl_torus, mmgl_torus , "Function @ref{torus} draw surface of the curve rotation."},
+	{"traj", smgl_traj, mmgl_traj, "Function @ref{traj} is 1D analogue of @ref{vect}. It draw vectors from specified points."},
+	{"triangulation",smgl_triangulation, mmgl_triangulation , "Example of use @ref{triangulate} for arbitrary placed points."},
+	{"triplot", smgl_triplot, mmgl_triplot, "Functions @ref{triplot} and @ref{quadplot} draw set of triangles (or quadrangles, correspondingly) for irregular data arrays. Note, that you have to provide not only vertexes, but also the indexes of triangles or quadrangles. I.e. perform triangulation by some other library. See also @ref{triangulate}."},
+	{"tube", smgl_tube, mmgl_tube, "Function @ref{tube} draw tube with variable radius."},
+	{"type0", smgl_type0, mmgl_type0, "Example of ordinary transparency (@ref{transptype}=0)."},
+	{"type1", smgl_type1, mmgl_type1, "Example of glass-like transparency (@ref{transptype}=1)."},
+	{"type2", smgl_type2, mmgl_type2, "Example of lamp-like transparency (@ref{transptype}=2)."},
+	{"vect", smgl_vect, mmgl_vect, "Function @ref{vect} is most standard way to visualize vector fields -- it draw a lot of arrows or hachures for each data cell. It have a lot of options which can be seen on the figure (and in the sample code), and use color scheme for coloring (see @ref{Color scheme})."},
+	{"vect3", smgl_vect3, mmgl_vect3, "Function @ref{vect3} draw ordinary vector field plot but at slices of 3D data."},
+	{"venn", smgl_venn, mmgl_venn, "Example of venn-like diagram."},
+{"", NULL, NULL, NULL}};
 //-----------------------------------------------------------------------------

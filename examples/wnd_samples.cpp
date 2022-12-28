@@ -20,12 +20,6 @@
 //-----------------------------------------------------------------------------
 #include "mgl2/mgl.h"
 //-----------------------------------------------------------------------------
-void mgls_prepare1d(mglData *y, mglData *y1=0, mglData *y2=0, mglData *x1=0, mglData *x2=0);
-void mgls_prepare2d(mglData *a, mglData *b=0, mglData *v=0);
-void mgls_prepare3d(mglData *a, mglData *b=0);
-void mgls_prepare2v(mglData *a, mglData *b);
-void mgls_prepare3v(mglData *ex, mglData *ey, mglData *ez);
-//-----------------------------------------------------------------------------
 int test_wnd(mglGraph *gr)
 {
 mgl_set_test_mode(true);
@@ -502,13 +496,6 @@ void mgls_prepare3v(mglData *ex, mglData *ey, mglData *ez)
 	{
 		double x=2*i/(n-1.)-1, y=2*j/(n-1.)-1, z=2*k/(n-1.)-1;
 		long i0 = i+n*(j+k*n);
-/* 		r1 = 1./(x*x+y*y+z*z+0.01);	r2=exp(-0.01/r1/r1)*r1;
- 		ex->a[i0]=z*y*r2*r2;
- 		ey->a[i0]=x*y*r2*r2+1;
- 		ez->a[i0]=y*x*r2*r2;*/
-/*		ex->a[i0]=3*z;
-		ey->a[i0]=1;
-		ez->a[i0]=-3*x;*/
 		double r1 = pow(x*x+y*y+(z-z0)*(z-z0)+0.03,1.5);
 		double r2 = pow(x*x+y*y+(z+z0)*(z+z0)+0.03,1.5);
 		ex->a[i0]=0.2*x/r1 - 0.2*x/r2;

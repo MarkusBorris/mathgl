@@ -21,6 +21,7 @@
 #include <QMenu>
 #include <QPrinter>
 #include <QTimer>
+#include <QElapsedTimer>
 #include <QScrollArea>
 #include <QPainter>
 #include <QPrintDialog>
@@ -103,7 +104,7 @@ void PlotPanel::execute()
 	raisePanel(this);
 	objId = subId = -1;
 	emit clearWarn();
-	QTime t;	t.start();
+	QElapsedTimer t;	t.start();
 	mgl_set_facenum(mgl->getGraph(),0);
 	draw->text=textMGL->toPlainText();
 	draw->line=curPos;
@@ -123,7 +124,7 @@ void PlotPanel::pressF9()
 	parser.AddParam(0,str);
 	delete []str;
 
-	QTime t;	t.start();
+	QElapsedTimer t;	t.start();
 	parser.RestoreOnce();
 	draw->text=textMGL->toPlainText();
 	draw->line=curPos;	mgl->update();
@@ -188,7 +189,7 @@ void PlotPanel::next()
 	{
 		gr.NewFrame();	execute();	gr.EndFrame();
 		if(jpgOn)	gr.WriteFrame();
-		QString s;	s.sprintf(_("%d - %d of %d"),gr.GetNumFrame(),animPos,n);
+		QString s;	s.asprintf(_("%d - %d of %d"),gr.GetNumFrame(),animPos,n);
 		setStatus(QString(_("Frame %1 of %2")).arg(animPos).arg(n));
 	}
 }
@@ -527,7 +528,7 @@ void PlotPanel::toolLeft(QBoxLayout *h)
 	a = new QAction(QPixmap(":/png/arrow-down.png"), _("Move down"), this);
 	connect(a, SIGNAL(triggered()), mgl, SLOT(shiftDown()));
 	a->setShortcut(Qt::ALT+Qt::Key_Down);
-	a->setToolTip(_("Move graphics up down 1/3 of its height."));
+	a->setToolTip(_("Move graphics down 1/3 of its height."));
 	oo->addAction(a);	t->addAction(a);
 
 	a = new QAction(QPixmap(":/png/arrow-right.png"), _("Move right"), this);

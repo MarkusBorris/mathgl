@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -30,8 +30,6 @@ void MGL_NO_EXPORT mgl_printf(void *fp, bool gz, const char *str, ...);
 #include <climits>
 #include <cassert>
 #include <float.h>
-#include <math.h>
-
 #include <deque>
 #include <map>
 #include <iostream>
@@ -147,8 +145,8 @@ class ObjXYZ
   { x = fx; y = fy; z = fz; }
   mreal Dot(const ObjXYZ & sPt) const
   { return(x*sPt.x)+(y*sPt.y)+(z*sPt.z); }
-  mreal LengthSquared()
-  { return(x*x+y*y+z*z); }
+//  mreal LengthSquared()
+//  { return(x*x+y*y+z*z); }
 
   friend ObjXYZ operator + (const ObjXYZ& a, const ObjXYZ& b)
   { return ObjXYZ(a.x+b.x,a.y+b.y,a.z+b.z); }

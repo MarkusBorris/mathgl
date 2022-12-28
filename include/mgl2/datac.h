@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -22,6 +22,10 @@
 
 #include "mgl2/data.h"
 #include "mgl2/datac_cf.h"
+
+#if MGL_HAVE_ARMA
+#include <armadillo>
+#endif
 //-----------------------------------------------------------------------------
 #include <vector>
 #include <string>
@@ -36,19 +40,19 @@ class MGL_EXPORT mglDataC : public mglDataA
 {
 public:
 using mglDataA::Momentum;
+using mglDataA::Last;
 	long nx;		///< number of points in 1st dimensions ('x' dimension)
 	long ny;		///< number of points in 2nd dimensions ('y' dimension)
 	long nz;		///< number of points in 3d dimensions ('z' dimension)
 	dual *a;		///< data array
-	std::string id;	///< column (or slice) names
 	bool link;		///< use external data (i.e. don't free it)
 
 	/// Initiate by other mglDataC variable
 	mglDataC(const mglDataC &d)	{	a=0;	mgl_datac_set(this,&d);		}	// NOTE: must be constructor for mglDataC& to exclude copy one
 	mglDataC(const mglDataA &d)	{	a=0;	mgl_datac_set(this,&d);		}
 #if MGL_HAVE_RVAL
-	mglDataC(mglDataC &&d):nx(d.nx),ny(d.ny),nz(d.nz),a(d.a),id(d.id),link(d.link)
-	{	s=d.s;	temp=d.temp;	func=d.func;	o=d.o;	d.a=0;	d.func=0;	}
+	mglDataC(mglDataC &&d):nx(d.nx),ny(d.ny),nz(d.nz),a(d.a),link(d.link)
+	{	s=d.s;	temp=d.temp;	func=d.func;	o=d.o;	id=d.id;	d.a=0;	d.func=0;	}
 #endif
 	mglDataC(const mglDataA &re, const mglDataA &im)	{	a=0;	mgl_datac_set_ri(this,&re,&im);	}
 	mglDataC(HCDT d)	{	a=0;	mgl_datac_set(this, d);		}
@@ -106,7 +110,7 @@ using mglDataA::Momentum;
 
 	/// Link external data array (don't delete it at exit)
 	inline void Link(dual *A, long NX, long NY=1, long NZ=1)
-	{	mgl_datac_link(this,A,NX,NY,NZ);	}
+	{	mgl_datac_link(this,reinterpret_cast<mdual*>(A),NX,NY,NZ);	}
 	inline void Link(mglDataC &d)	{	Link(d.a,d.nx,d.ny,d.nz);	}
 	/// Allocate memory and copy the data from the gsl_vector
 	inline void Set(gsl_vector *m)	{	mgl_datac_set_vector(this,m);	}
@@ -121,7 +125,7 @@ using mglDataA::Momentum;
 	{	mgl_datac_set_double(this,A,NX,NY,NZ);	}
 	/// Allocate memory and copy the data from the (complex *) array
 	inline void Set(const dual *A,long NX,long NY=1,long NZ=1)
-	{	mgl_datac_set_complex(this,A,NX,NY,NZ);	}
+	{	mgl_datac_set_complex(this,reinterpret_cast<const mdual*>(A),NX,NY,NZ);	}
 	/// Allocate memory and scanf the data from the string
 	inline void Set(const char *str,long NX,long NY=1,long NZ=1)
 	{	mgl_datac_set_values(this,str,NX,NY,NZ);	}
@@ -146,6 +150,23 @@ using mglDataA::Momentum;
 	inline void Set(const std::vector<std::complex<float> > &d)
 	{	if(d.size()>0)	{	Create(d.size());	for(long i=0;i<nx;i++)	a[i] = d[i];	}
 		else	Create(1);	}
+
+#if MGL_HAVE_ARMA
+	inline void Set(const arma::cx_mat &d)
+	{	Create(d.n_rows,d.n_cols);	for(long i=0;i<nx*ny;i++)	a[i] = d[i];	}
+	inline void Set(const arma::mat &d)
+	{	Create(d.n_rows,d.n_cols);	for(long i=0;i<nx*ny;i++)	a[i] = d[i];	}
+	inline void Set(const arma::cx_cube &d)
+	{	Create(d.n_rows,d.n_cols,d.n_slices);	for(long i=0;i<nx*ny*nz;i++)	a[i] = d[i];	}
+	inline void Set(const arma::cube &d)
+	{	Create(d.n_rows,d.n_cols,d.n_slices);	for(long i=0;i<nx*ny*nz;i++)	a[i] = d[i];	}
+	inline void Set(const arma::cx_vec &d)
+	{	Create(d.n_elem);	for(long i=0;i<nx;i++)	a[i] = d[i];	}
+	inline void Set(const arma::vec &d)
+	{	Create(d.n_elem);	for(long i=0;i<nx;i++)	a[i] = d[i];	}
+	inline arma::cx_mat arma_mat(long k=0) const { return arma::cx_mat(a+k*nx*ny,ny,nx);  }
+	inline arma::cx_cube arma_cube() const {return arma::cx_cube(a,nx,ny,nz);}
+#endif
 
 	/// Create or recreate the array with specified size and fill it by zero
 	inline void Create(long mx,long my=1,long mz=1)
@@ -225,12 +246,6 @@ using mglDataA::Momentum;
 	/// Put array to data element(s)
 	inline void Put(const mglDataA &dat, long i=-1, long j=-1, long k=-1)
 	{	mgl_datac_put_dat(this,&dat,i,j,k);	}
-
-	/// Set names for columns (slices)
-	inline void SetColumnId(const char *ids)
-	{	mgl_datac_set_id(this,ids);	}
-	/// Make new id
-	inline void NewId()	{	id.clear();	}
 
 	/// Read data from tab-separated text file with auto determining size
 	inline bool Read(const char *fname)
@@ -333,12 +348,22 @@ using mglDataA::Momentum;
 	/// Create n-th points distribution of this data values in range [v1, v2] with weight w
 	inline mglData Hist(const mglDataA &w, long n,mreal v1=0,mreal v2=1, long nsub=0) const
 	{	return mglData(true,mgl_data_hist_w(this,&w,n,v1,v2,nsub));	}
+	/// Get array of positions of first value, which abs() is  large val
+	inline mglData First(const char *dir, mreal val) const
+	{	return mglData(true,mgl_data_first_dir(this,dir,val));	}
+	/// Get array of positions of last value, which abs() is large val
+	inline mglData Last(const char *dir, mreal val) const
+	{	return mglData(true,mgl_data_last_dir(this,dir,val));	}
+
 	/// Get array which is result of maximal values in given direction or directions
 	inline mglData Max(const char *dir) const
 	{	return mglData(true,mgl_data_max_dir(this,dir));	}
 	/// Get array which is result of minimal values in given direction or directions
 	inline mglData Min(const char *dir) const
 	{	return mglData(true,mgl_data_min_dir(this,dir));	}
+	/// Find roots for set of nonlinear equations defined by textual formula
+	inline mglDataC MultiRoots(const char *eq, const char *vars) const
+	{	return mglDataC(true,mgl_find_roots_txt_c(eq, vars, this));	}
 
 	/// Cumulative summation the data in given direction or directions
 	inline void CumSum(const char *dir)	{	mgl_datac_cumsum(this,dir);	}
@@ -373,9 +398,13 @@ using mglDataA::Momentum;
 	 *  By default quadratic averaging over 5 points is used. */
 	inline void Smooth(const char *dirs="xyz",mreal delta=0)
 	{	mgl_datac_smooth(this,dirs,delta);	}
-	/// Limit the data to be inside [-v,v], keeping the original sign
+	/// Limit the data to be inside [-v,v], keeping the original phase
 	inline void Limit(mreal v)
 	{	mgl_datac_limit(this, v);	}
+	/// Keep the data phase/value along line i and j in given direction. 
+	/** Parameter "how" may contain: 'x','y' or 'z' for direction (default is 'y'); 'a' for keeping amplitude instead of phase.*/
+	inline void Keep(const char *how, long i, long j=0)
+	{	mgl_datac_keep(this, how, i, j);	}
 
 	/// Set as the data envelop
 	inline void Envelop(char dir='x')	{	mgl_datac_envelop(this,dir);	}
@@ -388,6 +417,9 @@ using mglDataA::Momentum;
 	/// Fourier transform
 	inline void FFT(const char *dir)	{	mgl_datac_fft(this,dir);	}
 	/// Calculate one step of diffraction by finite-difference method with parameter q
+	/** Parameter \a how may contain:
+	 * ‘x‘,‘y‘,‘z‘ or ‘r‘  for directions or axial along x,
+	 * ‘e‘,‘g‘,‘0‘,‘1‘,‘2‘,‘3‘ for boundary conditions: exponential, Gaussian, zero, constant, linear, quadratic.*/
 	inline void Diffraction(const char *how, mreal q)	{	mgl_datac_diffr(this,how,q);	}
 	/// Apply wavelet transform
 	/** Parameter \a dir may contain:
@@ -413,14 +445,14 @@ using mglDataA::Momentum;
 	/// Interpolate by linear function the data and return its derivatives at given point x=[0...nx-1], y=[0...ny-1], z=[0...nz-1]
 	inline dual Linear(mglPoint &dif, mreal x,mreal y=0,mreal z=0)	const
 	{
-		dual val,dx,dy,dz;
+		mdual val,dx,dy,dz;
 		val = mgl_datac_linear_ext(this,x,y,z, &dx, &dy, &dz);
 		dif.Set(dx.real(),dy.real(),dz.real());	return val;
 	}
 	/// Interpolate by line the data and return its derivatives at given point x,\a y,\a z which normalized in range [0, 1]
 	inline dual Linear1(mglPoint &dif, mreal x,mreal y=0,mreal z=0) const
 	{
-		dual val,dx,dy,dz;
+		mdual val,dx,dy,dz;
 		val = mgl_datac_linear_ext(this,x,y,z, &dx, &dy, &dz);
 		dif.Set(dx.real(),dy.real(),dz.real());
 		dif.x/=nx>1?nx-1:1;	dif.y/=ny>1?ny-1:1;	dif.z/=nz>1?nz-1:1;
@@ -466,7 +498,8 @@ using mglDataA::Momentum;
 	inline void operator-=(dual d)		{	mgl_datac_sub_num(this,d);	}
 #ifndef SWIG
 	/// Direct access to the data cell
-	inline dual &operator[](long i)	{	return a[i];	}
+	inline dual operator[](long i) const	{	return a[i];	}
+	inline dual &operator[](long i)			{	return a[i];	}
 #endif
 
 
@@ -477,7 +510,7 @@ using mglDataA::Momentum;
 	void set_v(mreal val, long i,long j=0,long k=0)	{	a[i+nx*(j+ny*k)]=val;	}
 #else
 	/// Get the value in given cell of the data with border checking
-	mreal v(long i,long j=0,long k=0) const	{	return mgl_abs(mgl_datac_get_value(this,i,j,k));	}
+	mreal v(long i,long j=0,long k=0) const	{	return abs(mgl_datac_get_value(this,i,j,k));	}
 	/// Set the value in given cell of the data
 	void set_v(mreal val, long i,long j=0,long k=0)	{	mgl_datac_set_value(this,val,i,j,k);	}
 #endif
@@ -498,14 +531,17 @@ using mglDataA::Momentum;
 	mreal vthr(long i) const {	return abs(a[i]);	}
 	// add for speeding up !!!
 	mreal dvx(long i,long j=0,long k=0) const
-	{   long i0=i+nx*(j+ny*k);
-		return i>0? abs(i<nx-1? (a[i0+1]-a[i0-1])/mreal(2):a[i0]-a[i0-1]) : abs(a[i0+1]-a[i0]);	}
+	{   long i0 = size_t(i)<size_t(nx-1) ? i+nx*(j+ny*k):nx*(1+j+ny*k)-2;	return abs(a[i0+1]-a[i0]);	}
+//	{   long i0=i+nx*(j+ny*k);
+//		return i>0? abs(i<nx-1? (a[i0+1]-a[i0-1])/mreal(2):a[i0]-a[i0-1]) : abs(a[i0+1]-a[i0]);	}
 	mreal dvy(long i,long j=0,long k=0) const
-	{   long i0=i+nx*(j+ny*k);
-		return j>0? abs(j<ny-1? (a[i0+nx]-a[i0-nx])/mreal(2):a[i0]-a[i0-nx]) : abs(a[i0+nx]-a[i0]);}
+	{   long i0 = size_t(j)<size_t(ny-1) ? i+nx*(j+ny*k):i+nx*(ny*(k+1)-2);	return abs(a[i0+nx]-a[i0]);	}
+//	{   long i0=i+nx*(j+ny*k);
+//		return j>0? abs(j<ny-1? (a[i0+nx]-a[i0-nx])/mreal(2):a[i0]-a[i0-nx]) : abs(a[i0+nx]-a[i0]);}
 	mreal dvz(long i,long j=0,long k=0) const
-	{   long i0=i+nx*(j+ny*k), n=nx*ny;
-		return k>0? abs(k<nz-1? (a[i0+n]-a[i0-n])/mreal(2):a[i0]-a[i0-n]) : abs(a[i0+n]-a[i0]);	}
+	{   long n=nx*ny, i0 = size_t(k)<size_t(nz-1) ? i+nx*(j+ny*k):i+nx*(j+ny*(nz-2));	return abs(a[i0+n]-a[i0]);	}
+//	{   long i0=i+nx*(j+ny*k), n=nx*ny;
+//		return k>0? abs(k<nz-1? (a[i0+n]-a[i0-n])/mreal(2):a[i0]-a[i0-n]) : abs(a[i0+n]-a[i0]);	}
 };
 //-----------------------------------------------------------------------------
 /// Saves result of PDE solving (|u|^2) for "Hamiltonian" ham with initial conditions ini
@@ -524,6 +560,9 @@ inline mglDataC mglQO3dc(const char *ham, const mglDataA &ini_re, const mglDataA
 /// Saves result of ODE solving for var complex variables with right part func (separated by ';') and initial conditions x0 over time interval [0,tmax] with time step dt
 inline mglDataC mglODEc(const char *func, const char *var, const mglDataA &ini, mreal dt=0.1, mreal tmax=10)
 {	return mglDataC(true, mgl_ode_solve_str_c(func,var, &ini, dt, tmax));	}
+/// Saves result of ODE solving for var complex variables with right part func (separated by ';') and initial conditions x0 of size n*m over time interval [0,tmax] with time step dt
+inline mglDataC mglODEcs(const char *func, const char *var, char brd, const mglDataA &ini, mreal dt=0.1, mreal tmax=10)
+{	return mglDataC(true, mgl_ode_solve_set_c(func,var, brd, &ini, dt, tmax));	}
 //-----------------------------------------------------------------------------
 /// Get array as solution of tridiagonal system of equations a[i]*x[i-1]+b[i]*x[i]+c[i]*x[i+1]=d[i]
 /** String \a how may contain:
@@ -549,7 +588,11 @@ inline mglDataC mglGSplineCInit(const mglDataA &xdat, const mglDataA &ydat)
 {	return mglDataC(true,mgl_gsplinec_init(&xdat, &ydat));	}
 /// Evaluate global spline (and its derivatives d1, d2 if not NULL) using prepared coefficients \a coef
 inline dual mglGSplineC(const mglDataA &coef, mreal dx, dual *d1=0, dual *d2=0)
-{	return mgl_gsplinec(&coef, dx, d1,d2);	}
+{	return mgl_gsplinec(&coef, dx, reinterpret_cast<mdual*>(d1), reinterpret_cast<mdual*>(d2));	}
+//-----------------------------------------------------------------------------
+/// Evaluate formula 'str' for given list of variables 'vars'.
+/** NOTE: you need to delete returned data array!*/
+HADT MGL_EXPORT mglFormulaCalcC(const char *str, const std::vector<mglDataA*> &vars);
 //-----------------------------------------------------------------------------
 #define _DN_(a)	((mglDataC *)*(a))
 #define _DC_		((mglDataC *)*d)
@@ -559,8 +602,8 @@ inline dual mglGSplineC(const mglDataA &coef, mreal dx, dual *d1=0, dual *d2=0)
 class MGL_EXPORT mglExprC
 {
 	HAEX ex;
-	mglExprC(const mglExprC &){}	// copying is not allowed
-	const mglExprC &operator=(const mglExprC &t){return t;}	// copying is not allowed
+	mglExprC(const mglExprC &){ex=0;}	// copying is not allowed
+	const mglExprC &operator=(const mglExprC &t){ex=0;	return t;}	// copying is not allowed
 public:
 	mglExprC(const char *expr)		{	ex = mgl_create_cexpr(expr);	}
 	~mglExprC()	{	mgl_delete_cexpr(ex);	}
@@ -570,13 +613,13 @@ public:
 	/// Return value of expression for given x,y,z,u,v,w variables
 	inline dual Eval(dual x, dual y, dual z, dual u, dual v, dual w)
 	{
-		dual var[26];
+		mdual var[26];
 		var['x'-'a']=x;	var['y'-'a']=y;	var['z'-'a']=z;
 		var['u'-'a']=u;	var['v'-'a']=v;	var['w'-'a']=w;
 		return mgl_cexpr_eval_v(ex,var);	}
 	/// Return value of expression for given variables
 	inline dual Eval(dual var[26])
-	{	return mgl_cexpr_eval_v(ex,var);	}
+	{	return mgl_cexpr_eval_v(ex,reinterpret_cast<mdual*>(var));	}
 };
 #endif
 //-----------------------------------------------------------------------------

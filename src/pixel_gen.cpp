@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -25,8 +25,10 @@
 #endif
 
 //-----------------------------------------------------------------------------
-MGL_NO_EXPORT void *mgl_canvas_thr(void *par)
+#if MGL_HAVE_PTHREAD
+static void *mgl_canvas_thr(void *par)
 {	mglThreadG *t=(mglThreadG *)par;	(t->gr->*(t->f))(t->id, t->n, t->p);	return NULL;	}
+#endif
 void mglStartThread(void (mglCanvas::*func)(long i, long n, const void *p), mglCanvas *gr, long n, const void *p=NULL)
 {
 	if(!func || !gr)	return;
@@ -75,7 +77,9 @@ void mglCanvas::SetSize(int w,int h,bool clf)
 	Z = new float[s*3];	// only 3 planes
 	OI= new int[s];
 #pragma omp parallel for
-	for(long i=0;i<s;i++)	memcpy(GB+4*i,BDef,4);
+	for(long i=0;i<s;i++)
+	{	unsigned char *b=GB+4*i;
+		b[0]=BDef[0];	b[1]=BDef[1];	b[2]=BDef[2];	b[3]=0/*BDef[3]*/;	}
 #if MGL_HAVE_PTHREAD
 	pthread_mutex_unlock(&mutexClf);
 #elif MGL_HAVE_OMP
@@ -165,8 +169,8 @@ void mglCanvas::PutDrawReg(mglDrawReg *d, const mglCanvas *gr)
 //-----------------------------------------------------------------------------
 void mglCanvas::PostScale(const mglMatrix *M, mglPoint &p) const
 {
-	mreal f = 1./(2*M->pf),x=p.x,y=p.y,z=p.z;
-	const mreal *b=M->b;
+	float f = 1./(2*M->pf),x=p.x,y=p.y,z=p.z;
+	const float *b=M->b;
 	p.x = M->x + f*(x*b[0] + y*b[1] + z*b[2]);
 	p.y = M->y + f*(x*b[3] + y*b[4] + z*b[5]);
 	p.z = M->z + f*(x*b[6] + y*b[7] + z*b[8]);
@@ -177,8 +181,8 @@ bool mglCanvas::ScalePoint(const mglMatrix *M, mglPoint &p, mglPoint &n, bool us
 	bool res = get(MGL_DISABLE_SCALE) || mglBase::ScalePoint(M,p,n,use_nan);
 	PostScale(M,p);
 
-	mreal nx=n.x, ny=n.y, nz=n.z;
-	const mreal *b=M->b;
+	float nx=n.x, ny=n.y, nz=n.z;
+	const float *b=M->b;
 	n.x = nx*b[0] + ny*b[1] + nz*b[2];	// simpler for rotation only
 	n.y = nx*b[3] + ny*b[4] + nz*b[5];
 	n.z = nx*b[6] + ny*b[7] + nz*b[8];
@@ -191,7 +195,7 @@ long mglCanvas::ProjScale(int nf, long id, bool text)
 	const mglPnt &pi = Pnt[id];
 	mglPoint pp(pi.x,pi.y,pi.z), nn(pi.u,pi.v,pi.w), p, n;
 	if(mgl_isnan(pp.x))	return -1;
-	const mreal w=B1.b[0]/2, h=B1.b[4]/2, d=B1.b[8]/2, xx=B1.x-w/2, yy=B1.y-h/2;
+	const float w=B1.b[0]/2, h=B1.b[4]/2, d=B1.b[8]/2, xx=B1.x-w/2, yy=B1.y-h/2;
 	if(pi.sub>=0)
 	{
 		mglPoint q(RestorePnt(pp)/(2*B.pf));
@@ -204,7 +208,7 @@ long mglCanvas::ProjScale(int nf, long id, bool text)
 		{	p.x = xx+w + q.z*w;	p.y = yy + q.y*h;	p.z = B1.z - q.x*d;	n.Set(u.z,u.y,-u.x);	}
 		else
 		{
-			const mreal *b=B.b;	n = nn;
+			const float *b=B.b;	n = nn;
 			p.x = xx+w + q.x*b[0]/2 + q.y*b[1]/2 + q.z*b[2]/2;
 			p.y = yy+h + q.x*b[3]/2 + q.y*b[4]/2 + q.z*b[5]/2;
 			p.z = B.z + q.x*b[6]/2 + q.y*b[7]/2 + q.z*b[8]/2;
@@ -236,23 +240,23 @@ void mglCanvas::LightScale(const mglMatrix *M)
 // NOTE: Perspective is not fully supported now !!! Also it use LAST InPlot parameters!!!
 mglPoint mglCanvas::RestorePnt(mglPoint ps, bool norm) const
 {
-	const mreal s3 = 2*B.pf;
+	const float s3 = 2*B.pf;
 	mglPoint p;
 
-	const mreal W=Width/2, H=Height/2, D=Depth/2;
-	const mreal *b=B.b,*d=Bp.b;
-	mreal cx = B.z*d[2]+B.y*d[1]+B.x*d[0]-Bp.x*W-d[0]*W+W-d[1]*H-d[2]*D;
-	const mreal c0 = b[6]*d[2]+b[3]*d[1]+b[0]*d[0];
-	const mreal c1 = b[7]*d[2]+b[4]*d[1]+b[1]*d[0];
-	const mreal c2 = b[8]*d[2]+b[5]*d[1]+b[2]*d[0];
-	mreal cy = B.z*d[5]+B.y*d[4]+B.x*d[3]-d[3]*W-Bp.y*H-d[4]*H+H-d[5]*D;
-	const mreal c3 = b[6]*d[5]+b[3]*d[4]+b[0]*d[3];
-	const mreal c4 = b[7]*d[5]+b[4]*d[4]+b[1]*d[3];
-	const mreal c5 = b[8]*d[5]+b[5]*d[4]+b[2]*d[3];
-	mreal cz = B.z*d[8]+B.y*d[7]+B.x*d[6]-d[6]*W-d[7]*H-Bp.z*D-d[8]*D+D;
-	const mreal c6 = b[6]*d[8]+b[3]*d[7]+b[0]*d[6];
-	const mreal c7 = b[7]*d[8]+b[4]*d[7]+b[1]*d[6];
-	const mreal c8 = b[8]*d[8]+b[5]*d[7]+b[2]*d[6];
+	const float W=Width/2, H=Height/2, D=Depth/2;
+	const float *b=B.b,*d=Bp.b;
+	float cx = B.z*d[2]+B.y*d[1]+B.x*d[0]-Bp.x*W-d[0]*W+W-d[1]*H-d[2]*D;
+	const float c0 = b[6]*d[2]+b[3]*d[1]+b[0]*d[0];
+	const float c1 = b[7]*d[2]+b[4]*d[1]+b[1]*d[0];
+	const float c2 = b[8]*d[2]+b[5]*d[1]+b[2]*d[0];
+	float cy = B.z*d[5]+B.y*d[4]+B.x*d[3]-d[3]*W-Bp.y*H-d[4]*H+H-d[5]*D;
+	const float c3 = b[6]*d[5]+b[3]*d[4]+b[0]*d[3];
+	const float c4 = b[7]*d[5]+b[4]*d[4]+b[1]*d[3];
+	const float c5 = b[8]*d[5]+b[5]*d[4]+b[2]*d[3];
+	float cz = B.z*d[8]+B.y*d[7]+B.x*d[6]-d[6]*W-d[7]*H-Bp.z*D-d[8]*D+D;
+	const float c6 = b[6]*d[8]+b[3]*d[7]+b[0]*d[6];
+	const float c7 = b[7]*d[8]+b[4]*d[7]+b[1]*d[6];
+	const float c8 = b[8]*d[8]+b[5]*d[7]+b[2]*d[6];
 	if(norm)	cx=cy=cz=0;
 
 	if(mgl_isnum(ps.z))	// try to take into account perspective if z-value is provided
@@ -261,13 +265,13 @@ mglPoint mglCanvas::RestorePnt(mglPoint ps, bool norm) const
 		ps.x = Width/2 + (ps.x-Width/2)/dd;
 		ps.y = Height/2+ (ps.y-Height/2)/dd;
 	}
-	const mreal xx = ps.x-cx, yy = ps.y-cy, zz = ps.z-cz;
-	const mreal d1=c0*c4-c1*c3, d2=c1*c5-c2*c4, d3=c0*c5-c2*c3;
+	const float xx = ps.x-cx, yy = ps.y-cy, zz = ps.z-cz;
+	const float d1=c0*c4-c1*c3, d2=c1*c5-c2*c4, d3=c0*c5-c2*c3;
 
 	if(mgl_isnum(zz))	// try to use z-values
 	{
 		// put inverse matrix here: [x,y,z]=B^(-1)[xx,yy,zz]
-		mreal det = (-c0*c4*c8+c1*c3*c8+c0*c5*c7-c2*c3*c7-c1*c5*c6+c2*c4*c6)/s3;
+		float det = (-c0*c4*c8+c1*c3*c8+c0*c5*c7-c2*c3*c7-c1*c5*c6+c2*c4*c6)/s3;
 		p.x = (c2*c4-c1*c5)*zz+(c1*c8-c2*c7)*yy+(c5*c7-c4*c8)*xx;	p.x /= det;
 		p.y = (c0*c5-c2*c3)*zz+(c2*c6-c0*c8)*yy+(c3*c8-c5*c6)*xx;	p.y /= det;
 		p.z = (c1*c3-c0*c4)*zz+(c0*c7-c1*c6)*yy+(c4*c6-c3*c7)*xx;	p.z /= det;
@@ -312,16 +316,16 @@ void mglCanvas::CalcScr(mglPoint p, int *xs, int *ys) const
 	if(ys)	*ys=int(p.y);
 }
 //-----------------------------------------------------------------------------
-mglPoint mglCanvas::CalcScr(mglPoint p) const
+mglPoint mglCanvas::CalcScr(const mglPoint &p) const
 {	int x,y;	CalcScr(p,&x,&y);	return mglPoint(x,y);	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_prm_swap(mglPrim &s1,mglPrim &s2,mglPrim *buf)
+/*void static mgl_prm_swap(mglPrim &s1,mglPrim &s2,mglPrim *buf)
 {
 	memcpy(buf, &s1, sizeof(mglPrim));
 	memcpy(&s1, &s2, sizeof(mglPrim));
 	memcpy(&s2, buf, sizeof(mglPrim));
 }
-void MGL_NO_EXPORT sort_prm_c(const size_t l0, const size_t r0, mglStack<mglPrim> &s, mglPrim *buf)
+void static sort_prm_c(const size_t l0, const size_t r0, mglStack<mglPrim> &s, mglPrim *buf)
 {
 	if(l0==r0)	return;
 	if(l0+1==r0)
@@ -352,7 +356,7 @@ void MGL_NO_EXPORT sort_prm_c(const size_t l0, const size_t r0, mglStack<mglPrim
 	if(l>l0+1)	sort_prm_c(l0,l-1,s,buf);
 	if(r<r0)	sort_prm_c(r,r0,s,buf);
 	if(del)	free(buf);
-}
+}*/
 //-----------------------------------------------------------------------------
 uint32_t mglCanvas::GetColor(const mglPrim &p) const
 {
@@ -446,45 +450,54 @@ void mglCanvas::Finish()
 	omp_set_lock((omp_lock_t*)lockClf);
 #endif
 	size_t n=Width*Height;
-	if(Quality==MGL_DRAW_DOTS)
+	if(Quality!=MGL_DRAW_DOTS)
 	{
-		mglStartThread(&mglCanvas::pxl_dotsdr,this,Pnt.size());
-		mglStartThread(&mglCanvas::pxl_memcpy,this,n);
-	}
-	else
-	{
-		if((Quality&MGL_DRAW_LMEM) || (memcmp(&Bp,&bp,sizeof(mglMatrix)) && !(Quality&MGL_DRAW_LMEM) && Prm.size()>0))
+		if((Quality&MGL_DRAW_LMEM) || ( Bp!=bp && !(Quality&MGL_DRAW_LMEM) && Prm.size()>0))
 			clr(MGL_FINISHED);
 		if(!get(MGL_FINISHED))
 		{
 			if(!(Quality&MGL_DRAW_LMEM) && Prm.size()>0)
 			{
-				PreparePrim(0);	bp=Bp;
-				clr(MGL_FINISHED);
+				PreparePrim(0);	bp=Bp;	clr(MGL_FINISHED);
 				mglStartThread(&mglCanvas::pxl_primdr,this,Prm.size());
 			}
 			BDef[3] = (Flag&3)!=2 ? 0:255;
 			if(Quality&MGL_DRAW_NORM)	mglStartThread(&mglCanvas::pxl_combine,this,n);
-			else 			mglStartThread(&mglCanvas::pxl_memcpy,this,n);
+			else	mglStartThread(&mglCanvas::pxl_memcpy,this,n);
 			BDef[3] = 255;
 		}
 	}
+	else
+	{
+		mglStartThread(&mglCanvas::pxl_dotsdr,this,Pnt.size());
+		mglStartThread(&mglCanvas::pxl_memcpy,this,n);
+	}
 	int x2 = BBoxX2<0?Width:BBoxX2, y2 = BBoxY2<0?Height:BBoxY2;
+	if(x2>Width)	x2=Width;
+	if(y2>Height)	y2=Height;
 	if(BBoxX1>=0 && BBoxX1<x2 && BBoxY1>=0 && BBoxY1<y2)
 	{
 		unsigned char ff[8]={255,255,255,255, 0,0,0,255}, *g1 = G4+BBoxX1*4-4;
 		int ww = 8*Width;
 		if(BBoxX1>0)	for(long i=0;i<Height/2-1;i++)
-			memcpy(g1+ww*i,ff,8);
+		{	unsigned char *g=g1+ww*i;
+			g[0]=ff[0];	g[1]=ff[1];	g[2]=ff[2];	g[3]=ff[3];
+			g[4]=ff[4];	g[5]=ff[5];	g[6]=ff[6];	g[7]=ff[7];	}
 		g1 = G4+x2*4;
 		if(x2<Width)	for(long i=0;i<Height/2-1;i++)
-			memcpy(g1+ww*i,ff,8);
+		{	unsigned char *g=g1+ww*i;
+			g[0]=ff[0];	g[1]=ff[1];	g[2]=ff[2];	g[3]=ff[3];
+			g[4]=ff[4];	g[5]=ff[5];	g[6]=ff[6];	g[7]=ff[7];	}
 		g1 = G4+(BBoxY1-1)*4*Width;
 		if(BBoxY1>0)	for(long i=0;i<Width/2-1;i++)
-			memcpy(g1+8*i,ff,8);
+		{	unsigned char *g=g1+8*i;
+			g[0]=ff[0];	g[1]=ff[1];	g[2]=ff[2];	g[3]=ff[3];
+			g[4]=ff[4];	g[5]=ff[5];	g[6]=ff[6];	g[7]=ff[7];	}
 		g1 = G4+y2*4*Width;
 		if(y2<Height)	for(long i=0;i<Width/2-1;i++)
-			memcpy(g1+8*i,ff,8);
+		{	unsigned char *g=g1+8*i;
+			g[0]=ff[0];	g[1]=ff[1];	g[2]=ff[2];	g[3]=ff[3];
+			g[4]=ff[4];	g[5]=ff[5];	g[6]=ff[6];	g[7]=ff[7];	}
 	}
 	mglStartThread(&mglCanvas::pxl_backgr,this,n);
 	if(Quality!=MGL_DRAW_DOTS)	set(MGL_FINISHED);
@@ -514,6 +527,7 @@ void mglCanvas::Clf(mglColor Back)
 	ClearFrame();
 	if((Flag&3)==2)	Back.Set(0,0,0,0);
 	if(Back!=NC)	FillBackground(Back);
+//	else	FillBackground(mglColor(1,1,1,0));
 }
 //-----------------------------------------------------------------------------
 void mglCanvas::Clf(const char *col)
@@ -534,17 +548,86 @@ bool MGL_NO_EXPORT mgl_read_image(unsigned char **g, int &w, int &h, const char 
 void mglCanvas::LoadBackground(const char *fname, double alpha)
 {
 	mgl_read_image(&GB,Width,Height,fname);
-	if(alpha<1 && alpha>0)
-#pragma omp parallel for
+	if(alpha<=1 && alpha>=0)
+#pragma omp parallel for //simd
 		for(long i=0;i<Width*Height;i++)	GB[4*i+3] = (unsigned char)(GB[4*i+3]*alpha);
+}
+//-----------------------------------------------------------------------------
+void mglCanvas::LoadBackground(const char *fname, const char *how, double alpha)
+{
+	int w,h;	// bitmap sizes
+	unsigned char *g=NULL;
+	mgl_read_image(&g,w,h,fname);
+	if(!g)	return;
+	if(alpha<=1 && alpha>=0)
+#pragma omp parallel for //simd
+		for(long i=0;i<w*h;i++)	g[4*i+3] = (unsigned char)(g[4*i+3]*alpha);
+	int ww=Width, hh=Height, ii=0, jj=0;	// canvas range
+	if(mglchr(how,'a'))	{	ww=inW;	hh=inH;	ii=inX;	jj=Height-inY-inH;	}
+	int di = 0, dj=0;	// bitmap shift
+	bool center=false;
+	if(mglchr(how,'c'))	{	center=true;	di = (w-ww)/2;	dj = (h-hh)/2;	}
+	if(mglchr(how,'s'))	// spline resizing
+	{
+		double ki=double(w-1)/(ww-1), kj=double(h-1)/(hh-1);
+		for(int j=0;j<hh-1;j++)
+		{
+			double tj = kj*j;
+			int pj = int(tj);
+			if(pj>h-1)	{	pj--;	tj=1;	}	else	tj -= pj;
+			for(int i=0;i<ww-1;i++)
+			{
+				unsigned char *b=GB+4*(ii+i+Width*(jj+j));
+				int pi = int(ki*i);
+				double ti = ki*i-pi;
+				const unsigned char *p=g+4*(pi+w*pj), *q=g+4*(pi+w*pj+w);
+				b[0] = p[0]*(1-ti)*(1-tj) + p[4]*ti*(1-tj) + q[0]*(1-ti)*tj + q[4]*ti*tj;
+				b[1] = p[1]*(1-ti)*(1-tj) + p[5]*ti*(1-tj) + q[1]*(1-ti)*tj + q[5]*ti*tj;
+				b[2] = p[2]*(1-ti)*(1-tj) + p[6]*ti*(1-tj) + q[2]*(1-ti)*tj + q[6]*ti*tj;
+				b[3] = p[3]*(1-ti)*(1-tj) + p[7]*ti*(1-tj) + q[3]*(1-ti)*tj + q[7]*ti*tj;
+			}
+			unsigned char *b=GB+4*(ii+ww-1+Width*(jj+j));
+			const unsigned char *p=g+4*(w*(pj+1)-1), *q=g+4*(w*(pj+2)-1);
+			b[0] = q[0]*tj + p[0]*(1-tj);
+			b[1] = q[1]*tj + p[1]*(1-tj);
+			b[2] = q[2]*tj + p[2]*(1-tj);
+			b[3] = q[3]*tj + p[3]*(1-tj);
+		}
+	}
+	else if(mglchr(how,'m'))	// mosaic
+	{
+		while(di<0)	di+=w;	// stupid correction
+		while(dj<0)	dj+=h;
+		for(int j=0;j<hh;j++)
+		{
+			int pj = (j+dj)%h;
+			for(int i=0;i<ww;i++)
+			{
+				unsigned char *b=GB+4*(ii+i+Width*(jj+j));
+				int pi = (i+di)%w;
+				unsigned char *p=g+4*(pi+w*pj);
+				b[0] = p[0];	b[1] = p[1];	b[2] = p[2];	b[3] = p[3];
+			}
+		}
+	}
+	else
+	{
+		if(w<ww)	{	ww=w;	if(center)	{	ii-=di;	di=0;	}	}
+		if(h<hh)	{	hh=h;	if(center)	{	jj-=dj;	dj=0;	}	}
+		for(int j=0;j<hh;j++)
+			memcpy(GB+4*(ii+Width*(jj+j)), g+4*(di+w*(dj+j)), 4*ww);
+	}
+	if(g)	delete []g;
 }
 //-----------------------------------------------------------------------------
 void mglCanvas::FillBackground(const mglColor &cc)
 {
 	BDef[0] = (unsigned char)(255*cc.r);	BDef[1] = (unsigned char)(255*cc.g);
 	BDef[2] = (unsigned char)(255*cc.b);	BDef[3] = (unsigned char)(255*cc.a);
-#pragma omp parallel for
-	for(long i=0;i<Width*Height;i++)	memcpy(GB+4*i,BDef,4);
+#pragma omp parallel for //simd
+	for(long i=0;i<Width*Height;i++)
+	{	unsigned char *b=GB+4*i;
+		b[0]=BDef[0];	b[1]=BDef[1];	b[2]=BDef[2];	b[3]=BDef[3];	}
 }
 //-----------------------------------------------------------------------------
 void mglCanvas::Combine(const mglCanvas *gr)
@@ -560,6 +643,8 @@ unsigned char **mglCanvas::GetRGBLines(long &w, long &h, unsigned char *&f, bool
 	long c = alpha?4:3, d = c*Width;
 	unsigned char *gg = (alpha?G4:G);
 	int x2 = BBoxX2<0?Width:BBoxX2, y2 = BBoxY2<0?Height:BBoxY2;
+	if(x2>Width)	x2=Width;
+	if(y2>Height)	y2=Height;
 	if(BBoxX1>=0 && BBoxX1<x2 && BBoxY1>=0 && BBoxY1<y2)
 	{
 		gg += c*BBoxX1 + d*BBoxY1;

@@ -11,6 +11,7 @@ MathGL library supports the simplest scripts for data handling and plotting. The
 @menu
 * MGL definition::
 * Program flow commands::
+* Special comments::
 * LaTeX package::
 @ifclear UDAV
 * mglParse class::
@@ -26,7 +27,7 @@ MathGL library supports the simplest scripts for data handling and plotting. The
 
 MGL script language is rather simple. Each string is a command. First word of string is the name of command. Other words are command arguments. Words are separated from each other by space or tabulation symbol. The upper or lower case of words is important, i.e. variables @var{a} and @var{A} are different variables. Symbol @samp{#} starts the comment (all characters after # will be ignored). The exception is situation when @samp{#} is a part of some string. Also options can be specified after symbol @samp{;} (@pxref{Command options}). Symbol @samp{:} starts new command (like new line character) if it is not placed inside a string or inside brackets.
 
-If string contain references to external parameters (substrings @samp{$0}, @samp{$1} ... @samp{$9}) or definitions (substrings @samp{$a}, @samp{$b} ... @samp{$z}) then before execution the values of parameter/definition will be substituted instead of reference. It allows to use the same MGL script for different parameters (filenames, paths, condition and so on).
+If string contain references to external parameters (substrings @samp{$0}, @samp{$1} ... @samp{$9}) or definitions (substrings @samp{$a}, @samp{$b} ... @samp{$z}) then before execution the values of parameter/definition will be substituted instead of reference. It allows one to use the same MGL script for different parameters (filenames, paths, condition and so on).
 
 Argument can be a string, a variable (data arrays) or a number (scalars).
 @itemize @bullet
@@ -48,7 +49,7 @@ sub-arrays (like in @ref{subdata} command) as command argument. For example, @co
 any column combinations defined by formulas, like @code{a('n*w^2/exp(t)')} if names for data columns was specified (by @ref{idset} command or in the file at string started with @code{##}).
 
 @item
-any expression (without spaces) of existed variables produce temporary variable. For example, @samp{sqrt(dat(:,5)+1)} will produce temporary variable with data values equal to @code{tmp[i,j] = sqrt(dat[i,5,j]+1)}.
+any expression (without spaces) of existed variables produce temporary variable. For example, @samp{sqrt(dat(:,5)+1)} will produce temporary variable with data values equal to @code{tmp[i,j] = sqrt(dat[i,5,j]+1)}. At this symbol @samp{`} will return transposed data array: both @samp{`sqrt(dat(:,5)+1)} and @samp{sqrt(`dat(:,5)+1)} will produce temporary variable with data values equal to @code{tmp[i,j] = sqrt(dat[j,5,i]+1)}.
 
 @item
 temporary variable of higher dimensions by help of []. For example, @samp{[1,2,3]} will produce a temporary vector of 3 elements @{1, 2, 3@}; @samp{[[11,12],[21,22]]} will produce matrix 2*2 and so on. Here you can join even an arrays of the same dimensions by construction like @samp{[v1,v2,...,vn]}.
@@ -75,7 +76,7 @@ fplot 'x^3' 'b'?'r|'
 
 @c ------------------------------------------------------------------
 @external{}
-@node Program flow commands, LaTeX package, MGL definition, MGL scripts
+@node Program flow commands, Special comments, MGL definition, MGL scripts
 @section Program flow commands
 @nav{}
 
@@ -142,20 +143,23 @@ Load additional MGL command from external module (DLL or .so), located in file @
 
 
 @cindex if
-@anchor{if}
-@deftypefn {MGL command} {} if dat 'cond'
-Starts block which will be executed if @var{dat} satisfy to @var{cond}.
+@anchor{if} @anchor{then}
+@deftypefn {MGL command} {} if @code{val} @strong{then} @code{CMD}
+Executes command @code{CMD} only if @code{val} is nonzero.
 @end deftypefn
 @deftypefn {MGL command} {} if @code{val}
 Starts block which will be executed if @code{val} is nonzero.
 @end deftypefn
+@deftypefn {MGL command} {} if dat 'cond'
+Starts block which will be executed if @var{dat} satisfy to @var{cond}.
+@end deftypefn
 @cindex elseif
 @anchor{elseif}
-@deftypefn {MGL command} {} elseif dat 'cond'
-Starts block which will be executed if previous @code{if} or @code{elseif} is false and @var{dat} satisfy to @var{cond}.
-@end deftypefn
 @deftypefn {MGL command} {} elseif @code{val}
 Starts block which will be executed if previous @code{if} or @code{elseif} is false and @code{val} is nonzero.
+@end deftypefn
+@deftypefn {MGL command} {} elseif dat 'cond'
+Starts block which will be executed if previous @code{if} or @code{elseif} is false and @var{dat} satisfy to @var{cond}.
 @end deftypefn
 @cindex else
 @anchor{else}
@@ -171,15 +175,29 @@ Finishes @code{if/elseif/else} block.
 @cindex for
 @anchor{for}
 @deftypefn {MGL command} {} for $N @code{v1 v2 [dv=1]}
-Starts cycle with $@var{N}-th argument changing from @var{v1} to @var{v2} with the step @var{dv}. Here @var{N} is digit (0...9) or alpha (a...z).
+Starts loop with $@var{N}-th argument changing from @var{v1} to @var{v2} with the step @var{dv}. Here @var{N} is digit (0...9) or alpha (a...z).
 @end deftypefn
 @deftypefn {MGL command} {} for $N dat
-Starts cycle with $@var{N}-th argument changing for @var{dat} values. Here @var{N} is digit (0...9) or alpha (a...z).
+Starts loop with $@var{N}-th argument changing for @var{dat} values. Here @var{N} is digit (0...9) or alpha (a...z).
 @end deftypefn
 @cindex next
 @anchor{next}
 @deftypefn {MGL command} {} next
-Finishes @code{for} cycle.
+Finishes @code{for} loop.
+@end deftypefn
+
+@cindex do
+@anchor{do}
+@deftypefn {MGL command} {} do
+Starts infinite loop.
+@end deftypefn
+@cindex while
+@anchor{while}
+@deftypefn {MGL command} {} while @code{val}
+Continue loop iterations if @var{val} is nonzero, or finishes loop otherwise.
+@end deftypefn
+@deftypefn {MGL command} {} while dat 'cond'
+Continue loop iterations if @var{dat} satisfy to @var{cond}, or finishes loop otherwise.
 @end deftypefn
 
 @cindex once
@@ -206,13 +224,66 @@ Set variant of argument(s) separated by @samp{?} symbol to be used in further co
 Make one step for ordinary differential equation(s) @{var1' = eq1, ... @} with time-step @var{dt}. Here variable(s) @samp{var1}, ... are the ones, defined in MGL script previously. The Runge-Kutta 4-th order method is used for solution.
 @end deftypefn
 
+
+@c ------------------------------------------------------------------
+@external{}
+@node Special comments, LaTeX package, Program flow commands, MGL scripts
+@section Special comments
+@nav{}
+
+There are number of special comments for MGL script, which set some global behavior (like, animation, dialog for parameters and so on). All these special comments starts with double sign @code{##}. Let consider them.
+
+@table @samp
+@item @strong{##c} @code{v1 v2 [dv=1]}
+Sets the parameter for animation loop relative to variable @code{$0}. Here @var{v1} and @var{v2} are initial and final values, @var{dv} is the increment.
+
+@item @strong{##a} val
+Adds the parameter @var{val} to the list of animation relative to variable @code{$0}. You can use it several times (one parameter per line) or combine it with animation loop @strong{##c}.
+
+@item @strong{##d} $I kind|label|par1|par2|...
+Creates custom dialog for changing plot properties. Each line adds one widget to the dialog. Here @var{$I} is id ($0,$1...$9,$a,$b...$z), @var{label} is the label of widget, @var{kind} is the kind of the widget:
+@itemize @bullet
+@item
+	'e' for editor or input line (parameter is initial value) , 
+@item
+	'v' for spinner or counter (parameters are "ini|min|max|step|big_step"), 
+@item
+	's' for slider (parameters are "ini|min|max|step"), 
+@item
+	'b' for check box (parameter is "ini"; also understand "on"=1), 
+@item
+	'c' for choice (parameters are possible choices).
+@end itemize
+Now, it work in FLTK-based @code{mgllab} and @code{mglview} only.
+
+@ifclear UDAV
+You can make custom dialog in C/C++ code too by using one of following functions.
+
+@deftypefn {Method on @code{mglWnd}} @code{void} MakeDialog (@code{const char *}ids, @code{char const * const *}args, @code{const char *}title)
+@deftypefnx{Method on @code{mglWnd}} @code{void} MakeDialog (@code{const std::string &}ids, @code{const std::vector<std::string> &}args, @code{const char *}title)
+@deftypefnx {C function} @code{void} mgl_wnd_make_dialog (@code{HMGL} gr, @code{const char *}ids, @code{char const * const *}args, @code{const char *}title)
+Makes custom dialog for parameters ids of element properties defined by args.
+@end deftypefn
+
+At this you need to provide callback function for setting up properties. You can do it by overloading @code{Param()} function of @code{mglDraw} class or set it manually.
+
+@deftypefn {Method on @code{mglDraw}} @code{void} Param (@code{char} id, @code{const char *} val)
+@deftypefnx{Method on @code{mglWnd}} @code{void} SetPropFunc (@code{void (*}prop@code{)(char id, const char *val, void *p)}, @code{void *}par=@code{NULL})
+@deftypefnx {C function} @code{void} mgl_wnd_set_prop (@code{void (*}prop@code{)(char id, const char *val, void *p)}, @code{void *}par)
+Set callback function for properties setup.
+@end deftypefn
+
+@end ifclear
+
+@end table
+
 @c ------------------------------------------------------------------
 @external{}
 @ifclear UDAV
-@node LaTeX package, mglParse class, Program flow commands, MGL scripts
+@node LaTeX package, mglParse class, Special comments, MGL scripts
 @end ifclear
 @ifset UDAV
-@node LaTeX package, , Program flow commands, MGL scripts
+@node LaTeX package, , Special comments, MGL scripts
 @end ifset
 @section LaTeX package
 @nav{}
@@ -221,7 +292,7 @@ There is LaTeX package @code{mgltex} (was made by Diego Sejas Viscarra) which al
 
 For using this package you need to specify @code{--shell-escape} option for @emph{latex/pdflatex} or manually run @emph{mglconv} tool with produced MGL scripts for generation of images. Don't forgot to run @emph{latex/pdflatex} second time to insert generated images into the output document. Also you need to run @emph{pdflatex} third time to update converted from EPS images if you are using vector EPS output (default).
 
-The package may have following options: @code{draft}, @code{final} --- the same as in the @emph{graphicx} package; @code{on}, @code{off} --- to activate/deactivate the creation of scripts and graphics; @code{comments}, @code{nocomments} --- to make visible/invisible commentaries contained inside @code{mglcomment} environments; @code{jpg}, @code{jpeg}, @code{png} --- to export graphics as JPEG/PNG images; @code{eps}, @code{epsz} --- to export to uncompressed/compressed EPS format as primitives; @code{bps}, @code{bpsz} --- to export to uncompressed/compressed EPS format as bitmap (doesn't work with @emph{pdflatex}); @code{pdf} --- to export to 3D PDF; @code{tex} --- to export to @emph{LaTeX/tikz} document.
+The package may have following options: @code{draft}, @code{final} --- the same as in the @emph{graphicx} package; @code{on}, @code{off} --- to activate/deactivate the creation of scripts and graphics; @code{comments}, @code{nocomments} --- to make visible/invisible comments contained inside @code{mglcomment} environments; @code{jpg}, @code{jpeg}, @code{png} --- to export graphics as JPEG/PNG images; @code{eps}, @code{epsz} --- to export to uncompressed/compressed EPS format as primitives; @code{bps}, @code{bpsz} --- to export to uncompressed/compressed EPS format as bitmap (doesn't work with @emph{pdflatex}); @code{pdf} --- to export to 3D PDF; @code{tex} --- to export to @emph{LaTeX/tikz} document.
 
 The package defines the following environments:
 @table @samp
@@ -272,7 +343,7 @@ An example of usage of @samp{mgl} environment would be:
 @item mglfunc
 	Is used to define MGL functions. It takes one mandatory argument, which is the name of the function, plus one additional argument, which specifies the number of arguments of the function. The environment needs to contain only the body of the function, since the first and last lines are appended automatically, and the resulting code is written at the end of the general script, after the @ref{stop} command, which is also written automatically. The warning is produced if 2 or more function with the same name is defined.
 @item mglcomment
-	Is used to contain multiline commentaries. This commentaries will be visible/invisible in the output document, depending on the use of the package options @code{comments} and @code{nocomments} (see above), or the @code{\mglcomments} and @code{\mglnocomments} commands (see bellow).
+	Is used to contain multiline comments. This comments will be visible/invisible in the output document, depending on the use of the package options @code{comments} and @code{nocomments} (see above), or the @code{\mglcomments} and @code{\mglnocomments} commands (see bellow).
 @item mglsetup
 	If many scripts with the same code are to be written, the repetitive code can be written inside this environment only once, then this code will be used automatically every time the @samp{\mglplot} command is used (see below). It takes one optional argument, which is a name to be associated to the corresponding contents of the environment; this name can be passed to the @samp{\mglplot} command to use the corresponding block of code automatically (see below).
 @end table
@@ -378,7 +449,7 @@ The same as previous but read script from the file @var{fp}. If @var{print}=@cod
 @deftypefnx {Method on @code{mglParse}} @code{int} Parse (@code{mglGraph *}gr, @code{const wchar_t *}str, @code{long} pos=@code{0})
 @deftypefnx {C function} @code{int} mgl_parse_line (@code{HMGL} gr, @code{HMPR} p, @code{const char *}str, @code{int} pos)
 @deftypefnx {C function} @code{int} mgl_parse_linew (@code{HMGL} gr, @code{HMPR} p, @code{const wchar_t *}str, @code{int} pos)
-Function parses the string @var{str} and executes it by  using @var{gr} as a graphics plotter. Returns the value depending on an error presence in the string @var{str}: 0 -- no error, 1 -- wrong command argument(s), 2 -- unknown command, 3 -- string is too long, 4 -- strings is not closed. Optional argument @var{pos} allows to save the string position in the document (or file) for using @code{for|next} command.
+Function parses the string @var{str} and executes it by  using @var{gr} as a graphics plotter. Returns the value depending on an error presence in the string @var{str}: 0 -- no error, 1 -- wrong command argument(s), 2 -- unknown command, 3 -- string is too long, 4 -- strings is not closed. Optional argument @var{pos} allows one to save the string position in the document (or file) for using @code{for|next} command.
 @end deftypefn
 
 @deftypefn {Method on @code{mglParse}} @code{mglData} Calc (@code{const char *}formula)
@@ -439,7 +510,7 @@ Restore Once flag.
 
 @deftypefn {Method on @code{mglParse}} @code{void} AllowSetSize (@code{bool} a)
 @deftypefnx {C function} @code{void} mgl_parser_allow_setsize (@code{HMPR} p, @code{int} a)
-Allow to parse @ref{setsize} command or not.
+allow one to parse @ref{setsize} command or not.
 @end deftypefn
 
 @deftypefn {Method on @code{mglParse}} @code{void} AllowFileIO (@code{bool} a)
@@ -449,7 +520,7 @@ Allow reading/saving files or not.
 
 @deftypefn {Method on @code{mglParse}} @code{void} AllowDllCall (@code{bool} a)
 @deftypefnx {C function} @code{void} mgl_parser_allow_dll_call (@code{HMPR} p, @code{int} a)
-Allow to parse @ref{load} command or not.
+allow one to parse @ref{load} command or not.
 @end deftypefn
 
 @deftypefn {Method on @code{mglParse}} @code{void} Stop ()

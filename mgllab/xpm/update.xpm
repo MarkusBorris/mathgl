@@ -2,7 +2,7 @@
 static const char *update_xpm[] = {
 "16 16 2 1",
 " 	c None",
-".	c #00007F",
+".	c #007ffF",
 "                ",
 "                ",
 "      ....      ",

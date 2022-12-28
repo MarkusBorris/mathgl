@@ -2,7 +2,7 @@
 static const char * pause_xpm[] = {
 "16 16 3 1",
 " 	c None",
-".	c #777777",
+".	c #afafaf",
 "q	c #000000",
 "                ",
 "                ",

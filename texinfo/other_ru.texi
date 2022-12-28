@@ -384,15 +384,15 @@ protected:
   inline mreal vthr(long i) const
   { return use_abs ? abs(a[i]) : arg(a[i]);  }
   inline mreal dvx(long i,long j=0,long k=0) const
-  { register long i0=i+nx*(j+ny*k);
+  { long i0=i+nx*(j+ny*k);
     std::complex<double> res=i>0? (i<nx-1? (a[i0+1]-a[i0-1])/2.:a[i0]-a[i0-1]) : a[i0+1]-a[i0];
     return use_abs? abs(res) : arg(res);  }
   inline mreal dvy(long i,long j=0,long k=0) const
-  { register long i0=i+nx*(j+ny*k);
+  { long i0=i+nx*(j+ny*k);
     std::complex<double> res=j>0? (j<ny-1? (a[i0+nx]-a[i0-nx])/2.:a[i0]-a[i0-nx]) : a[i0+nx]-a[i0];
     return use_abs? abs(res) : arg(res);  }
   inline mreal dvz(long i,long j=0,long k=0) const
-  { register long i0=i+nx*(j+ny*k), n=nx*ny;
+  { long i0=i+nx*(j+ny*k), n=nx*ny;
     std::complex<double> res=k>0? (k<nz-1? (a[i0+n]-a[i0-n])/2.:a[i0]-a[i0-n]) : a[i0+n]-a[i0];
     return use_abs? abs(res) : arg(res);  }
 };

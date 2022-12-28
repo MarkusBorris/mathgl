@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -31,7 +31,7 @@ uintptr_t MGL_EXPORT mgl_create_graph_qt_(const char *title, int);
 int MGL_EXPORT mgl_qt_run();
 int MGL_EXPORT mgl_qt_run_();
 /// Return pointer to widget (QMathGL*) used for plotting
-MGL_EXPORT void *mgl_qt_widget(HMGL gr);
+MGL_EXPORT_PURE void *mgl_qt_widget(HMGL gr);
 #ifdef __cplusplus
 }
 //-----------------------------------------------------------------------------
@@ -54,8 +54,6 @@ public:
 		mgl_set_click_func(gr, mgl_click_class);	}
 	virtual ~mglQT() {}
 	int Run()	{	return mgl_qt_run();	}	///< Run main loop for event handling
-	/// Return pointer to widget (QMathGL*) used for plotting
-	void *Widget()	{	return mgl_qt_widget(gr);	}
 };
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_ask_qt(const wchar_t *quest, wchar_t *res);

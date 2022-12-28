@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -144,7 +144,7 @@ void MGL_EXPORT mgl_fft(double *x, long s, long n, const void *wt, void *ws, int
 #endif
 }
 //-----------------------------------------------------------------------------
-MGL_NO_EXPORT void* mgl_fftx(void *par)
+static void* mgl_fftx(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0];
@@ -160,7 +160,7 @@ MGL_NO_EXPORT void* mgl_fftx(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_ffty(void *par)
+static void* mgl_ffty(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0],ny=t->p[1];
@@ -176,7 +176,7 @@ MGL_NO_EXPORT void* mgl_ffty(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_fftz(void *par)
+static void* mgl_fftz(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0],ny=t->p[1],nz=t->p[2];
@@ -286,7 +286,7 @@ void MGL_EXPORT mgl_data_fourier(HMDT re, HMDT im, const char *dir)
 	delete []a;
 }
 //-----------------------------------------------------------------------------
-MGL_NO_EXPORT void* mgl_envx(void *par)
+static void* mgl_envx(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0];
@@ -310,7 +310,7 @@ MGL_NO_EXPORT void* mgl_envx(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_envy(void *par)
+static void* mgl_envy(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0],ny=t->p[1];
@@ -334,7 +334,7 @@ MGL_NO_EXPORT void* mgl_envy(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_envz(void *par)
+static void* mgl_envz(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0],ny=t->p[1],nz=t->p[2],k=nx*ny;
@@ -404,7 +404,7 @@ void MGL_EXPORT mgl_datac_envelop(HADT c, char dir)
 	for(long i=0;i<n;i++)	c->a[i] = dual(re.a[i], im.a[i]);
 }
 //-----------------------------------------------------------------------------
-MGL_NO_EXPORT void* mgl_stfa1(void *par)
+static void* mgl_stfa1(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long mx=t->p[0],mz=t->p[2],dn=t->p[3],dd=dn/2,ny=t->p[4];
@@ -442,7 +442,7 @@ MGL_NO_EXPORT void* mgl_stfa1(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_stfa2(void *par)
+static void* mgl_stfa2(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long mx=t->p[0],my=t->p[1],dn=t->p[3],dd=dn/2,nx=t->p[4];
@@ -507,7 +507,7 @@ HMDT MGL_EXPORT mgl_data_stfa(HCDT re, HCDT im, long dn, char dir)
 	return d;
 }
 //-----------------------------------------------------------------------------
-MGL_NO_EXPORT void* mgl_sinx(void *par)
+static void* mgl_sinx(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0];
@@ -536,7 +536,7 @@ MGL_NO_EXPORT void* mgl_sinx(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_siny(void *par)
+static void* mgl_siny(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0],ny=t->p[1];
@@ -565,7 +565,7 @@ MGL_NO_EXPORT void* mgl_siny(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_sinz(void *par)
+static void* mgl_sinz(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0],ny=t->p[1],nz=t->p[2],k=nx*ny;
@@ -642,7 +642,7 @@ void MGL_EXPORT mgl_datac_sinfft(HADT c, const char *dir)
 	for(long i=0;i<n;i++)	c->a[i] = dual(re.a[i], im.a[i]);
 }
 //-----------------------------------------------------------------------------
-MGL_NO_EXPORT void* mgl_cosx(void *par)
+static void* mgl_cosx(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0],nn=nx-1;
@@ -679,7 +679,7 @@ MGL_NO_EXPORT void* mgl_cosx(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_cosy(void *par)
+static void* mgl_cosy(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0],ny=t->p[1],nn=ny-1;
@@ -716,7 +716,7 @@ MGL_NO_EXPORT void* mgl_cosy(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_cosz(void *par)
+static void* mgl_cosz(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0],ny=t->p[1],nz=t->p[2],k=nx*ny,nn=nz-1;
@@ -885,7 +885,7 @@ void MGL_EXPORT mgl_datac_envelop_(uintptr_t *d, const char *dir, int)
 {	mgl_datac_envelop(_DC_,*dir);	}
 //-----------------------------------------------------------------------------
 #if MGL_HAVE_GSL
-MGL_NO_EXPORT void* mgl_chnkx(void *par)
+static void* mgl_chnkx(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0];
@@ -911,7 +911,7 @@ MGL_NO_EXPORT void* mgl_chnkx(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_chnky(void *par)
+static void* mgl_chnky(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0],ny=t->p[1];
@@ -938,7 +938,7 @@ MGL_NO_EXPORT void* mgl_chnky(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_chnkz(void *par)
+static void* mgl_chnkz(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long k=t->p[0]*t->p[1],nz=t->p[2];
@@ -1005,7 +1005,7 @@ void MGL_EXPORT mgl_datac_hankel_(uintptr_t *d, const char *dir,int l)
 	mgl_datac_hankel(_DC_,s);	delete []s;	}
 //-----------------------------------------------------------------------------
 #if MGL_HAVE_GSL
-MGL_NO_EXPORT void* mgl_hnkx(void *par)
+static void* mgl_hnkx(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0];
@@ -1029,7 +1029,7 @@ MGL_NO_EXPORT void* mgl_hnkx(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_hnky(void *par)
+static void* mgl_hnky(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long nx=t->p[0],ny=t->p[1];
@@ -1054,7 +1054,7 @@ MGL_NO_EXPORT void* mgl_hnky(void *par)
 	}
 	return 0;
 }
-MGL_NO_EXPORT void* mgl_hnkz(void *par)
+static void* mgl_hnkz(void *par)
 {
 	mglThreadT *t=(mglThreadT *)par;
 	long k=t->p[0]*t->p[1],nz=t->p[2];
@@ -1169,7 +1169,7 @@ void MGL_EXPORT mgl_datac_sinfft_(uintptr_t *d, const char *dir,int l)
 {	char *s=new char[l+1];	memcpy(s,dir,l);	s[l]=0;
 	mgl_datac_sinfft(_DC_,s);	delete []s;	}
 //-----------------------------------------------------------------------------
-MGL_NO_EXPORT void* mgl_cor(void *par)
+/*static void* mgl_cor(void *par)
 {
 	mglThreadC *t=(mglThreadC *)par;
 	dual *a = t->a;
@@ -1179,7 +1179,7 @@ MGL_NO_EXPORT void* mgl_cor(void *par)
 #endif
 	for(long i=t->id;i<t->n;i+=mglNumThr)	a[i] *= conj(b[i]);
 	return 0;
-}
+}*/
 HADT MGL_EXPORT mgl_datac_correl(HCDT d1, HCDT d2, const char *dir)
 {
 	if(!dir || *dir==0)	return 0;

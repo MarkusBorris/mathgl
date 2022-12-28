@@ -17,7 +17,8 @@ HMGL MGL_EXPORT mgl_create_graph_gl()
 uintptr_t MGL_EXPORT mgl_create_graph_gl_()
 {	return uintptr_t(new mglCanvasGL);	}
 //-----------------------------------------------------------------------------
-mglCanvasGL::mglCanvasGL() : mglCanvas(1,1)	{	Clf();	Zoom(0,0,1,1);	}
+mglCanvasGL::mglCanvasGL() : mglCanvas(1,1)
+{	Clf();	Zoom(0,0,1,1);	set(MGL_FULL_CURV);	limit_pm1=true;	}
 //-----------------------------------------------------------------------------
 mglCanvasGL::~mglCanvasGL(){}
 //-----------------------------------------------------------------------------
@@ -45,6 +46,16 @@ void mglCanvasGL::Finish()
 #else
 #define MGL_GL_TYPE	GL_FLOAT
 #endif
+
+	// Try to add smoothing
+	glEnable(GL_LINE_SMOOTH);
+	glEnable(GL_POLYGON_SMOOTH);
+	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+	glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+	glEnable(GL_BLEND);
+	if((Flag&3)==1)	glBlendFunc(GL_DST_COLOR, GL_ZERO);
+	else if((Flag&3)==2) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	if(Prm.size()>0)
 	{
@@ -99,7 +110,7 @@ bool mglCanvasGL::Alpha(bool enable)
 		clr(MGL_ENABLE_ALPHA);
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_ALPHA_TEST);
-		glDisable(GL_BLEND);
+//		glDisable(GL_BLEND);
 	}
 	return mglCanvas::Alpha(enable);
 }
@@ -120,7 +131,6 @@ void mglCanvasGL::AddLight(int n,mglPoint r,mglPoint d,char cc, mreal br,mreal a
 		spc[0] = spc[1] = spc[2] = br;
 		amb[0] = amb[1] = amb[2] = AmbBr;
 	}
-	ap = 90-180*atan(fabs(ap))/M_PI;
 	dif[0] = dif[1] = dif[2] = DifBr;
 	dif[3] = amb[3] = spc[3] = 1.;
 	if(inf)
@@ -135,6 +145,7 @@ void mglCanvasGL::AddLight(int n,mglPoint r,mglPoint d,char cc, mreal br,mreal a
 	glLightfv(GL_LIGHT0+n, GL_POSITION, pos);
 	if(!inf)
 	{
+//		ap = 90-180*atan(fabs(ap))/M_PI;
 //		float dir[4]={d.x, d.y, d.z, 0};
 //		glLightfv(GL_LIGHT0+n, GL_SPOT_DIRECTION, dir);
 //		glLightf(GL_LIGHT0+n, GL_SPOT_CUTOFF, ap);
@@ -446,7 +457,7 @@ void mglCanvasGL::mark_draw(const mglPnt &q, char type, mreal size, mglDrawReg *
 			{
 				long x=long(q.x)+i, y=long(q.y)+j;
 				if(i*i+j*j>=ss*ss || !d || x<d->x1 || x>d->x2 || y<d->y1 || y>d->y2)	continue;
-				pnt_plot(x,y,q.z+1,cs,d->ObjId);
+				if(cs[3])	pnt_plot(x,y,q.z+1,cs,d->ObjId);
 			}*/
 		case 'o':
 			for(long i=0;i<=20;i++)	// TODO copy from mark_pix()?!

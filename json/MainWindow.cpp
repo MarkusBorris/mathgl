@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget* const parent) : QMainWindow(parent), ui(new Ui::
 	// inject backend object each time javascript object is cleared
 	connect(ui->webView->page()->mainFrame(), SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(injectBackendObject()));
 	// set url to load
-	ui->webView->load(QUrl(QString("file:///%1/../../json/%2").arg(qApp->applicationDirPath()).arg("index.html")));
+	ui->webView->load(QUrl(QString("file:///%1/../../json/%2").arg(qApp->applicationDirPath(),"index.html")));
 }
 //-----------------------------------------------------------------------------
 void MainWindow::injectBackendObject()

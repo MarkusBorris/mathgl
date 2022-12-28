@@ -2,7 +2,7 @@
  * Copyright (C) 2007-2014 Alexey Balakin <mathgl.abalakin@gmail.ru>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
+ * modify it under the terms of the GNU Lesser General Public License 
  * as published by the Free Software Foundation
  *
  * This program is distributed in the hope that it will be useful,
@@ -18,7 +18,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 //-----------------------------------------------------------------------------
-#include <Fl/Fl_RGB_Image.H>
+#include <FL/Fl_RGB_Image.H>
 
 extern MGL_EXPORT Fl_RGB_Image img_load;
 extern MGL_EXPORT Fl_RGB_Image img_save;
@@ -68,4 +68,6 @@ extern MGL_EXPORT Fl_RGB_Image img_reload;
 extern MGL_EXPORT Fl_RGB_Image img_zoom12;
 extern MGL_EXPORT Fl_RGB_Image img_zoom21;
 extern MGL_EXPORT Fl_RGB_Image img_pause;
+extern MGL_EXPORT Fl_RGB_Image img_icons;
+extern MGL_EXPORT Fl_RGB_Image img_form;
 #endif

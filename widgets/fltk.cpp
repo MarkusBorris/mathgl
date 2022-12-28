@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -22,6 +22,10 @@
 #include <FL/Fl_Double_Window.H>
 #include <FL/fl_draw.H>
 #include <FL/Fl_Native_File_Chooser.H>
+#include <FL/Fl_Value_Slider.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Choice.H>
+#include <FL/Fl_Check_Button.H>
 //-----------------------------------------------------------------------------
 #include "mgl2/canvas_wnd.h"
 #include "mgl2/Fl_MathGL.h"
@@ -55,6 +59,12 @@ using mglCanvasWnd::Window;
 	void Adjust();			///< Adjust size of bitmap to window size
 	void GotoFrame(int d);	///< Show arbitrary frame (use relative step)
 	void Animation();	///< Run animation (I'm too lasy to change it)
+	void MakeDialog(const char *ids, char const * const *args, const char *title="")
+	{	if(GetNumFig()==1)	mgl->dialog(ids,args,title);	}
+	void *Window()	{return Wnd;}	///< Return pointer to widget (Fl_Window*) used for plotting
+	void *Widget()	{return mgl;}	///< Return pointer to widget (Fl_MGLView*) used for plotting
+	void WndSize(int w, int h)	{	Wnd->size(w,h);	}	///< Resize window
+	void WndMove(int x, int y)	{	Wnd->position(x,y);	}	///< Move window
 };
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_ask_fltk(const wchar_t *quest, wchar_t *res)
@@ -103,8 +113,13 @@ Fl_MathGL::Fl_MathGL(int xx, int yy, int ww, int hh, const char *lbl) : Fl_Widge
 	flag=x0=y0=xe=ye=0;	show_warn=true;
 	tet_val = phi_val = 0;
 	draw_par = 0;	draw_func = 0;	draw_cl = 0;
+	hndl_func = 0;	hndl_par = 0;
+	prop_func = 0;	prop_par = 0;
 	last_id = -1;	run = false;
-	popup=0;	vpar=0;	wpar=0;	thr=0;
+	popup=0;	vpar=0;	wpar=0;
+#if (MGL_HAVE_PTHREAD|MGL_HAVE_PTHR_WIDGET)
+	thr=0;
+#endif
 }
 //-----------------------------------------------------------------------------
 Fl_MathGL::~Fl_MathGL()	{	if(mgl_use_graph(gr,-1)<1)	mgl_delete_graph(gr);	}
@@ -121,6 +136,8 @@ void Fl_MathGL::set_graph(HMGL GR)
 	gr=gg;	mgl_use_graph(gg,1);
 	gr->SetEventFunc(mgl_fltk_event_func, NULL);
 }
+//-----------------------------------------------------------------------------
+void Fl_MathGL::refresh()	{	img = mgl_get_rgb(gr);	redraw();	}
 //-----------------------------------------------------------------------------
 void Fl_MathGL::draw()
 {
@@ -145,6 +162,7 @@ void Fl_MathGL::draw()
 			fl_rectf(x()+p.x-d/2, y()+p.y-d/2-1, d,d, fl_rgb_color(127,255,63));
 			fl_rect(x()+p.x-d/2, y()+p.y-d/2-1, d,d, FL_BLACK);
 		}
+		fl_color(FL_BLACK);		fl_draw(mouse_pos,40,70);
 		mgl_set_flag(gr,1,MGL_SHOW_POS);
 	}
 	else	mgl_set_flag(gr,0,MGL_SHOW_POS);
@@ -193,7 +211,7 @@ inline void Fl_MathGL::draw_plot()	// drawing itself
 	run = false;	Fl::awake();
 }
 //-----------------------------------------------------------------------------
-MGL_NO_EXPORT void *draw_plot_thr(void *v)
+static void *draw_plot_thr(void *v)
 {	((Fl_MathGL*)v)->draw_plot();	return 0;	}
 //-----------------------------------------------------------------------------
 void Fl_MathGL::update()
@@ -228,14 +246,18 @@ void Fl_MathGL::update()
 void Fl_MathGL::resize(int xx, int yy, int ww, int hh)
 {	Fl_Widget::resize(xx,yy,ww,hh);	}
 //-----------------------------------------------------------------------------
+void Fl_MGLView::dlg_show()	{	dlg_finish();	dlg_wnd->show();	}	///< Show window
+void Fl_MGLView::dlg_hide()	{	dlg_wnd->hide();	}	///< Close window
 int Fl_MathGL::handle(int code)
 {
 	static bool busy=false;
 	static int last_pos=-1;
+	int r = hndl_func?hndl_func(code, hndl_par):0;
+	if(r)	return r;
 	if(handle_keys && code==FL_KEYUP && Fl::event_button()!=FL_LEFT_MOUSE)
 	{
 		int key=Fl::event_key();
-		if(!strchr(" .,wasdrfx",key))	return 0;
+//		if(!strchr(" .,wasdrfx",key))	return 0;
 		if(key==' ')	{	update();	return 1;	}
 		if(key=='w')
 		{
@@ -307,9 +329,8 @@ int Fl_MathGL::handle(int code)
 			{
 				mglPoint p = gr->CalcXYZ(xx, yy);
 				if(g)	g->LastMousePos = p;
-				char s[128];
-				snprintf(s,128,"x=%g, y=%g, z=%g",p.x,p.y,p.z);	s[127]=0;
-				draw();	fl_color(FL_BLACK);		fl_draw(s,40,70);
+				snprintf(mouse_pos,128,"x=%g, y=%g, z=%g",p.x,p.y,p.z);
+				mouse_pos[127]=0;	draw();
 			}
 			if(Fl::event_clicks())
 			{
@@ -469,6 +490,13 @@ int Fl_MathGL::handle(int code)
 		}
 		redraw();	return 1;
 	}
+/*	else if(code==FL_MOVE && mgl_get_flag(gr,MGL_SHOW_POS))
+	{
+		mglPoint p = gr->CalcXYZ(x0-x(), y0-y());
+		snprintf(mouse_pos,128,"x=%g, y=%g, z=%g",p.x,p.y,p.z);
+		mouse_pos[127]=0;	draw();
+		return 1;
+	}*/
 	return 0;
 }
 //-----------------------------------------------------------------------------
@@ -519,21 +547,21 @@ void Fl_MGLView::exec_pause()
 #endif
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_pause_cb(Fl_Widget*, void* v)
+void static mgl_pause_cb(Fl_Widget*, void* v)
 {	if(v)	((Fl_MGLView*)v)->toggle_pause();	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_grid_cb(Fl_Widget*, void* v)
+void static mgl_grid_cb(Fl_Widget*, void* v)
 {	if(v)	((Fl_MGLView*)v)->toggle_grid();	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_alpha_cb(Fl_Widget*, void* v)
+void static mgl_alpha_cb(Fl_Widget*, void* v)
 {	if(v)	((Fl_MGLView*)v)->toggle_alpha();	}
 void mglCanvasFL::ToggleAlpha()	{	mgl->toggle_alpha();	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_light_cb(Fl_Widget*, void* v)
+void static mgl_light_cb(Fl_Widget*, void* v)
 {	if(v)	((Fl_MGLView*)v)->toggle_light();	}
 void mglCanvasFL::ToggleLight()	{	mgl->toggle_light();	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_norm_cb(Fl_Widget*, void* v)
+void static mgl_norm_cb(Fl_Widget*, void* v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;	if(!e)	return;
 	e->setoff_rotate();			e->setoff_zoom();
@@ -543,14 +571,14 @@ void MGL_NO_EXPORT mgl_norm_cb(Fl_Widget*, void* v)
 }
 void mglCanvasFL::ToggleNo()	{	mgl_norm_cb(0,mgl);	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_zoom_cb(Fl_Widget*, void* v)
+void static mgl_zoom_cb(Fl_Widget*, void* v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;	if(!e)	return;
 	e->setoff_rotate();	e->toggle_zoom();
 }
 void mglCanvasFL::ToggleZoom()	{	mgl_zoom_cb(0,mgl);	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_rotate_cb(Fl_Widget*, void* v)
+void static mgl_rotate_cb(Fl_Widget*, void* v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;	if(!e)	return;
 	e->setoff_zoom();	e->toggle_rotate();
@@ -563,11 +591,11 @@ void Fl_MGLView::update()
 	FMGL->set_flag(alpha + 2*light);
 	FMGL->update();
 }
-void MGL_NO_EXPORT mgl_draw_cb(Fl_Widget*, void* v)
+void static mgl_draw_cb(Fl_Widget*, void* v)
 {	if(v)	((Fl_MGLView*)v)->update();	}
 void mglCanvasFL::Update()		{	mgl->update();	Wnd->show();	}
 //-----------------------------------------------------------------------------
-MGL_NO_EXPORT const char *mgl_save_name(const char *ext)
+static const char *mgl_save_name(const char *ext)
 {
 	static std::string fname;
 	fname = mgl_file_chooser(_("Save File As?"), ext, true);
@@ -577,162 +605,165 @@ MGL_NO_EXPORT const char *mgl_save_name(const char *ext)
 }
 #define _FGR_	((Fl_MGLView*)v)->FMGL->get_graph()
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_png_cb(Fl_Widget*, void* v)
+void static mgl_export_png_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.png");
 	if(fname)	mgl_write_png(_FGR_,fname,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_bps_cb(Fl_Widget*, void* v)
+void static mgl_export_bps_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.eps");
 	if(fname)	mgl_write_bps(_FGR_,fname,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_pngn_cb(Fl_Widget*, void* v)
+void static mgl_export_pngn_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.png");
 	if(fname)	mgl_write_png_solid(_FGR_,fname,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_jpeg_cb(Fl_Widget*, void* v)
+void static mgl_export_jpeg_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.jpg");
 	if(fname)	mgl_write_jpg(_FGR_,fname,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_svg_cb(Fl_Widget*, void* v)
+void static mgl_export_svg_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.svg");
 	if(fname)	mgl_write_svg(_FGR_,fname,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_eps_cb(Fl_Widget*, void* v)
+void static mgl_export_eps_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.eps");
 	if(fname)	mgl_write_eps(_FGR_,fname,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_gif_cb(Fl_Widget*, void* v)
+void static mgl_export_gif_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.gif");
 	if(fname)	mgl_write_gif(_FGR_,fname,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_bmp_cb(Fl_Widget*, void* v)
+void static mgl_export_bmp_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.bmp");
 	if(fname)	mgl_write_bmp(_FGR_,fname,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_prc_cb(Fl_Widget*, void* v)
+void static mgl_export_prc_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.prc");
 	if(fname)	mgl_write_prc(_FGR_,fname,0,1);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_tex_cb(Fl_Widget*, void* v)
+void static mgl_export_tex_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.tex");
 	if(fname)	mgl_write_tex(_FGR_,fname,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_obj_cb(Fl_Widget*, void* v)
+void static mgl_export_obj_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.obj");
 	if(fname)	mgl_write_obj(_FGR_,fname,0,1);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_off_cb(Fl_Widget*, void* v)
+void static mgl_export_off_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.off");
 	if(fname)	mgl_write_off(_FGR_,fname,0,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_stl_cb(Fl_Widget*, void* v)
+void static mgl_export_stl_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.stl");
 	if(fname)	mgl_write_stl(_FGR_,fname,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_export_xyz_cb(Fl_Widget*, void* v)
+void static mgl_export_xyz_cb(Fl_Widget*, void* v)
 {
 	const char *fname = mgl_save_name("*.xyz");
 	if(fname)	mgl_write_xyz(_FGR_,fname,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_su_cb(Fl_Widget*, void* v)
+void static mgl_su_cb(Fl_Widget*, void* v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;	if(!e)	return;
-	mreal x1,x2,y1,y2,d;
+	double x1,x2,y1,y2,d;
 	e->FMGL->get_zoom(&x1,&y1,&x2,&y2);
 	d = (y2-y1)/3;	y1 -= d;	y2 -= d;
 	e->FMGL->set_zoom(x1,y1,x2,y2);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_sd_cb(Fl_Widget*, void* v)
+void static mgl_sd_cb(Fl_Widget*, void* v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;	if(!e)	return;
-	mreal x1,x2,y1,y2,d;
+	double x1,x2,y1,y2,d;
 	e->FMGL->get_zoom(&x1,&y1,&x2,&y2);
 	d = (y2-y1)/3;	y1 += d;	y2 += d;
 	e->FMGL->set_zoom(x1,y1,x2,y2);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_sr_cb(Fl_Widget*, void* v)
+void static mgl_sr_cb(Fl_Widget*, void* v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;	if(!e)	return;
-	mreal x1,x2,y1,y2,d;
+	double x1,x2,y1,y2,d;
 	e->FMGL->get_zoom(&x1,&y1,&x2,&y2);
 	d = (x2-x1)/3;	x1 -= d;	x2 -= d;
 	e->FMGL->set_zoom(x1,y1,x2,y2);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_sl_cb(Fl_Widget*, void* v)
+void static mgl_sl_cb(Fl_Widget*, void* v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;	if(!e)	return;
-	mreal x1,x2,y1,y2,d;
+	double x1,x2,y1,y2,d;
 	e->FMGL->get_zoom(&x1,&y1,&x2,&y2);
 	d = (x2-x1)/3;	x1 += d;	x2 += d;
 	e->FMGL->set_zoom(x1,y1,x2,y2);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_sz_cb(Fl_Widget*, void* v)
+void static mgl_sz_cb(Fl_Widget*, void* v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;	if(!e)	return;
-	mreal x1,x2,y1,y2,d;
+	double x1,x2,y1,y2,d;
 	e->FMGL->get_zoom(&x1,&y1,&x2,&y2);
 	d = (y2-y1)/4;	y1 += d;	y2 -= d;
 	d = (x2-x1)/4;	x1 += d;	x2 -= d;
 	e->FMGL->set_zoom(x1,y1,x2,y2);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_so_cb(Fl_Widget*, void* v)
+void static mgl_so_cb(Fl_Widget*, void* v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;	if(!e)	return;
-	mreal x1,x2,y1,y2,d;
+	double x1,x2,y1,y2,d;
 	e->FMGL->get_zoom(&x1,&y1,&x2,&y2);
 	d = (y2-y1)/2;	y1 -= d;	y2 += d;
 	d = (x2-x1)/2;	x1 -= d;	x2 += d;
 	e->FMGL->set_zoom(x1,y1,x2,y2);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_adjust_cb(Fl_Widget*, void*v)
+void static mgl_dialog_cb(Fl_Widget*, void*v)
+{	Fl_MGLView *e = (Fl_MGLView*)v;	if(e)	e->dlg_show();	}
+//-----------------------------------------------------------------------------
+void static mgl_adjust_cb(Fl_Widget*, void*v)
 {	Fl_MGLView *e = (Fl_MGLView*)v;	if(e)	e->adjust();	}
 void mglCanvasFL::Adjust()	{	mgl_adjust_cb(0,mgl);	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_oncemore_cb(Fl_Widget*, void*v)
+void static mgl_oncemore_cb(Fl_Widget*, void*v)
 {	Fl_MGLView *e = (Fl_MGLView*)v;	if(e && e->reload)	e->reload(e->par);	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_quit_cb(Fl_Widget*, void*)	{	Fl::first_window()->hide();	}
+//void static mgl_quit_cb(Fl_Widget*, void*)	{	Fl::first_window()->hide();	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_snext_cb(Fl_Widget*, void* v)
+void static mgl_snext_cb(Fl_Widget*, void* v)
 {	Fl_MGLView *e = (Fl_MGLView*)v;	if(e && e->next)	e->next(e->par);	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_sprev_cb(Fl_Widget*, void* v)
+void static mgl_sprev_cb(Fl_Widget*, void* v)
 {	Fl_MGLView *e = (Fl_MGLView*)v;	if(e && e->prev)	e->prev(e->par);	}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_time_cb(void *v)
+void static mgl_time_cb(void *v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;
 	if(!e || !e->is_sshow() || !e->next || !e->delay)	return;
@@ -740,7 +771,7 @@ void MGL_NO_EXPORT mgl_time_cb(void *v)
 	Fl::repeat_timeout(e->delay(e->par), mgl_time_cb, v);
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_sshow_cb(Fl_Widget *, void *v)
+void static mgl_sshow_cb(Fl_Widget *, void *v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;
 	if(!e || !e->delay || !e->next)	return;
@@ -748,17 +779,17 @@ void MGL_NO_EXPORT mgl_sshow_cb(Fl_Widget *, void *v)
 	if(e->is_sshow())	Fl::add_timeout(e->delay(e->par), mgl_time_cb, v);
 }
 void mglCanvasFL::Animation()	{	mgl_sshow_cb(0,mgl);	}
-void MGL_LOCAL_CONST mgl_no_cb(Fl_Widget *, void *)	{}
+void MGL_NO_EXPORT mgl_no_cb(Fl_Widget *, void *)	{}
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_stop_cb(Fl_Widget*, void* v)
+void static mgl_stop_cb(Fl_Widget*, void* v)
 {
 	Fl_MGLView *e = (Fl_MGLView*)v;
 	if(e)	e->FMGL->stop();
 }
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_fl_next(void *v)	{	((mglCanvasWnd*)v)->NextFrame();	}	///< Callback function for next frame
-void MGL_NO_EXPORT mgl_fl_prev(void *v)	{	((mglCanvasWnd*)v)->PrevFrame();	}	///< Callback function for prev frame
-void MGL_NO_EXPORT mgl_fl_reload(void *v)	{	((mglCanvasWnd*)v)->ReLoad();	}		///< Callback function for reloading
+void static mgl_fl_next(void *v)	{	((mglCanvasWnd*)v)->NextFrame();	}	///< Callback function for next frame
+void static mgl_fl_prev(void *v)	{	((mglCanvasWnd*)v)->PrevFrame();	}	///< Callback function for prev frame
+void static mgl_fl_reload(void *v)	{	((mglCanvasWnd*)v)->ReLoad();	}		///< Callback function for reloading
 mreal MGL_LOCAL_PURE mgl_fl_delay(void *v)	{	return ((mglCanvasWnd*)v)->GetDelay();	}	///< Callback function for delay
 //-----------------------------------------------------------------------------
 void copy_coor_cb(Fl_Widget *,void *v)
@@ -825,7 +856,7 @@ Fl_MGLView::Fl_MGLView(int xx, int yy, int ww, int hh, const char *lbl) : Fl_Win
 	grid = alpha = light = sshow = pauseC = rotate = zoom = 0;
 	menu = NULL;	next = prev = reload = NULL;	delay = NULL;
 
-	Fl_Group *g = new Fl_Group(0,0,480,30);
+	Fl_Group *g = new Fl_Group(0,0,ww,30);
 	alpha_bt = new Fl_Button(0, 1, 25, 25);	alpha_bt->type(FL_TOGGLE_BUTTON);
 	alpha_bt->image(img_alpha);	alpha_bt->callback(mgl_alpha_cb,this);
 	alpha_bt->tooltip(_("Switch on/off transparency in the picture"));
@@ -863,9 +894,10 @@ Fl_MGLView::Fl_MGLView(int xx, int yy, int ww, int hh, const char *lbl) : Fl_Win
 	tet->tooltip(_("Theta angle (tilt z-axis)"));
 	phi->lstep(10);	phi->step(1);	phi->range(-180,180);
 	phi->tooltip(_("Phi angle (rotate in x*y plane)"));
-	g->end();	g->resizable(0);
+	progress = new Fl_Progress(485,0,ww-490,30);
+	g->end();	g->resizable(progress);
 
-	g = new Fl_Group(0,0,30,285);
+	g = new Fl_Group(0,0,30,315);
 	o = new Fl_Button(1, 30, 25, 25);		o->tooltip(_("Shift the picture up"));
 	o->image(img_goU);		o->callback(mgl_su_cb,this);
 	o = new Fl_Button(1, 55, 25, 25);		o->tooltip(_("Shift the picture left"));
@@ -886,8 +918,11 @@ Fl_MGLView::Fl_MGLView(int xx, int yy, int ww, int hh, const char *lbl) : Fl_Win
 	anim_bt->tooltip(_("Run/Stop slideshow (graphics animation)"));
 	o = new Fl_Button(1, 235, 25, 25);		o->tooltip(_("Show next frame in slideshow"));
 	o->image(img_next);	o->callback(mgl_snext_cb,this);
+
+	o = new Fl_Button(1, 265, 25, 25);		o->tooltip(_("Show custom dialog for plot setup"));
+	o->image(img_form);	o->callback(mgl_dialog_cb,this);
 #if MGL_HAVE_PTHR_WIDGET
-	pause_bt = new Fl_Button(1, 260, 25, 25);	pause_bt->type(FL_TOGGLE_BUTTON);
+	pause_bt = new Fl_Button(1, 290, 25, 25);	pause_bt->type(FL_TOGGLE_BUTTON);
 	pause_bt->image(img_pause);	pause_bt->callback(mgl_pause_cb,this);
 	pause_bt->tooltip(_("Pause on/off external calculations"));
 #endif
@@ -895,26 +930,33 @@ Fl_MGLView::Fl_MGLView(int xx, int yy, int ww, int hh, const char *lbl) : Fl_Win
 
 	scroll = new Fl_Scroll(30, 30, ww-30, hh-30);
 	FMGL = new Fl_MathGL(30, 30, 800, 600);
-	FMGL->tet_val = tet;
-	FMGL->phi_val = phi;
+	FMGL->tet_val = tet;	FMGL->phi_val = phi;
 	FMGL->set_popup(pop_graph,FMGL,this);
+	mglCanvasFL *gr = new mglCanvasFL;	gr->mgl = this;
+	FMGL->set_graph(gr);
 	scroll->end();	resizable(scroll);	end();	par=0;
+	dlg_wnd = NULL;	dlg_done = false;
 }
-Fl_MGLView::~Fl_MGLView()	{}
+Fl_MGLView::~Fl_MGLView()
+{
+	delete dlg_wnd;
+	for(size_t i=0;i<strs.size();i++)	free(strs[i]);
+	strs.clear();	
+}
 //-----------------------------------------------------------------------------
 //
 //		class mglCanvasFL
 //
 //-----------------------------------------------------------------------------
 mglCanvasFL::mglCanvasFL() : mglCanvasWnd()	{	Wnd=0;	mgl=0;	}
-mglCanvasFL::~mglCanvasFL()		{	if(Wnd)	{	mgl->FMGL->gr=0;	delete Wnd;	}	}
+mglCanvasFL::~mglCanvasFL()		{	if(Wnd)	{	mgl->FMGL->no_graph();	delete Wnd;	}	}
 //-----------------------------------------------------------------------------
 void mglCanvasFL::GotoFrame(int d)
 {
 	int f = GetCurFig()+d;
 	if(f>=GetNumFig())	f = 0;
 	if(f<0)	f = GetNumFig()-1;
-	if(GetNumFig()>0 && d)	{	SetCurFig(f);	mgl->FMGL->redraw();	}
+	if(GetNumFig()>0 && d)	{	SetCurFig(f);	mgl->FMGL->refresh();	}
 }
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_makemenu_fltk(Fl_Menu_ *m, Fl_MGLView *w)
@@ -968,6 +1010,12 @@ void MGL_EXPORT mgl_makemenu_fltk(Fl_Menu_ *m, Fl_MGLView *w)
 void mglCanvasFL::Window(int argc, char **argv, int (*draw)(mglBase *gr, void *p), const char *title, void *par, void (*reload)(void *p), bool maximize)
 {
 	static bool first=true;
+
+	Fl_Preferences pref(Fl_Preferences::USER,"abalakin","mgllab");
+	static const char *sch[4]={"base","gtk+","plastic","gleam"};
+	int scheme;	pref.get("scheme",scheme,2);
+	Fl::scheme(sch[scheme]);
+
 	if(first)	{	Fl::lock();	first=false;	}
 
 	SetDrawFunc(draw, par, reload);
@@ -982,6 +1030,7 @@ void mglCanvasFL::Window(int argc, char **argv, int (*draw)(mglBase *gr, void *p
 	mgl->prev = mgl_fl_prev;	mgl->delay= mgl_fl_delay;
 	mgl->FMGL->set_graph(this);
 	mgl->FMGL->set_draw(draw, par);
+	mgl->FMGL->set_prop(mgl_prop_func, this);
 
 	Wnd->end();
 	Wnd->resizable(mgl);
@@ -1006,7 +1055,7 @@ HMGL MGL_EXPORT mgl_create_graph_fltk(int (*draw)(HMGL gr, void *p), const char 
 	g->mgl->FMGL->set_handle_key(true);
 	return g;
 }
-void* mgl_fltk_widget(HMGL gr)
+MGL_EXPORT_PURE void* mgl_fltk_widget(HMGL gr)
 {
 	mglCanvasFL *g = dynamic_cast<mglCanvasFL *>(gr);
 	return g?g->mgl:NULL;
@@ -1021,7 +1070,7 @@ uintptr_t MGL_EXPORT mgl_create_graph_fltk_(const char *title, int l)
 }
 int MGL_EXPORT mgl_fltk_run_()	{	return mgl_fltk_run();	}
 //-----------------------------------------------------------------------------
-MGL_NO_EXPORT void *mgl_fltk_tmp(void *)
+static void *mgl_fltk_tmp(void *)
 {	mgl_fltk_run();	return 0;	}
 //-----------------------------------------------------------------------------
 int MGL_EXPORT mgl_fltk_thr()		// NOTE: Qt couldn't be running in non-primary thread
@@ -1032,5 +1081,145 @@ int MGL_EXPORT mgl_fltk_thr()		// NOTE: Qt couldn't be running in non-primary th
 	pthread_detach(thr);
 #endif
 	return 0;	// stupid, but I don't want keep result returned by Fl::Run()
+}
+//-----------------------------------------------------------------------------
+//
+//		Custom dialog
+//
+//-----------------------------------------------------------------------------
+static void mgl_upd_vals(Fl_Widget *, void *p)	{	((Fl_MGLView *)p)->get_values();	}
+//-----------------------------------------------------------------------------
+static void mgl_dlg_hide(Fl_Widget *, void *p)	{	((Fl_MGLView *)p)->dlg_hide();	}
+//-----------------------------------------------------------------------------
+void Fl_MGLView::toggle_alpha()	{	toggle(alpha, alpha_bt, _("Graphics/Alpha"));	}
+void Fl_MGLView::toggle_light()	{	toggle(light, light_bt, _("Graphics/Light"));	}
+void Fl_MGLView::toggle_sshow()	{	toggle(sshow, anim_bt, _("Graphics/Animation/Slideshow"));	}
+void Fl_MGLView::toggle_grid()	{	toggle(grid, grid_bt, _("Graphics/Grid"));	}
+void Fl_MGLView::toggle_pause()	{	toggle(pauseC, pause_bt, _("Graphics/Pause calc"));	exec_pause();	}
+//-----------------------------------------------------------------------------
+void Fl_MGLView::dlg_window(const char *title)
+{
+	if(!title || *title==0)	title = "MGL dialog";
+	if(!dlg_wnd)	delete dlg_wnd;
+	dlg_wnd = new Fl_Double_Window(210,50,title);
+// 	else
+// 	{	dlg_wnd->hide();	dlg_wnd->label(title);
+// 		dlg_wnd->clear();	dlg_wnd->begin();	}
+	for(size_t i=0;i<strs.size();i++)	free(strs[i]);
+	strs.clear();	dlg_ind = 0;
+}
+//-----------------------------------------------------------------------------
+void Fl_MGLView::dlg_finish()
+{
+	if(!dlg_wnd)	dlg_window();
+	if(!dlg_done)
+	{
+		Fl_Button *b;	dlg_wnd->size(210,dlg_ind*45+50);
+		b = new Fl_Button(5, 20+45*dlg_ind, 80, 25, _("Close"));
+		b->callback(mgl_dlg_hide,this);
+		b = new Fl_Button(125, 20+45*dlg_ind, 80, 25, _("Update"));
+		b->callback(mgl_upd_vals,this);
+		dlg_wnd->end();	dlg_done=true;
+	}
+}
+//-----------------------------------------------------------------------------
+void Fl_MGLView::get_values()
+{
+	if(!dlg_wnd || !dlg_done)	return;
+	for(unsigned i=0;i<dlg_ids.size();i++)
+	{
+		std::string s;
+		Fl_Widget *w=dlg_wdgt[i];
+		switch(dlg_kind[i])
+		{
+		case 'e':	//	input
+		{	Fl_Input* o = (Fl_Input*)w;	s = o->value();	break;	}
+		case 'v':	// spinner|counter
+		case 's':	// slider
+		{	Fl_Valuator* o = (Fl_Valuator*)w;
+			double v = o->value();	char buf[32];
+			sprintf(buf,"%g",v);	s = buf;	break;	}
+		case 'b':	// check_box
+		{	Fl_Check_Button* o = (Fl_Check_Button*)w;	s = o->value()?"1":"0";	break;	}
+		case 'c':	// choice
+		{	Fl_Choice* o = (Fl_Choice*)w;	s = o->text();	break;	}
+		}
+		FMGL->set_param(dlg_ids[i], s.c_str());
+	}
+	FMGL->update();
+}
+//-----------------------------------------------------------------------------
+void Fl_MGLView::add_widget(char id, const char *args)
+{
+	static std::vector<std::string> buf;
+	if(!dlg_wnd)	dlg_window();
+	if(args[1]!='|')	return;	// wrong format
+	char type = *args;
+	if(!strchr("esvbc",type))	return;
+	args += 2;
+	Fl_Widget *w=NULL;
+	char *lbl=0;
+	for(size_t i=0;args[i];i++)
+		if(args[i]=='|')	// find label
+		{
+			lbl = (char*)malloc(i);	lbl[i]=0;
+			for(size_t j=0;j<i;j++)	lbl[j] = args[j];
+			args += i;	break;
+		}
+	if(!lbl)
+	{	lbl = (char*)malloc(3);	lbl[0]='$';	lbl[1]=id;	lbl[2]=0;	}
+	else	args++;
+	strs.push_back(lbl);	dlg_wnd->size(210,dlg_ind*45+50);
+	switch(type)
+	{
+	case 'e':	//	input
+	{	Fl_Input* o = new Fl_Input(5, 20+45*dlg_ind, 200, 25, lbl);	w=o;
+		o->align(Fl_Align(FL_ALIGN_TOP_LEFT));	o->value(args);
+		break;	}
+	case 'v':	// spinner|counter
+	{	Fl_Counter* o = new Fl_Counter(5, 20+45*dlg_ind, 200, 25, lbl);	w=o;
+		o->align(Fl_Align(FL_ALIGN_TOP_LEFT));	o->type(FL_SIMPLE_COUNTER);
+		float v=0,v1=-1,v2=1,s1=1;
+		sscanf(args,"%g|%g|%g|%g",&v,&v1,&v2,&s1);
+		o->step(s1);	o->bounds(v1,v2);	o->value(v);
+		break;	}
+	case 's':	// slider
+	{	Fl_Slider* o = new Fl_Value_Slider(5, 20+45*dlg_ind, 200, 25, lbl);	w=o;
+		o->align(Fl_Align(FL_ALIGN_TOP_LEFT));	o->type(FL_HORIZONTAL);
+		float v=0,v1=-1,v2=1,s=0;
+		sscanf(args,"%g|%g|%g|%g",&v,&v1,&v2,&s);
+		o->step(s);	o->bounds(v1,v2);	o->value(v);
+		break;	}
+	case 'b':	// check_box
+	{	Fl_Check_Button* o = new Fl_Check_Button(5, 10+45*dlg_ind, 200, 25, lbl);	w=o;
+		int v = atoi(args);	o->value(v!=0 || !strcmp(args,"on"));
+		break;	}
+	case 'c':	// choice
+	{	Fl_Choice* o = new Fl_Choice(5, 20+45*dlg_ind, 200, 25, lbl);	w=o;
+		lbl = (char*)malloc(strlen(args)+1);
+		strcpy(lbl,args);	strs.push_back(lbl);
+		o->align(Fl_Align(FL_ALIGN_TOP_LEFT));
+		o->add(lbl);	o->value(0);
+		break;	}
+	}
+	if(w)
+	{	const char *tip = _("This is for parameter ");
+		lbl = (char*)malloc(strlen(tip)+2);
+		sprintf(lbl,"%s%c",tip,id);	strs.push_back(lbl);	w->tooltip(lbl);
+		dlg_ind++;	dlg_done=false;	w->callback(mgl_upd_vals, this);
+		dlg_wdgt.push_back(w);	dlg_ids.push_back(id);	dlg_kind.push_back(type);	}
+}
+//-----------------------------------------------------------------------------
+void Fl_MGLView::set_progress(int value, int maximal)
+{
+	progress->maximum(maximal);
+	progress->value(value);
+	Fl::awake();
+}
+//-----------------------------------------------------------------------------
+void MGL_EXPORT mgl_progress_fltk(int value, int maximal, HMGL gr)
+{
+	mglCanvasFL *g = dynamic_cast<mglCanvasFL *>(gr);
+	if(g && g->mgl)	g->mgl->set_progress(value,maximal);
 }
 //-----------------------------------------------------------------------------

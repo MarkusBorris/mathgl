@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -22,7 +22,7 @@
 mglCanvasWnd::mglCanvasWnd() : mglCanvas()
 {
 	Setup();	LoadFunc=0;	FuncPar=0;	DrawFunc=0;	ClickFunc=0;
-	GG = 0;		NumFig = 0;	CurFig = -1;
+	GG = 0;		NumFig = 0;	CurFig=-1;	PropFunc=0;	PropPar=0;
 #if MGL_HAVE_PTHR_WIDGET
 	mutex=0;
 #endif
@@ -134,8 +134,14 @@ void mglCanvasWnd::ReLoad()
 	}
 }
 //-----------------------------------------------------------------------------
+void MGL_EXPORT mgl_prop_func(char id, const char *val, void *p)
+{	mglCanvasWnd *g = (mglCanvasWnd *)(p);	if(g)	g->SetParam(id, val);	}
+void MGL_EXPORT mgl_wnd_make_dialog(HMGL gr, const char *ids, char const * const *args, const char *title)
+{	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>(gr);	if(g)	g->MakeDialog(ids, args, title);	}
 void MGL_EXPORT mgl_wnd_set_func(HMGL gr, int (*draw)(HMGL gr, void *p), void *par, void (*reload)(void *p))
 {	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>(gr);	if(g)	g->SetDrawFunc(draw, par, reload);	}
+void MGL_EXPORT mgl_wnd_set_prop(HMGL gr, void (*prop)(char id, const char *val, void *p), void *par)
+{	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>(gr);	if(g)	g->SetPropFunc(prop, par);	}
 void MGL_EXPORT mgl_wnd_toggle_alpha(HMGL gr)
 {	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>(gr);	if(g)	g->ToggleAlpha();	}
 void MGL_EXPORT mgl_wnd_toggle_light(HMGL gr)
@@ -166,6 +172,20 @@ void MGL_EXPORT mgl_get_last_mouse_pos(HMGL gr, mreal *x, mreal *y, mreal *z)
 {	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>(gr);
 	mglPoint p;	if(g)	p=g->GetMousePos();
 	*x=p.x;	*y=p.y;	*z=p.z;	}
+MGL_EXPORT void *mgl_wnd_window(HMGL gr)
+{	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>(gr);	return g?g->Window():NULL;	}
+MGL_EXPORT void *mgl_wnd_widget(HMGL gr)
+{	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>(gr);	return g?g->Widget():NULL;	}
+/// Move window to given position
+void MGL_EXPORT mgl_wnd_move(HMGL gr, int x, int y)
+{	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>(gr);	if(g)	g->WndMove(x,y);	}
+void MGL_EXPORT mgl_wnd_move_(uintptr_t *gr, int *x, int *y)
+{	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>((HMGL)(*gr));	if(g)	g->WndMove(*x,*y);	}
+/// Change window sizes
+void MGL_EXPORT mgl_wnd_size(HMGL gr, int w, int h)
+{	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>(gr);	if(g)	g->WndSize(w,h);	}
+void MGL_EXPORT mgl_wnd_size_(uintptr_t *gr, int *w, int *h)
+{	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>((HMGL)(*gr));	if(g)	g->WndSize(*w,*h);	}
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_wnd_toggle_alpha_(uintptr_t *gr)
 {	mglCanvasWnd *g = dynamic_cast<mglCanvasWnd *>((HMGL)(*gr));
@@ -233,6 +253,8 @@ void MGL_EXPORT mgl_reload_class(void *p)
 {	mglDraw *dr = (mglDraw *)p;	if(dr)	dr->Reload();	}
 void MGL_EXPORT mgl_click_class(void *p)
 {	mglDraw *dr = (mglDraw *)p;	if(dr)	dr->Click();		}
+void MGL_EXPORT mgl_prop_class(char id, const char *val, void *p)
+{	mglDraw *dr = (mglDraw *)p;	if(dr)	dr->Param(id,val);	}
 //-----------------------------------------------------------------------------
 typedef int (*draw_func)(mglGraph *gr);
 int MGL_EXPORT mgl_draw_graph(HMGL gr, void *p)
@@ -250,4 +272,159 @@ MGL_EXPORT void *mgl_draw_calc(void *p)
 #endif
 	return 0;
 }
+//-----------------------------------------------------------------------------
+void MGL_EXPORT mgl_parse_comments(const wchar_t *text, double &a1, double &a2, double &da, std::vector<std::wstring> &anim, std::string &ids, std::vector<std::wstring> &par)
+{
+	a1=0;	a2=0;	da=1;
+	const wchar_t *str = wcsstr(text, L"##c");
+	if(str)	// this is animation loop
+	{
+		int res=wscanf(str+3, "%lg%lg%lg", &a1, &a2, &da);
+		da = res<3?1:da;
+		if(res>2 && da*(a2-a1)>0)
+		{
+			for(double a=a1;da*(a2-a)>=0;a+=da)
+			{
+				wchar_t buf[128];	swprintf(buf,128,L"%g",a);
+				anim.push_back(buf);
+			}
+			return;
+		}
+	}
+	str = wcsstr(text, L"##a");
+	while(str)
+	{
+		str += 3;
+		while(*str>0 && *str<=' ' && *str!='\n')	str++;
+		if(*str>' ')
+		{
+			size_t j=0;	while(str[j]>' ')	j++;
+			std::wstring val(str,j);
+			anim.push_back(val);
+		}
+		str = wcsstr(str, L"##a");
+	}
+	str = wcsstr(text, L"##d");	// custom dialog
+	while(str)
+	{
+		str = wcschr(str,'$');
+		if(str)
+		{
+			char id = str[1];	str += 2;
+			while(*str>0 && *str<=' ' && *str!='\n')	str++;
+			if(*str>' ')
+			{
+				long j=0;	while(str[j]!='\n')	j++;
+				while(str[j-1]<=' ')	j--;
+				
+				ids.push_back(id);
+				std::wstring val(str,j);
+				par.push_back(val);
+			}
+		}
+		str = wcsstr(str, L"##d");
+	}
+}
+//-----------------------------------------------------------------------------
+void MGL_EXPORT mgl_parse_comments(const char *text, double &a1, double &a2, double &da, std::vector<std::string> &anim, std::string &ids, std::vector<std::string> &par)
+{
+	a1=0;	a2=0;	da=1;
+	const char *str = strstr(text, "##c");
+	if(str)	// this is animation loop
+	{
+		int res=sscanf(str+3, "%lg%lg%lg", &a1, &a2, &da);
+		da = res<3?1:da;
+		if(res>2 && da*(a2-a1)>0)
+		{
+			for(double a=a1;da*(a2-a)>=0;a+=da)
+			{
+				char buf[128];	snprintf(buf,128,"%g",a);
+				anim.push_back(buf);
+			}
+			return;
+		}
+	}
+	str = strstr(text, "##a");
+	while(str)
+	{
+		str += 3;
+		while(*str>0 && *str<=' ' && *str!='\n')	str++;
+		if(*str>' ')
+		{
+			size_t j=0;	while(str[j]>' ')	j++;
+			std::string val(str,j);
+			anim.push_back(val);
+		}
+		str = strstr(str, "##a");
+	}
+	str = strstr(text, "##d");	// custom dialog
+	while(str)
+	{
+		str = strchr(str,'$');
+		if(str)
+		{
+			char id = str[1];	str += 2;
+			while(*str>0 && *str<=' ' && *str!='\n')	str++;
+			if(*str>' ')
+			{
+				long j=0;	while(str[j]!='\n')	j++;
+				while(str[j-1]<=' ')	j--;
+				
+				ids.push_back(id);
+				std::string val(str,j);
+				par.push_back(val);
+			}
+		}
+		str = strstr(str, "##d");
+	}
+}
+//-----------------------------------------------------------------------------
+void MGL_EXPORT mgl_parse_animation(const char *text, std::vector<std::string> &anim)
+{
+	std::string ids;
+	std::vector<std::string> par;
+	double a1, a2, da;
+	mgl_parse_comments(text, a1, a2, da, anim, ids, par);
+}
+//-----------------------------------------------------------------------------
+void MGL_EXPORT mgl_parse_animation(const wchar_t *text, std::vector<std::wstring> &anim)
+{
+	std::string ids;
+	std::vector<std::wstring> par;
+	double a1, a2, da;
+	mgl_parse_comments(text, a1, a2, da, anim, ids, par);
+}
+//-----------------------------------------------------------------------------
+#undef _GR_
+#define _GR_	((mglCanvas *)(*gr))
+void MGL_EXPORT mgl_wnd_set_delay(HMGL gr, double dt)
+{	mglCanvas *g = dynamic_cast<mglCanvas *>(gr);	if(g)	g->SetDelay(dt);	}
+double MGL_EXPORT_PURE mgl_wnd_get_delay(HMGL gr)
+{	mglCanvas *g = dynamic_cast<mglCanvas *>(gr);	return g?g->GetDelay():0;	}
+void MGL_EXPORT mgl_wnd_set_delay_(uintptr_t *gr, mreal *dt)	{	_GR_->SetDelay(*dt);	}
+double MGL_EXPORT_PURE mgl_wnd_get_delay_(uintptr_t *gr)	{	return _GR_->GetDelay();	}
+//-----------------------------------------------------------------------------
+MGL_EXPORT const char *mgl_hints[] = {
+	_("You can shift axis range by pressing middle button and moving mouse. Also, you can zoom in/out axis range by using mouse wheel."),
+	_("You can rotate/shift/zoom whole plot by mouse. Just press 'Rotate' toolbutton, click image and hold a mouse button: left button for rotation, right button for zoom/perspective, middle button for shift."),
+	_("You may quickly draw the data from file. Just use: mgllab 'filename.dat' in command line."),
+	_("You can copy the current image to clipboard by pressing Ctrl-Shift-C. Later you can paste it directly into yours document or presentation."),
+	_("You can export image into a set of format (EPS, SVG, PNG, JPEG) by pressing right mouse button inside image and selecting 'Export as ...'."),
+	_("You can setup colors for script highlighting in Property dialog. Just select menu item 'Settings/Properties'."),
+	_("You can save the parameter of animation inside MGL script by using comment started from '##a ' or '##c ' for loops."),
+	_("New drawing never clears things drawn already. For example, you can make a surface with contour lines by calling commands 'surf' and 'cont' one after another (in any order). "),
+	_("You can put several plots in the same image by help of commands 'subplot' or 'inplot'."),
+	_("All indexes (of data arrays, subplots and so on) are always start from 0."),
+	_("You can edit MGL file in any text editor. Also you can run it in console by help of commands: mglconv, mglview."),
+	_("You can use command 'once on|off' for marking the block which should be executed only once. For example, this can be the block of large data reading/creating/handling. Press F9 (or menu item 'Graphics/Reload') to re-execute this block."),
+	_("You can use command 'stop' for terminating script parsing. It is useful if you don't want to execute a part of script."),
+	_("You can type arbitrary expression as input argument for data or number. In last case (for numbers), the first value of data array is used."),
+	_("There is powerful calculator with a lot of special functions. You can use buttons or keyboard to type the expression. Also you can use existed variables in the expression."),
+	_("The calculator can help you to put complex expression in the script. Just type the expression (which may depend on coordinates x,y,z and so on) and put it into the script."),
+	_("You can easily insert file or folder names, last fitted formula or numerical value of selection by using menu Edit|Insert."),
+	_("The special dialog (Edit|Insert|New Command) help you select the command, fill its arguments and put it into the script."),
+	_("You can put several plotting commands in the same line or in separate function, for highlighting all of them simultaneously."),
+	_("You can concatenation of strings and numbers using `,` with out spaces (for example, `'max(u)=',u.max,' a.u.'` or `'u=',!(1+i2)` for complex numbers). Also you can get n-th symbol of the string using `[]` (for example, `'abc'[1]` will give 'b'), or add a value to the last character of the string using `+` (for example, `'abc'+3` will give 'abf'), or use it all together."),
+	NULL
+};
 //-----------------------------------------------------------------------------

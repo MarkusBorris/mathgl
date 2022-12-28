@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -31,6 +31,9 @@ uintptr_t MGL_EXPORT mgl_create_graph_(int *width, int *height);
 /// Delete HMGL object
 void MGL_EXPORT mgl_delete_graph(HMGL gr);
 void MGL_EXPORT mgl_delete_graph_(uintptr_t *gr);
+/// Return pointer to built-in (default) HMGL object
+HMGL MGL_EXPORT mgl_default_graph();
+uintptr_t MGL_EXPORT mgl_default_graph_();
 /// Set size of frame in pixels. Normally this function is called internally.
 void MGL_EXPORT mgl_set_size(HMGL gr, int width, int height);
 void MGL_EXPORT mgl_set_size_(uintptr_t *gr, int *width, int *height);
@@ -159,8 +162,8 @@ void MGL_EXPORT mgl_labelw(HMGL gr, char dir, const wchar_t *text, double pos, c
  *	 ‘+’ for printing ‘+’ for positive ticks;
  *	 ‘-’ for printing usual ‘-’ in ticks labels;
  *	 ‘0123456789’ for precision at printing ticks labels.*/
-void MGL_EXPORT mgl_colorbar(HMGL gr, const char *sch);
-void MGL_EXPORT mgl_colorbar_(uintptr_t *gr, const char *sch,int);
+void MGL_EXPORT mgl_colorbar(HMGL gr, const char *sch, const char *opt);
+void MGL_EXPORT mgl_colorbar_(uintptr_t *gr, const char *sch, const char *opt,int,int);
 /// Draw colorbar at manual position
 /** Parameter \a sch may contain:
  *	 ‘<>^_’ for positioning at left, at right, at top or at bottom correspondingly;
@@ -174,8 +177,8 @@ void MGL_EXPORT mgl_colorbar_(uintptr_t *gr, const char *sch,int);
  *	 ‘+’ for printing ‘+’ for positive ticks;
  *	 ‘-’ for printing usual ‘-’ in ticks labels;
  *	 ‘0123456789’ for precision at printing ticks labels.*/
-void MGL_EXPORT mgl_colorbar_ext(HMGL gr, const char *sch, double x, double y, double w, double h);
-void MGL_EXPORT mgl_colorbar_ext_(uintptr_t *gr, const char *sch, mreal *x, mreal *y, mreal *w, mreal *h, int);
+void MGL_EXPORT mgl_colorbar_ext(HMGL gr, const char *sch, double x, double y, double w, double h, const char *opt);
+void MGL_EXPORT mgl_colorbar_ext_(uintptr_t *gr, const char *sch, mreal *x, mreal *y, mreal *w, mreal *h, const char *opt, int,int);
 /// Draw colorbar with manual colors at edge of axis
 /** Parameter \a sch may contain:
  *	 ‘<>^_’ for positioning at left, at right, at top or at bottom correspondingly;
@@ -189,8 +192,8 @@ void MGL_EXPORT mgl_colorbar_ext_(uintptr_t *gr, const char *sch, mreal *x, mrea
  *	 ‘+’ for printing ‘+’ for positive ticks;
  *	 ‘-’ for printing usual ‘-’ in ticks labels;
  *	 ‘0123456789’ for precision at printing ticks labels.*/
-void MGL_EXPORT mgl_colorbar_val(HMGL gr, HCDT dat, const char *sch);
-void MGL_EXPORT mgl_colorbar_val_(uintptr_t *gr, uintptr_t *dat, const char *sch,int);
+void MGL_EXPORT mgl_colorbar_val(HMGL gr, HCDT dat, const char *sch, const char *opt);
+void MGL_EXPORT mgl_colorbar_val_(uintptr_t *gr, uintptr_t *dat, const char *sch, const char *opt,int,int);
 /// Draw colorbar with manual colors at manual position
 /** Parameter \a sch may contain:
  *	 ‘<>^_’ for positioning at left, at right, at top or at bottom correspondingly;
@@ -204,8 +207,8 @@ void MGL_EXPORT mgl_colorbar_val_(uintptr_t *gr, uintptr_t *dat, const char *sch
  *	 ‘+’ for printing ‘+’ for positive ticks;
  *	 ‘-’ for printing usual ‘-’ in ticks labels;
  *	 ‘0123456789’ for precision at printing ticks labels.*/
-void MGL_EXPORT mgl_colorbar_val_ext(HMGL gr, HCDT dat, const char *sch,double x, double y, double w, double h);
-void MGL_EXPORT mgl_colorbar_val_ext_(uintptr_t *gr, uintptr_t *dat, const char *sch, mreal *x, mreal *y, mreal *w, mreal *h, int);
+void MGL_EXPORT mgl_colorbar_val_ext(HMGL gr, HCDT dat, const char *sch,double x, double y, double w, double h, const char *opt);
+void MGL_EXPORT mgl_colorbar_val_ext_(uintptr_t *gr, uintptr_t *dat, const char *sch, mreal *x, mreal *y, mreal *w, mreal *h, const char *opt, int,int);
 
 /// Add string to legend
 void MGL_EXPORT mgl_add_legend(HMGL gr, const char *text,const char *style);
@@ -332,17 +335,17 @@ MGL_EXPORT const unsigned char *mgl_get_rgba(HMGL gr);
 MGL_EXPORT const unsigned char *mgl_get_rgba_(uintptr_t *gr);
 /// Get RGBA values of background image
 /** Position of element {i,j} is [4*i + 4*Width*j]. */
-MGL_EXPORT const unsigned char *mgl_get_background(HMGL gr);
-MGL_EXPORT const unsigned char *mgl_get_background_(uintptr_t *gr);
+MGL_EXPORT_PURE const unsigned char *mgl_get_background(HMGL gr);
+MGL_EXPORT_PURE const unsigned char *mgl_get_background_(uintptr_t *gr);
 /// Set object/subplot id
 void MGL_EXPORT mgl_set_obj_id(HMGL gr, int id);
 void MGL_EXPORT mgl_set_obj_id_(uintptr_t *gr, int *id);
 /// Get object id
-int MGL_EXPORT mgl_get_obj_id(HMGL gr, int x, int y);
-int MGL_EXPORT mgl_get_obj_id_(uintptr_t *gr, int *x, int *y);
+int MGL_EXPORT_PURE mgl_get_obj_id(HMGL gr, int x, int y);
+int MGL_EXPORT_PURE mgl_get_obj_id_(uintptr_t *gr, int *x, int *y);
 /// Get subplot id
-int MGL_EXPORT mgl_get_spl_id(HMGL gr, int x, int y);
-int MGL_EXPORT mgl_get_spl_id_(uintptr_t *gr, int *x, int *y);
+int MGL_EXPORT_PURE mgl_get_spl_id(HMGL gr, int x, int y);
+int MGL_EXPORT_PURE mgl_get_spl_id_(uintptr_t *gr, int *x, int *y);
 /// Get width of the image
 int MGL_EXPORT mgl_get_width(HMGL gr);
 int MGL_EXPORT mgl_get_width_(uintptr_t *gr);
@@ -356,8 +359,8 @@ void MGL_EXPORT mgl_calc_xyz_(uintptr_t *gr, int *xs, int *ys, mreal *x, mreal *
 void MGL_EXPORT mgl_calc_scr(HMGL gr, double x, double y, double z, int *xs, int *ys);
 void MGL_EXPORT mgl_calc_scr_(uintptr_t *gr, mreal *x, mreal *y, mreal *z, int *xs, int *ys);
 /// Check if {xs,ys} is close to active point with accuracy d, and return its position or -1
-long MGL_EXPORT mgl_is_active(HMGL gr, int xs, int ys, int d);
-long MGL_EXPORT mgl_is_active_(uintptr_t *gr, int *xs, int *ys, int *d);
+long MGL_EXPORT_PURE mgl_is_active(HMGL gr, int xs, int ys, int d);
+long MGL_EXPORT_PURE mgl_is_active_(uintptr_t *gr, int *xs, int *ys, int *d);
 
 /// Create new frame.
 int MGL_EXPORT mgl_new_frame(HMGL gr);
@@ -366,8 +369,8 @@ int MGL_EXPORT mgl_new_frame_(uintptr_t *gr);
 void MGL_EXPORT mgl_end_frame(HMGL gr);
 void MGL_EXPORT mgl_end_frame_(uintptr_t *gr);
 /// Get the number of created frames
-int MGL_EXPORT mgl_get_num_frame(HMGL gr);
-int MGL_EXPORT mgl_get_num_frame_(uintptr_t *gr);
+int MGL_EXPORT_PURE mgl_get_num_frame(HMGL gr);
+int MGL_EXPORT_PURE mgl_get_num_frame_(uintptr_t *gr);
 /// Reset frames counter (start it from zero)
 void MGL_EXPORT mgl_reset_frames(HMGL gr);
 void MGL_EXPORT mgl_reset_frames_(uintptr_t *gr);
@@ -434,7 +437,9 @@ void MGL_EXPORT mgl_clf_nfog(HMGL gr);
 void MGL_EXPORT mgl_clf_nfog_(uintptr_t *gr);
 /// Clear up the frame and fill background by specified color
 void MGL_EXPORT mgl_clf_rgb(HMGL gr, double r, double g, double b);
+void MGL_EXPORT mgl_clf_rgba(HMGL gr, double r, double g, double b, double a);
 void MGL_EXPORT mgl_clf_rgb_(uintptr_t *gr, mreal *r, mreal *g, mreal *b);
+void MGL_EXPORT mgl_clf_rgba_(uintptr_t *gr, mreal *r, mreal *g, mreal *b, mreal *a);
 /// Clear up the frame and fill background by specified color
 void MGL_EXPORT mgl_clf_chr(HMGL gr, char col);
 void MGL_EXPORT mgl_clf_chr_(uintptr_t *gr, const char *col, int);
@@ -444,6 +449,17 @@ void MGL_EXPORT mgl_clf_str_(uintptr_t *gr, const char *col, int);
 /// Load background image
 void MGL_EXPORT mgl_load_background(HMGL gr, const char *fname, double alpha);
 void MGL_EXPORT mgl_load_background_(uintptr_t *gr, const char *fname, mreal *alpha, int);
+/// Load background image
+/** Parameter 'how' can be:
+	*   'a' for filling current subplot only;
+	*   's' for scaling (resizing) image to whole area;
+	*   'c' for centering image;
+	*   'm' for tessellate image as mosaic. */
+void MGL_EXPORT mgl_load_background_ext(HMGL gr, const char *fname, const char *how, double alpha);
+void MGL_EXPORT mgl_load_background_ext_(uintptr_t *gr, const char *fname, const char *how, mreal *alpha, int,int);
+/// Fill background by specified color. Colors r,g,b should be in range [0,1].
+void MGL_EXPORT mgl_fill_background(HMGL gr, double r, double g, double b, double a);
+void MGL_EXPORT mgl_fill_background_(uintptr_t *gr, double *r, double *g, double *b, double *a);
 
 /// Put further plotting in m-th cell of nx*ny grid of the image.
 /** String \a style may contain:
@@ -462,7 +478,7 @@ void MGL_EXPORT mgl_subplot_(uintptr_t *gr, int *nx,int *ny,int *m, const char *
  *  '_' for reserving space at bottom
  *  '#' for using whole region. */
 void MGL_EXPORT mgl_subplot_d(HMGL gr, int nx,int ny,int m,const char *style, double dx, double dy);
-void MGL_EXPORT mgl_subplot_d_(uintptr_t *gr, int *nx,int *ny,int *m, mreal *dx, mreal *dy);
+void MGL_EXPORT mgl_subplot_d_(uintptr_t *gr, int *nx,int *ny,int *m,const char *style, mreal *dx, mreal *dy,int l);
 /// Put further plotting in rectangle of dx*dy cells starting from m-th cell of nx*ny grid of the image.
 /** String \a style may contain:
  *  '<' for reserving space at left
@@ -534,61 +550,7 @@ void MGL_EXPORT mgl_zoom(HMGL gr, double x1, double y1, double x2, double y2);
 void MGL_EXPORT mgl_zoom_(uintptr_t *gr, mreal *x1, mreal *y1, mreal *x2, mreal *y2);
 
 //-----------------------------------------------------------------------------
-/// Callback function for mouse click
-void MGL_EXPORT mgl_set_click_func(HMGL gr, void (*func)(void *p));
-#if MGL_HAVE_PTHR_WIDGET
-/// Mutex for lock/unlock by widget
-void MGL_EXPORT mgl_wnd_set_mutex(HMGL gr, pthread_mutex_t *mutex);
-#endif
 
-/// Set callback functions for drawing and data reloading
-void MGL_EXPORT mgl_wnd_set_func(HMGL gr, int (*draw)(HMGL gr, void *p), void *par, void (*reload)(void *p));
-/// Set delay for animation in seconds
-void MGL_EXPORT mgl_wnd_set_delay(HMGL gr, double dt);
-void MGL_EXPORT mgl_wnd_set_delay_(uintptr_t *gr, mreal *dt);
-/// Get delay for animation in seconds
-double MGL_EXPORT mgl_wnd_get_delay(HMGL gr);
-double MGL_EXPORT mgl_wnd_get_delay_(uintptr_t *gr);
-/// Set window properties
-void MGL_EXPORT mgl_setup_window(HMGL gr, int clf_upd, int showpos);
-void MGL_EXPORT mgl_setup_window_(uintptr_t *gr, int *clf_upd, int *showpos);
-/// Switch on/off transparency (do not overwrite user settings)
-void MGL_EXPORT mgl_wnd_toggle_alpha(HMGL gr);
-void MGL_EXPORT mgl_wnd_toggle_alpha_(uintptr_t *gr);
-/// Switch on/off lighting (do not overwrite user settings)
-void MGL_EXPORT mgl_wnd_toggle_light(HMGL gr);
-void MGL_EXPORT mgl_wnd_toggle_light_(uintptr_t *gr);
-/// Switch on/off zooming by mouse
-void MGL_EXPORT mgl_wnd_toggle_zoom(HMGL gr);
-void MGL_EXPORT mgl_wnd_toggle_zoom_(uintptr_t *gr);
-/// Switch on/off rotation by mouse
-void MGL_EXPORT mgl_wnd_toggle_rotate(HMGL gr);
-void MGL_EXPORT mgl_wnd_toggle_rotate_(uintptr_t *gr);
-/// Switch off all zooming and rotation
-void MGL_EXPORT mgl_wnd_toggle_no(HMGL gr);
-void MGL_EXPORT mgl_wnd_toggle_no_(uintptr_t *gr);
-/// Update picture by calling user drawing function
-void MGL_EXPORT mgl_wnd_update(HMGL gr);
-void MGL_EXPORT mgl_wnd_update_(uintptr_t *gr);
-/// Reload user data and update picture
-void MGL_EXPORT mgl_wnd_reload(HMGL gr);
-void MGL_EXPORT mgl_wnd_reload_(uintptr_t *gr);
-/// Adjust size of bitmap to window size
-void MGL_EXPORT mgl_wnd_adjust(HMGL gr);
-void MGL_EXPORT mgl_wnd_adjust_(uintptr_t *gr);
-/// Show next frame (if one)
-void MGL_EXPORT mgl_wnd_next_frame(HMGL gr);
-void MGL_EXPORT mgl_wnd_next_frame_(uintptr_t *gr);
-/// Show previous frame (if one)
-void MGL_EXPORT mgl_wnd_prev_frame(HMGL gr);
-void MGL_EXPORT mgl_wnd_prev_frame_(uintptr_t *gr);
-/// Run slideshow (animation) of frames
-void MGL_EXPORT mgl_wnd_animation(HMGL gr);
-void MGL_EXPORT mgl_wnd_animation_(uintptr_t *gr);
-/// Get last mouse position
-void MGL_EXPORT mgl_get_last_mouse_pos(HMGL gr, mreal *x, mreal *y, mreal *z);
-void MGL_EXPORT mgl_get_last_mouse_pos_(uintptr_t *gr, mreal *x, mreal *y, mreal *z);
-//-----------------------------------------------------------------------------
 /// Create HMPR object for parsing MGL scripts
 HMPR MGL_EXPORT mgl_create_parser();
 uintptr_t MGL_EXPORT mgl_create_parser_();
@@ -610,24 +572,24 @@ uintptr_t MGL_EXPORT mgl_parser_add_var_(uintptr_t* p, const char *name, int);
 MGL_EXPORT mglDataA *mgl_parser_add_varw(HMPR p, const wchar_t *name);
 /// Find variable with given name or return NULL if no one
 /// NOTE !!! You must not delete obtained data arrays !!!
-MGL_EXPORT mglDataA *mgl_parser_find_var(HMPR p, const char *name);
+MGL_EXPORT_PURE mglDataA *mgl_parser_find_var(HMPR p, const char *name);
 uintptr_t MGL_EXPORT mgl_parser_find_var_(uintptr_t* p, const char *name, int);
-MGL_EXPORT mglDataA *mgl_parser_find_varw(HMPR p, const wchar_t *name);
+MGL_EXPORT_PURE mglDataA *mgl_parser_find_varw(HMPR p, const wchar_t *name);
 /// Get variable with given id
 /// NOTE !!! You must not delete obtained data arrays !!!
-MGL_EXPORT mglDataA *mgl_parser_get_var(HMPR p, unsigned long id);
-uintptr_t MGL_EXPORT mgl_parser_get_var_(uintptr_t* p, unsigned long *id);
+MGL_EXPORT_PURE mglDataA *mgl_parser_get_var(HMPR p, unsigned long id);
+uintptr_t MGL_EXPORT_PURE mgl_parser_get_var_(uintptr_t* p, unsigned long *id);
 /// Get number of variables
-long MGL_EXPORT mgl_parser_num_var(HMPR p);
-long MGL_EXPORT mgl_parser_num_var_(uintptr_t* p);
+long MGL_EXPORT_PURE mgl_parser_num_var(HMPR p);
+long MGL_EXPORT_PURE mgl_parser_num_var_(uintptr_t* p);
 
 /// Get constant with given id
 /// NOTE !!! You must not delete obtained data arrays !!!
-MGL_EXPORT mglNum *mgl_parser_get_const(HMPR p, unsigned long id);
-uintptr_t MGL_EXPORT mgl_parser_get_const_(uintptr_t* p, unsigned long *id);
+MGL_EXPORT_PURE mglNum *mgl_parser_get_const(HMPR p, unsigned long id);
+uintptr_t MGL_EXPORT_PURE mgl_parser_get_const_(uintptr_t* p, unsigned long *id);
 /// Get number of constants
-long MGL_EXPORT mgl_parser_num_const(HMPR p);
-long MGL_EXPORT mgl_parser_num_const_(uintptr_t* p);
+long MGL_EXPORT_PURE mgl_parser_num_const(HMPR p);
+long MGL_EXPORT_PURE mgl_parser_num_const_(uintptr_t* p);
 
 /// Delete variable with name
 void MGL_EXPORT mgl_parser_del_var(HMPR p, const char *name);
@@ -688,16 +650,16 @@ void MGL_EXPORT mgl_parser_start_id_(uintptr_t* p, int *id);
 ///		3 - setup, 4 - data handle, 5 - data create, 6 - subplot, 7 - program
 ///		8 - 1d plot, 9 - 2d plot, 10 - 3d plot, 11 - dd plot, 12 - vector plot
 ///		13 - axis, 14 - primitives, 15 - axis setup, 16 - text/legend, 17 - data transform
-int MGL_EXPORT mgl_parser_cmd_type(HMPR pr, const char *name);
-int MGL_EXPORT mgl_parser_cmd_type_(uintptr_t* p, const char *name, int);
+int MGL_EXPORT_PURE mgl_parser_cmd_type(HMPR pr, const char *name);
+int MGL_EXPORT_PURE mgl_parser_cmd_type_(uintptr_t* p, const char *name, int);
 /// Return description of MGL command
-MGL_EXPORT const char *mgl_parser_cmd_desc(HMPR pr, const char *name);
+MGL_EXPORT_PURE const char *mgl_parser_cmd_desc(HMPR pr, const char *name);
 /// Return string of command format (command name and its argument[s])
-MGL_EXPORT const char *mgl_parser_cmd_frmt(HMPR pr, const char *name);
+MGL_EXPORT_PURE const char *mgl_parser_cmd_frmt(HMPR pr, const char *name);
 /// Get name of command with number n
-MGL_EXPORT const char *mgl_parser_cmd_name(HMPR pr, long id);
+MGL_EXPORT_PURE const char *mgl_parser_cmd_name(HMPR pr, long id);
 /// Get number of defined commands
-long MGL_EXPORT mgl_parser_cmd_num(HMPR pr);
+long MGL_EXPORT_PURE mgl_parser_cmd_num(HMPR pr);
 
 /// Return result of formula evaluation
 HMDT MGL_EXPORT mgl_parser_calc(HMPR pr, const char *formula);

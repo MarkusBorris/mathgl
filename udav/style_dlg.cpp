@@ -423,7 +423,7 @@ void StyleDialog::updatePic()
 	}
 	result = "";
 	int i,j;
-	QString col="wbgrcmylenuqphkWBGRCMYLENUQPH", mrk=".+x*sdv^<>o.*+xsdv^<>o", dsh="|;=ji: ", arw="AVIKTSDO", s;
+	QString col="wbgrcmylenuqphkWBGRCMYLENUQPH", mrk=".+x*sdv^<>o.*+xsdv^<>o", dsh="|;=ji: ", arw="AVIKTSDO";
 	QString msk="-+=;oOsS~<>jdD*^", dir="/\\I";
 	switch(tab->currentIndex())
 	{

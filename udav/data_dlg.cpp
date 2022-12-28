@@ -132,7 +132,7 @@ void DataDialog::updateNames()
 	for(i=0;i<n;i++)
 	{
 		const mglDataA *v = parser.GetVar(i);
-		if(v)	name->addItem(QString::fromWCharArray(v->s.c_str()));
+		if(v)	name->addItem(QString::fromWCharArray(v->Name()));
 	}
 }
 //-----------------------------------------------------------------------------

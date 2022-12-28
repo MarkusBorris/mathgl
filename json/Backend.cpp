@@ -10,8 +10,11 @@ Backend::Backend(QObject *parent) : QObject(parent) { }
 //-----------------------------------------------------------------------------
 QString Backend::show(const QString& text) const
 {
+	static size_t counter=size_t(0xffffffff*mgl_rnd());
+	char tmp[256];
+	snprintf(tmp,256,"%s/mathgl%lu.json", P_tmpdir, counter);
+	tmp[255]=0;	counter++;
 	qDebug() << __FUNCTION__;
-	const char *tmp = tmpnam(0);
 	wchar_t *wtext;
 	mglGraph gr;
 	gr.SetFaceNum(200);
@@ -54,7 +57,7 @@ QString Backend::coor(const QString& xy, const QString& text) const
 	int y = (int)xy.section(" ",1,1).toDouble();
 	mglPoint p = gr.CalcXYZ(x,y);
 	QString res;
-	res.sprintf("x = %g, y = %g, z = %g for point (%d, %d)\n", p.x, p.y, p.z, x,y);
+	res.asprintf("x = %g, y = %g, z = %g for point (%d, %d)\n", p.x, p.y, p.z, x,y);
 	qDebug() << res+"\nask"+xy;
 	return res+"\nask"+xy;
 }
@@ -62,7 +65,10 @@ QString Backend::coor(const QString& xy, const QString& text) const
 QString Backend::geometry(const QString& mgl) const
 {
 	qDebug() << __FUNCTION__;
-	const char *tmp = tmpnam(0);
+	char tmp[256];
+	static size_t counter=size_t(0xffffffff*mgl_rnd());
+	snprintf(tmp,256,"%s/mathgl%lu.json", P_tmpdir, counter);
+	tmp[255]=0;	counter++;
 	wchar_t *wmgl;
 	mglGraph gr;
 #if 0

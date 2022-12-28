@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -32,20 +32,20 @@ int MGL_EXPORT mgl_check_version_(const char *ver, int);
 void MGL_EXPORT mgl_suppress_warn(int on);
 void MGL_EXPORT mgl_suppress_warn_(int *on);
 /// Get last warning code
-int MGL_EXPORT mgl_get_warn(HMGL gr);
-int MGL_EXPORT mgl_get_warn_(uintptr_t *gr);
+int MGL_EXPORT_PURE mgl_get_warn(HMGL gr);
+int MGL_EXPORT_PURE mgl_get_warn_(uintptr_t *gr);
 /// Set warning code ant fill message
 void MGL_EXPORT mgl_set_warn(HMGL gr, int code, const char *text);
 void MGL_EXPORT mgl_set_warn_(uintptr_t *gr, int *code, const char *text,int);
 /// Get text of warning message(s)
-MGL_EXPORT const char *mgl_get_mess(HMGL gr);
+MGL_EXPORT_PURE const char *mgl_get_mess(HMGL gr);
 int MGL_EXPORT mgl_get_mess_(uintptr_t *gr, char *out, int len);
 
 /// Set name of plot for saving filename
 void MGL_EXPORT mgl_set_plotid(HMGL gr, const char *id);
 void MGL_EXPORT mgl_set_plotid_(uintptr_t *gr, const char *id,int);
 /// Get name of plot for saving filename
-MGL_EXPORT const char *mgl_get_plotid(HMGL gr);
+MGL_EXPORT_PURE const char *mgl_get_plotid(HMGL gr);
 int MGL_EXPORT mgl_get_plotid_(uintptr_t *gr, char *out, int len);
 
 /// Ask to stop drawing
@@ -58,8 +58,8 @@ int MGL_EXPORT mgl_need_stop_(uintptr_t *gr);
 void MGL_EXPORT mgl_set_event_func(HMGL gr, void (*func)(void *), void *par);
 
 /// Get plot quality
-int MGL_EXPORT mgl_get_quality(HMGL gr);
-int MGL_EXPORT mgl_get_quality_(uintptr_t *gr);
+int MGL_EXPORT_PURE mgl_get_quality(HMGL gr);
+int MGL_EXPORT_PURE mgl_get_quality_(uintptr_t *gr);
 /// Set plot quality
 /** qual=0 -- no face drawing (fastest),
  *  qual=1 -- no color interpolation (fast),
@@ -73,10 +73,10 @@ void MGL_EXPORT mgl_set_draw_reg(HMGL gr, long nx, long ny, long m);
 void MGL_EXPORT mgl_set_draw_reg_(uintptr_t *gr, int *nx, int *ny, int *m);
 
 /// Check if support of frames is enabled (i.e. MGL_VECT_FRAME is set and Quality&MGL_DRAW_LMEM==0)
-int MGL_EXPORT mgl_is_frames(HMGL gr);
+int MGL_EXPORT_PURE mgl_is_frames(HMGL gr);
 /// Get bit-value flag of HMGL state (for advanced users only)
-int MGL_EXPORT mgl_get_flag(HMGL gr, uint32_t flag);
-int MGL_EXPORT mgl_get_flag_(uintptr_t *gr, unsigned long *flag);
+int MGL_EXPORT_PURE mgl_get_flag(HMGL gr, uint32_t flag);
+int MGL_EXPORT_PURE mgl_get_flag_(uintptr_t *gr, unsigned long *flag);
 /// Set bit-value flag of HMGL state (for advanced users only)
 void MGL_EXPORT mgl_set_flag(HMGL gr, int val, uint32_t flag);
 void MGL_EXPORT mgl_set_flag_(uintptr_t *gr, int *val, unsigned long *flag);
@@ -132,6 +132,9 @@ void MGL_EXPORT mgl_set_facenum_(uintptr_t *gr, int *num);
 /// Clear unused points and primitives. Useful only in combination with mgl_set_facenum().
 void MGL_EXPORT mgl_clear_unused(HMGL gr);
 void MGL_EXPORT mgl_clear_unused_(uintptr_t *gr);
+/// Set TeX parsing at text drawing
+void MGL_EXPORT mgl_set_tex_parse(HMGL gr, int val);
+void MGL_EXPORT mgl_set_tex_parse_(uintptr_t *gr, int *val);
 
 /// Set ambient light brightness
 void MGL_EXPORT mgl_set_ambbr(HMGL gr, double i);
@@ -213,6 +216,9 @@ void MGL_EXPORT mgl_set_font_def_(uintptr_t *gr, const char *fnt, int);
 /// Set to use or not text rotation
 void MGL_EXPORT mgl_set_rotated_text(HMGL gr, int enable);
 void MGL_EXPORT mgl_set_rotated_text_(uintptr_t *gr, int *enable);
+/// Set to scale text in relative subplots too
+void MGL_EXPORT mgl_set_scale_text(HMGL gr, int enable);
+void MGL_EXPORT mgl_set_scale_text_(uintptr_t *gr, int *enable);
 /// Load font from file
 void MGL_EXPORT mgl_load_font(HMGL gr, const char *name, const char *path);
 void MGL_EXPORT mgl_load_font_(uintptr_t *gr, char *name, char *path, int l, int n);

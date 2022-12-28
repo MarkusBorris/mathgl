@@ -57,7 +57,7 @@ There are a set of dialogs, which allow change/add a command, setup global plot 
 
 @ufig{udav_cmd,8, New command dialog}
 
-One of most interesting dialog (hotkey @key{Meta-C} or @key{Win-C}) is dialog which help to enter new command or change arguments of existed one. It allows consequently select the category of command, command name in category and appropriate set of command arguments. At this right side show detailed command description. Required argument(s) are denoted by bold text. Strings are placed in apostrophes, like @code{'txt'}. Buttons below table allow to call dialogs for changing style of command (if argument @code{'fmt'} is present in the list of command arguments); to set variable or expression for argument(s); to add options for command. Note, you can click on a cell to enter value, or double-click to call corresponding dialog.
+One of most interesting dialog (hotkey @key{Meta-C} or @key{Win-C}) is dialog which help to enter new command or change arguments of existed one. It allows consequently select the category of command, command name in category and appropriate set of command arguments. At this right side show detailed command description. Required argument(s) are denoted by bold text. Strings are placed in apostrophes, like @code{'txt'}. Buttons below table allow one to call dialogs for changing style of command (if argument @code{'fmt'} is present in the list of command arguments); to set variable or expression for argument(s); to add options for command. Note, you can click on a cell to enter value, or double-click to call corresponding dialog.
 
 @ufig{udav_pen,5, Style dialog - pen style}
 @ufig{udav_sch,5, Style dialog - color scheme}
@@ -68,11 +68,11 @@ Dialog for changing style can be called independently, but usually is called fro
 
 @ufig{udav_var,3, Variable dialog}
 
-Dialog for entering variable allow to select variable or expression which can be used as argument of a command. Here you can select the variable name; range of indexes in each directions; operation which will be applied (like, summation, finding minimal/maximal values and so on). Usually it can be called from New command dialog.
+Dialog for entering variable allow one to select variable or expression which can be used as argument of a command. Here you can select the variable name; range of indexes in each directions; operation which will be applied (like, summation, finding minimal/maximal values and so on). Usually it can be called from New command dialog.
 
 @ufig{udav_opt,7.5, Dialog for options of a command}
 
-Dialog for command options allow to change @ref{Command options}. Usually it can be called from New command dialog.
+Dialog for command options allow one to change @ref{Command options}. Usually it can be called from New command dialog.
 
 
 
@@ -92,7 +92,7 @@ Also you can set or change script parameters (@samp{$0} ... @samp{$9}, see @ref{
 
 @ufig{udav_prop,5, Dialog for UDAV settings}
 
-Finally, there is dialog for UDAV settings. It allow to change most of things in UDAV appearance and working, including colors of keywords and numbers, default font and image size, and so on (see figure above).
+Finally, there is dialog for UDAV settings. It allow one to change most of things in UDAV appearance and working, including colors of keywords and numbers, default font and image size, and so on (see figure above).
 
 There are also a set of dialogs for data handling, but they are too simple and clear. So, I will not put them here.
 

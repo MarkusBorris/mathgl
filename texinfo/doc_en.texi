@@ -48,6 +48,7 @@ This file documents the Mathematical Graphic Library (MathGL), a collection of c
 * MGL scripts::
 * UDAV::
 * Other classes::
+* All samples::
 * Symbols and hot-keys::
 * File formats::
 * TeX-like symbols::
@@ -71,42 +72,12 @@ This file documents the Mathematical Graphic Library (MathGL), a collection of c
 <tr><td><img src="http://groups.google.com/intl/en/images/logos/groups_logo_sm.gif" height=25 width=117 alt="Google Groups"></td></tr>
 <tr><td style="padding-left: 5px;font-size: 110%"> <a target=_blank href="http://groups.google.com/group/mathgl"><b>MathGL</b></a> </td></tr>
 </table>
-
-<hr style="width: 100%; height: 1px;">
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- 160x600, Vertical -->
-<ins class="adsbygoogle"
-     style="display:inline-block;width:160px;height:600px"
-     data-ad-client="ca-pub-1128070552722622"
-     data-ad-slot="2695178987"></ins>
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script>
 </nav>
 @end html
 @end macro
 
 @macro external {}
 @html
-<br><script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- Ref 728x15 -->
-<ins class="adsbygoogle"
-     style="display:inline-block;width:728px;height:15px"
-     data-ad-client="ca-pub-1128070552722622"
-     data-ad-slot="7008431385"></ins>
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script><br>
-@comment
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<!-- 728x90, Horizontal -->
-<ins class="adsbygoogle"
-     style="display:inline-block;width:728px;height:90px"
-     data-ad-client="ca-pub-1128070552722622"
-     data-ad-slot="9958083480"></ins>
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script><br/>
 <footer>
 <!--LiveInternet counter--><script type="text/javascript"><!--
 document.write("<a href='http://www.liveinternet.ru/click' "+
@@ -129,17 +100,17 @@ screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+
 @end macro
 
 @macro fig {fname,text}
-@center @image{../\fname\, 11cm, , \text\, png}
+@center @image{../\fname\.png, 11cm, , \text\, png}
 @end macro
 @macro pfig {fname,text}
-@center @uref{../pdf/\fname\.pdf, @image{../png/\fname\, 11cm, , \text\, png}}
+@center @uref{../pdf/\fname\.pdf, @image{../png/\fname\.png, 11cm, , \text\, png}}
 @c @center @image{../png/\fname\, 11cm, , \text\. See also @uref{../pdf/\fname\.pdf, 3D PDF} sample, .png}
 @end macro
 @macro ufig {fname,width,text}
-@center @image{../udav/\fname\, \width\cm, , \text\, png}
+@center @image{../udav/\fname\.png, \width\cm, , \text\, png}
 @end macro
 @macro sfig {plot,text}
-@ref{\text\, @image{../small/\plot\-sm,3cm, , , png}}
+@ref{\text\, @image{../small/\plot\-sm.png,3cm, , , png}}
 @end macro
 
 
@@ -174,10 +145,13 @@ screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+
 @node UDAV, Other classes, MGL scripts, Top
 @include udav_en.texi
 
-@node Other classes, Symbols and hot-keys, UDAV, Top
+@node Other classes, All samples, UDAV, Top
 @include other_en.texi
 
-@node Symbols and hot-keys, File formats, Other classes, Top
+@node All samples, Symbols and hot-keys, Other classes, Top
+@include samples.texi
+
+@node Symbols and hot-keys, File formats, All samples, Top
 @appendix Symbols and hot-keys
 @include symbols_en.texi
 
@@ -195,7 +169,7 @@ screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+
 
 Table below show plotting time in seconds for all samples in file @uref{http://sourceforge.net/p/mathgl/code/HEAD/tree/mathgl-2x/examples/samples.cpp, examples/samples.cpp}. The test was done in my laptop (i5-2430M) with 64-bit Debian.
 
-Few words about the speed. Firstly, direct bitmap drawing (Quality=4,5,6) is faster than buffered one (Quality=0,1,2), but sometimes it give incorrect result (see @ref{cloud}) and don't allow to export in vector or 3d formats (like EPS, SVG, PDF ...). Secondly, lower quality is faster than high one generally, i.e. Quality=1 is faster than Quality=2, and Quality=0 is faster than Quality=1. However, if plot contain a lot of faces (like @ref{cloud}, @ref{surf3}, @ref{pipe}, @ref{dew}) then Quality=0 may become slow, especially for small images. Finally, smaller images are drawn faster than larger ones.
+Few words about the speed. Firstly, direct bitmap drawing (Quality=4,5,6) is faster than buffered one (Quality=0,1,2), but sometimes it give incorrect result (see @ref{cloud}) and don't allow one to export in vector or 3d formats (like EPS, SVG, PDF ...). Secondly, lower quality is faster than high one generally, i.e. Quality=1 is faster than Quality=2, and Quality=0 is faster than Quality=1. However, if plot contain a lot of faces (like @ref{cloud}, @ref{surf3}, @ref{pipe}, @ref{dew}) then Quality=0 may become slow, especially for small images. Finally, smaller images are drawn faster than larger ones.
 
 Results for image size 800*600 (default one).
 @include time.texi

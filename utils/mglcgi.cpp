@@ -58,33 +58,34 @@ int main(int argc, char **argv)
 	mglGraph gr;
 	mglParse p(true);
 
-	mgl_ask_func = 0;
+	mgl_ask_func = 0;	mgl_progress_func = 0;
 	// read script
 	char *str, *buf;
 	const char *method = getenv("REQUEST_METHOD");
 	bool alloc=false;
+	
 	if(method && strcmp(method,"GET"))
 	{
 		long len=atol(getenv("CONTENT_LENGTH"));
-		buf = new char[len+1];
-		len = fread(buf,len,1,stdin);
-		buf[len]=0;	alloc=true;
+		buf = new char[len+2];	alloc=true;
+		fgets(buf, len+1, stdin);
 	}
-	else		buf = getenv("QUERY_STRING");
+	else	buf = getenv("QUERY_STRING");
 	if(buf==0)	{	printf(_("There is no query. Exit.\n"));	return 0;	}
 	str = new char[strlen(buf)+1];
 	mgl_get_value(buf,"mgl",str);
 
 	p.Execute(&gr,str);
 
-/*	printf("Content-Type: text/html\n\n");
-	printf("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd\">\n");
-	printf("<html><head><meta content=\"text/html; charset=utf-8\" http-equiv=\"content-type\">\n");
-	printf("<title>MathGL - library for scientific graphics</title></head><body>\n<img>\n");
+	printf("Content-Type: text/html\n\n");
+	printf("<!DOCTYPE html>\n");
+	printf("<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\n");
+	printf("<title>MathGL - library for scientific graphics</title></head><body>\n");
+//	printf("<h2>MGL script output</h2>\n<p>The script</p>\n<pre>%s</pre><p>give</p>\n",str);
 	gr.WriteSVG("-");	fflush(stdout);
-	printf("</img></body></html>\n");*/
+	printf("\n</body></html>\n");
 
-	printf("Content-Type: image/png\n\n");	gr.WritePNG("-");
+//	printf("Content-Type: image/png\n\n");	gr.WritePNG("-");
 	if(alloc)	delete []buf;
 	return 0;
 }

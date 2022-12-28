@@ -1,7 +1,7 @@
 /* XPM */
 static const char *edit_find_xpm[] = {
 /* columns rows colors chars-per-pixel */
-"16 16 64 1 ",
+"16 16 65 1 ",
 "  c black",
 ". c #010101",
 "X c #040404",
@@ -66,21 +66,22 @@ static const char *edit_find_xpm[] = {
 "S c #817E7D",
 "D c #AB917A",
 "F c None",
+"E c #afafaf",
 /* pixels */
 "FFFFFFFFFFFFFFFF",
-"FFFFFFFFFFFFFFFF",
-"FFFFF  FF  FFFFF",
-"FFFF2z4FF4z2FFFF",
-"FFF 88&&&&68 FFF",
-"FF;b8s&zh&d8b;FF",
-"F tdzed# dezdt F",
-"F&zSn46;;62nSz&F",
+"FFFFFEEFFEEFFFFF",
+"FFFFE  EE  EFFFF",
+"FFFE2z4EE4z2EFFF",
+"FFE 88&&&&68 EFF",
+"FE;b8s&zh&d8b;EF",
+"E tdzed# dezdt E",
+"E&zSn46;;62nSz&E",
 " hqupv:64:vp10g ",
 "OwiCVk;  &kBZiqX",
-" ,yiNl+FF#lNmu, ",
-" 3jADp FF aDAj3 ",
-"F #rO FFFF Or# F",
-"FFFFFFFFFFFFFFFF",
+" ,yiNl+EE#lNmu, ",
+" 3jADp EE aDAj3 ",
+"E #rO EFFE Or# E",
+"FEEEEEFFFFEEEEEF",
 "FFFFFFFFFFFFFFFF",
 "FFFFFFFFFFFFFFFF"
 };

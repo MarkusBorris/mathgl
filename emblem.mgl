@@ -31,6 +31,8 @@ modify a '-2*((2*x-1)^2 + (2*y-1)^2 + (2*z-1)^4 - (2*z-1)^2 - 0.1)'
 alpha on:light off
 cloud a 'wyrRk'
 
+write 'emplem.jpg'
+
 stop
 cut 0 -1 -1 1 0 1.1
 surf3 a -1 'BbcyrR'

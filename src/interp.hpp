@@ -1,3 +1,5 @@
+#ifndef INTERP_HPP
+#define INTERP_HPP
 //-----------------------------------------------------------------------------
 template <class Treal> Treal mglLineart(const Treal *a, long nx, long ny, long nz, mreal x, mreal y, mreal z)
 {
@@ -230,16 +232,16 @@ template <class Treal> void mgl_gspline_init(long n, const mreal *x, const Treal
 	{	c[5*i] = x[i+1]-x[i];	c[5*i+1] = v[i];	}
 	// progonka
 	a[0] = -0.5;	b[0] = mreal(1.5)*(v[1]-v[0])/(x[1]-x[0]);
-	for(long i=1;i<n-1;i++)
+	for(long i=1;i<n-1;i++)	// solve relative derivative
 	{
 		mreal h0 = x[i]-x[i-1], h1 = x[i+1]-x[i];
 		Treal r = mreal(1)/(2/h0+2/h1 + a[i-1]/h0);
 		a[i] = - r/h1;
-		b[i] = ((3/h0/h0)*(v[i]-v[i-1]) + (1/h1/h1)*(v[i+1]-v[i]) + a[i-1]/h0)*r;
+		b[i] = ((3/h0/h0)*(v[i]-v[i-1]) + (3/h1/h1)*(v[i+1]-v[i]) - b[i-1]/h0)*r;
 	}
 	b[n-1] = ( (6/(x[n-1]-x[n-2]))*(v[n-1]-v[n-2]) - mreal(2)*b[n-2] )/(mreal(4)+mreal(2)*a[n-2]);
 	for(long i=n-2;i>=0;i--)	b[i] += a[i]*b[i+1];
-	// no spline coefficients
+	// now spline coefficients
 	for(long i=0;i<n-1;i++)
 	{
 		c[5*i+2] = b[i];
@@ -250,3 +252,48 @@ template <class Treal> void mgl_gspline_init(long n, const mreal *x, const Treal
 	delete []a;	delete []b;
 }
 //-----------------------------------------------------------------------------
+struct mglEqTxT
+{
+	std::vector<std::string> str;
+	HAEX *eqC;
+	HMEX *eqR;
+	const char *var;
+	char brd;
+	long m,n;
+	std::vector<mglDataA*> head;
+	HMDT t;
+
+	mglEqTxT(const char *vars=0):eqC(0),eqR(0),var(vars),brd(0)	{}
+	~mglEqTxT()
+	{
+		if(eqR)	{	for(size_t i=0;i<str.size();i++)	mgl_delete_expr(eqR[i]);	delete []eqR;	}
+		if(eqC)	{	for(size_t i=0;i<str.size();i++)	mgl_delete_cexpr(eqC[i]);	delete []eqC;	}
+	}
+	void FillStr(const char *eqs)
+	{
+		const char *f=eqs;
+		while(1)
+		{
+			const char *g = strchr(f,';');
+			if(g)	str.push_back(std::string(f,g-f));
+			else	{	str.push_back(f);	break;	}
+			f = g+1;
+		}
+	}
+	void FillReal(const char *eqs)
+	{
+		FillStr(eqs);	size_t n = str.size();
+		if(n==0)	return;
+		eqR = new HMEX[n];
+		for(size_t i=0;i<n;i++)	eqR[i] = mgl_create_expr(str[i].c_str());
+	}
+	void FillCmplx(const char *eqs)
+	{
+		FillStr(eqs);	size_t n = str.size();
+		if(n==0)	return;
+		eqC = new HAEX[n];
+		for(size_t i=0;i<n;i++)	eqC[i] = mgl_create_cexpr(str[i].c_str());
+	}
+};
+//-----------------------------------------------------------------------------
+#endif

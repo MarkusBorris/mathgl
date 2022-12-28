@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 #include "mgl2/fltk.h"
+#include <thread>
 //-----------------------------------------------------------------------------
 #if defined(WIN32) || defined(_MSC_VER) || defined(__BORLANDC__)
 #include <windows.h>
@@ -32,6 +33,7 @@ void long_calculations()	// just delay which correspond to simulate calculations
 	sleep(1);	// which can be very long
 #endif
 }
+#define PTHREAD_SAMPLE3
 //-----------------------------------------------------------------------------
 #if defined(PTHREAD_SAMPLE1)	// first variant of multi-threading usage of mglFLTK window
 mglFLTK *gr=NULL;
@@ -51,11 +53,11 @@ void *calc(void *)
 			gr->Update();		// update window
 		}
 	}
-	exit(0);
+	exit(0);	return NULL;
 }
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL);
+	mgl_textdomain(argv?argv[0]:NULL,"");
 	static pthread_t thr;
 	pthread_create(&thr,0,calc,0);
 	pthread_detach(thr);
@@ -66,7 +68,7 @@ int main(int argc,char **argv)
 mglPoint pnt;	// some global variable for changeable data
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL);
+	mgl_textdomain(argv?argv[0]:NULL,"");
 	mglFLTK gr("test");
 	gr.RunThr();	// <-- need MathGL version which use pthread
 	for(int i=0;i<10;i++)	// do calculation
@@ -80,6 +82,34 @@ int main(int argc,char **argv)
 		gr.Update();		// update window
 	}
 	return 0;	// finish calculations and close the window
+}
+#elif defined(PTHREAD_SAMPLE3)	// another variant of multi-threading usage of mglFLTK window. Work only if pthread was enabled for MathGL
+mglFLTK *gr=NULL;
+void calc()
+{
+	mglPoint pnt;
+	for(int i=0;i<10;i++)		// do calculation
+	{
+		long_calculations();	// which can be very long
+		pnt.Set(2*mgl_rnd()-1,2*mgl_rnd()-1);
+		if(gr)
+		{
+			gr->Clf();			// make new drawing
+			gr->Line(mglPoint(),pnt,"Ar2");
+			char str[10] = "i=0";	str[2] = '0'+i;
+			gr->Puts(mglPoint(),str);
+			gr->Update();		// update window
+		}
+	}
+	exit(0);
+}
+int main(int argc,char **argv)
+{
+	mgl_textdomain(argv?argv[0]:NULL,"");
+//	static pthread_t thr;
+	std::thread(calc).detach();
+	gr = new mglFLTK;
+	gr->Run();	return 0;
 }
 #else		// just default samples
 //-----------------------------------------------------------------------------

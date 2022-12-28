@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -26,7 +26,7 @@
 //-----------------------------------------------------------------------------
 void MGL_NO_EXPORT mgl_surf_gen(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT c, HCDT a, const char *sch);
 //-----------------------------------------------------------------------------
-HCDT MGL_NO_EXPORT fill_slice_x(HMGL gr, double sv, HCDT a, mglDataV &xx, mglDataV &yy, mglDataV &zz, mglData &aa)
+HCDT static fill_slice_x(HMGL gr, double sv, HCDT a, mglDataV &xx, mglDataV &yy, mglDataV &zz, mglData &aa)
 {
 	long n=a->GetNx(),m=a->GetNy(),l=a->GetNz();
 	if(l>1)
@@ -49,7 +49,7 @@ HCDT MGL_NO_EXPORT fill_slice_x(HMGL gr, double sv, HCDT a, mglDataV &xx, mglDat
 	return a;
 }
 //-----------------------------------------------------------------------------
-HCDT MGL_NO_EXPORT fill_slice_y(HMGL gr, double sv, HCDT a, mglDataV &xx, mglDataV &yy, mglDataV &zz, mglData &aa)
+HCDT static fill_slice_y(HMGL gr, double sv, HCDT a, mglDataV &xx, mglDataV &yy, mglDataV &zz, mglData &aa)
 {
 	long n=a->GetNx(),m=a->GetNy(),l=a->GetNz();
 	if(l>1)
@@ -72,7 +72,7 @@ HCDT MGL_NO_EXPORT fill_slice_y(HMGL gr, double sv, HCDT a, mglDataV &xx, mglDat
 	return a;
 }
 //-----------------------------------------------------------------------------
-HCDT MGL_NO_EXPORT fill_slice_z(HMGL gr, double sv, HCDT a, mglDataV &xx, mglDataV &yy, mglDataV &zz, mglData &aa)
+HCDT static fill_slice_z(HMGL gr, double sv, HCDT a, mglDataV &xx, mglDataV &yy, mglDataV &zz, mglData &aa)
 {
 	long n=a->GetNx(),m=a->GetNy(),l=a->GetNz();
 	xx.Create(n,m);	yy.Create(n,m);	zz.Create(n,m);
@@ -155,7 +155,7 @@ void MGL_EXPORT mgl_dens_z_(uintptr_t *gr, uintptr_t *a, const char *sch, mreal 
 //	ContX, ContY, ContZ series
 //
 //-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_cont_gen(HMGL gr, mreal val, HCDT a, HCDT x, HCDT y, HCDT z, mreal c, int text,long ak);
+void MGL_EXPORT mgl_cont_genI(HMGL gr, mreal val, HCDT a, HCDT x, HCDT y, HCDT z, mreal c, int text,long ak);
 void MGL_EXPORT mgl_cont_x_val(HMGL gr, HCDT v, HCDT a, const char *sch, double sv, const char *opt)
 {
 	long n=a->GetNx(),m=a->GetNy();
@@ -177,7 +177,7 @@ void MGL_EXPORT mgl_cont_x_val(HMGL gr, HCDT v, HCDT a, const char *sch, double 
 	for(long i=0;i<v->GetNx();i++)
 	{
 		mreal v0 = v->v(i);
-		mgl_cont_gen(gr,v0,a,&xx,&yy,&zz,gr->GetC(ss,v0),text,0);
+		mgl_cont_genI(gr,v0,a,&xx,&yy,&zz,gr->GetC(ss,v0),text,0);
 	}
 	gr->EndGroup();
 }
@@ -203,7 +203,7 @@ void MGL_EXPORT mgl_cont_y_val(HMGL gr, HCDT v, HCDT a, const char *sch, double 
 	for(long i=0;i<v->GetNx();i++)
 	{
 		mreal v0 = v->v(i);
-		mgl_cont_gen(gr,v0,a,&xx,&yy,&zz,gr->GetC(ss,v0),text,0);
+		mgl_cont_genI(gr,v0,a,&xx,&yy,&zz,gr->GetC(ss,v0),text,0);
 	}
 	gr->EndGroup();
 }
@@ -229,7 +229,7 @@ void MGL_EXPORT mgl_cont_z_val(HMGL gr, HCDT v, HCDT a, const char *sch, double 
 	for(long i=0;i<v->GetNx();i++)
 	{
 		mreal v0 = v->v(i);
-		mgl_cont_gen(gr,v0,a,&xx,&yy,&zz,gr->GetC(ss,v0),text,0);
+		mgl_cont_genI(gr,v0,a,&xx,&yy,&zz,gr->GetC(ss,v0),text,0);
 	}
 	gr->EndGroup();
 }
@@ -295,7 +295,7 @@ void MGL_EXPORT mgl_cont_z_val_(uintptr_t *gr, uintptr_t *v, uintptr_t *a, const
 //	ContFX, ContFY, ContFZ series
 //
 //-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_contf_gen(HMGL gr, mreal v1, mreal v2, HCDT a, HCDT x, HCDT y, HCDT z, mreal c, long ak);
+void MGL_EXPORT mgl_contf_genI(HMGL gr, mreal v1, mreal v2, HCDT a, HCDT x, HCDT y, HCDT z, mreal c, long ak);
 void MGL_EXPORT mgl_contf_x_val(HMGL gr, HCDT v, HCDT a, const char *sch, double sv, const char *opt)
 {
 	long n=a->GetNx(),m=a->GetNy();
@@ -312,7 +312,7 @@ void MGL_EXPORT mgl_contf_x_val(HMGL gr, HCDT v, HCDT a, const char *sch, double
 	for(long i=0;i<v->GetNx()-1;i++)
 	{
 		mreal v0 = v->v(i);
-		mgl_contf_gen(gr,v0,v->v(i+1),a,&xx,&yy,&zz,gr->GetC(ss,v0),0);
+		mgl_contf_genI(gr,v0,v->v(i+1),a,&xx,&yy,&zz,gr->GetC(ss,v0),0);
 	}
 	gr->EndGroup();
 }
@@ -333,7 +333,7 @@ void MGL_EXPORT mgl_contf_y_val(HMGL gr, HCDT v, HCDT a, const char *sch, double
 	for(long i=0;i<v->GetNx()-1;i++)
 	{
 		mreal v0 = v->v(i);
-		mgl_contf_gen(gr,v0,v->v(i+1),a,&xx,&yy,&zz,gr->GetC(ss,v0),0);
+		mgl_contf_genI(gr,v0,v->v(i+1),a,&xx,&yy,&zz,gr->GetC(ss,v0),0);
 	}
 	gr->EndGroup();
 }
@@ -354,7 +354,7 @@ void MGL_EXPORT mgl_contf_z_val(HMGL gr, HCDT v, HCDT a, const char *sch, double
 	for(long i=0;i<v->GetNx()-1;i++)
 	{
 		mreal v0 = v->v(i);
-		mgl_contf_gen(gr,v0,v->v(i+1),a,&xx,&yy,&zz,gr->GetC(ss,v0),0);
+		mgl_contf_genI(gr,v0,v->v(i+1),a,&xx,&yy,&zz,gr->GetC(ss,v0),0);
 	}
 	gr->EndGroup();
 }

@@ -2,7 +2,7 @@
  * Copyright (C) 2007-2014 Alexey Balakin <mathgl.abalakin@gmail.ru>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
+ * modify it under the terms of the GNU Lesser General Public License 
  * as published by the Free Software Foundation
  *
  * This program is distributed in the hope that it will be useful,
@@ -179,8 +179,8 @@ public:
 void dirsel_dlg_cb(Fl_Widget *, void *v)
 {	dirsel_dlg.ext=NULL;	dirsel_dlg.e=(ScriptWindow *)v;	dirsel_dlg.show();	}
 //-----------------------------------------------------------------------------
-void dirsel_in_cb(Fl_Widget *, void *v)
-{	dirsel_dlg.ext=(Fl_Input*)v;	dirsel_dlg.e=NULL;	dirsel_dlg.show();	}
+// void dirsel_in_cb(Fl_Widget *, void *v)
+// {	dirsel_dlg.ext=(Fl_Input*)v;	dirsel_dlg.e=NULL;	dirsel_dlg.show();	}
 //-----------------------------------------------------------------------------
 //const char *arr = "_AKVITSDOX";
 Fl_Menu_Item arrows[] = {
@@ -544,8 +544,8 @@ void cb_style_sch(Fl_Widget *, void *)	{	style_dlg.set_scheme();	}
 void style_dlg_cb(Fl_Widget *, void *v)
 {	style_dlg.ext=NULL;	style_dlg.e=(ScriptWindow *)v;	style_dlg.show();	}
 //-----------------------------------------------------------------------------
-void style_in_cb(Fl_Widget *, void *v)
-{	style_dlg.ext=(Fl_Input*)v;	style_dlg.e=NULL;	style_dlg.show();	}
+//void style_in_cb(Fl_Widget *, void *v)
+//{	style_dlg.ext=(Fl_Input*)v;	style_dlg.e=NULL;	style_dlg.show();	}
 //-----------------------------------------------------------------------------
 void cb_datsel_upd(Fl_Widget *, void *);
 void cb_datsel_act(Fl_Widget *, void *);
@@ -630,7 +630,7 @@ public:
 		for(long i=0;i<n;i++)
 		{
 			HCDT d = Parse->GetVar(i);
-			if(!d->temp)	name->add(wcstombs(d->s).c_str());
+			if(!d->temp)	name->add(wcstombs(d->Name()).c_str());
 		}
 		x1->value(0);	x2->value(0);
 		y1->value(0);	y2->value(0);
@@ -671,8 +671,8 @@ void cb_datsel_act(Fl_Widget *, void *)	{	datsel_dlg.activate();	}
 void datsel_dlg_cb(Fl_Widget *, void *v)
 {	datsel_dlg.ext=NULL;	datsel_dlg.e=(ScriptWindow *)v;	datsel_dlg.show();	}
 //-----------------------------------------------------------------------------
-void datsel_in_cb(Fl_Widget *, void *v)
-{	datsel_dlg.ext=(Fl_Input*)v;	datsel_dlg.e=NULL;	datsel_dlg.show();	}
+// void datsel_in_cb(Fl_Widget *, void *v)
+// {	datsel_dlg.ext=(Fl_Input*)v;	datsel_dlg.e=NULL;	datsel_dlg.show();	}
 //-----------------------------------------------------------------------------
 std::string with_arg(std::string ss, std::vector<std::string> prev)
 {
@@ -878,7 +878,7 @@ public:
 	}
 	void cb_ok()
 	{
-		std::string par = var->text(), a;
+		std::string par = var->text();
 		size_t isp = par.find_first_of(' ');
 		result = par.substr(0,isp);	// command name
 		for(int i=1;i<=args->size();i++)
@@ -900,8 +900,8 @@ public:
 		}
 		hide();
 	}
-	void set_cmd(const char *line)	// TODO
-	{}
+//	void set_cmd(const char *line)	// TODO
+//	{}
 } newcmd_dlg;
 //-----------------------------------------------------------------------------
 void cb_cmd_type(Fl_Widget*, void*)	{	newcmd_dlg.type_sel();	}

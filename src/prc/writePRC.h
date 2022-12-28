@@ -4,16 +4,16 @@
 *   Copyright (C) 2008  Orest Shardt <shardtor (at) gmail dot com>
 *
 *   This program is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU Lesser General Public License as published by
+*   it under the terms of the GNU Lesser General Public License  as published by
 *   the Free Software Foundation, either version 3 of the License, or
 *   (at your option) any later version.
 *
 *   This program is distributed in the hope that it will be useful,
 *   but WITHOUT ANY WARRANTY; without even the implied warranty of
 *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU Lesser General Public License for more details.
+*   GNU Lesser General Public License  for more details.
 *
-*   You should have received a copy of the GNU Lesser General Public License
+*   You should have received a copy of the GNU Lesser General Public License 
 *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 *************/
@@ -1091,8 +1091,8 @@ public:
 class PRCBoundingBox
 {
 public:
-  PRCBoundingBox() : min(0.0,0.0,0.0), max(0.0,0.0,0.0) {}
-  PRCBoundingBox(const PRCVector3d &m, const PRCVector3d& M) : min(m),max(M) {}
+  PRCBoundingBox()	{min=PRCVector3d(0.0,0.0,0.0); max=PRCVector3d(0.0,0.0,0.0);}
+  PRCBoundingBox(const PRCVector3d &m, const PRCVector3d& M) {min=PRCVector3d(m); max=PRCVector3d(M);}
   void serializeBoundingBox(PRCbitStream &pbs);
   PRCVector3d min;
   PRCVector3d max;
@@ -1109,8 +1109,8 @@ public:
 class PRCInterval
 {
 public:
-  PRCInterval() : min(0), max(0) {}
-  PRCInterval(double m, double M) : min(m), max(M) {}
+  PRCInterval() { min=max=0;}
+  PRCInterval(double m, double M) {min=m;max=M;}
   void serializeInterval(PRCbitStream &pbs);
   double min;
   double max;

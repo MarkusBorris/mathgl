@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -21,8 +21,13 @@
 #define _MGL_WND_H_
 
 #include "mgl2/mgl.h"
+#include "mgl2/wnd_cf.h"
 //-----------------------------------------------------------------------------
 MGL_EXPORT void *mgl_draw_calc(void *p);
+void MGL_EXPORT mgl_parse_comments(const char *text, double &a1, double &a2, double &da, std::vector<std::string> &anim, std::string &dlg_ids, std::vector<std::string> &dlg_par);
+void MGL_EXPORT mgl_parse_comments(const wchar_t *text, double &a1, double &a2, double &da, std::vector<std::wstring> &anim, std::string &dlg_ids, std::vector<std::wstring> &dlg_par);
+void MGL_EXPORT mgl_parse_animation(const char *text, std::vector<std::string> &anim);
+void MGL_EXPORT mgl_parse_animation(const wchar_t *text, std::vector<std::wstring> &anim);
 //-----------------------------------------------------------------------------
 /// Class for drawing in windows (like, mglCanvasFL, mglCanvasQT and so on)
 /// Make inherited class and redefine Draw() function if you don't want to use function pointers.
@@ -31,6 +36,7 @@ class MGL_EXPORT mglDraw
 public:
 	virtual int Draw(mglGraph *)=0;	///< Function for drawing
 	virtual void Reload(){}		///< Function for reloading data
+	virtual void Param(char id, const char *val){}	///< Function for setting parameter
 	virtual void Click() {}		///< Callback function on mouse click
 #if MGL_HAVE_PTHR_WIDGET
 	mglDraw()	{	running=false;	pthread_mutex_init(&mutex,NULL);	thr=0;	}
@@ -69,6 +75,9 @@ int MGL_EXPORT mgl_draw_graph(HMGL gr, void *p);
 int MGL_EXPORT mgl_draw_class(HMGL gr, void *p);
 void MGL_EXPORT mgl_click_class(void *p);
 void MGL_EXPORT mgl_reload_class(void *p);
+void MGL_EXPORT mgl_prop_class(char id, const char *val, void *p);
+void MGL_EXPORT mgl_prop_func(char id, const char *val, void *p);
+extern MGL_EXPORT const char *mgl_hints[];
 }
 //-----------------------------------------------------------------------------
 /// Abstract class for windows displaying graphics
@@ -80,8 +89,14 @@ public:
 	mglWnd() : mglGraph(-1)	{}
 	virtual ~mglWnd() {	mgl_use_graph(gr,-255);	}
 	virtual int Run()=0;		///< Run main loop for event handling
-	/// Return pointer to widget used for plotting
-	virtual void *Widget()	{	return NULL;	}
+	inline void *Window()		///< Return pointer to widget (Fl_Window* or QMainWindow*) used for plotting
+	{	return mgl_wnd_window(gr);	}
+	inline void *Widget()		///< Return pointer to widget (Fl_MGLView* or QMathGL*) used for plotting
+	{	return mgl_wnd_widget(gr);	}
+	inline void WndSize(int w, int h)	///< Resize window
+	{	mgl_wnd_size(gr,w,h);	}
+	inline void WndMove(int x, int y)	///< Move window
+	{	mgl_wnd_move(gr,x,y);	}
 
 	inline void ToggleAlpha()	///< Switch on/off transparency (do not overwrite user settings)
 	{	mgl_wnd_toggle_alpha(gr);	}
@@ -107,6 +122,21 @@ public:
 	{	mgl_wnd_animation(gr);	}
 	inline void SetClickFunc(void (*func)(void *p))	///< Callback function for mouse click
 	{	mgl_set_click_func(gr,func);	}
+	/// Set callback function for properties setup
+	void SetPropFunc(void (*prop)(char id, const char *val, void *p), void *par=NULL)
+	{	mgl_wnd_set_prop(gr,prop,par);	}
+	/// Make custom dialog for parameters ids of element properties defined by args
+	inline void MakeDialog(const char *ids, char const * const *args, const char *title)
+	{	mgl_wnd_make_dialog(gr, ids, args, title);	}
+	inline void MakeDialog(const std::string &ids, const std::vector<std::string> &args, const char *title="")
+	{
+		if(args.size()>0)
+		{
+			std::vector<const char *> buf;	buf.reserve(args.size());
+			for(size_t i=0;i<args.size();i++)	buf.push_back(args[i].c_str());
+			MakeDialog(ids.c_str(), &(buf[0]), title);
+		}
+	}
 	/// Set callback functions for drawing and data reloading
 	inline void SetDrawFunc(int (*draw)(mglBase *gr, void *p), void *par=NULL, void (*reload)(void *p)=NULL)
 	{	mgl_wnd_set_func(gr,draw,par,reload);	}

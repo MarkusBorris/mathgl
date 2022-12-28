@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -29,8 +29,13 @@
 // 4244 - conversion from 'mreal,double' to 'float', possible loss of data
 // 4267	- conversion from 'size_t' to 'long,int,etc', possible loss of data
 // 4305	- truncation from 'double' to 'float'
+// 4251 - class 'type' needs to have dll-interface to be used by clients of class 'type2'
 #if defined(_MSC_VER)
-#pragma warning(disable: 4996 4190 4786 4231 4800 4244 4267 4305)
+#pragma warning(disable: 4190 4996 4786 4800 4244 4267 4305 4251)
+#endif
+
+#if defined(_WIN32) && !defined(WIN32)
+#define WIN32 1
 #endif
 
 #include "mgl2/config.h"
@@ -41,6 +46,12 @@
 #endif
 
 #include "mgl2/dllexport.h"
+#if defined(MGL_LIB_MSVC)
+#define MGL_EXTERN
+#else
+#define MGL_EXTERN extern
+#endif
+
 #if defined(_MSC_VER)
 #define MGL_OBSOLETE	MGL_NO_EXPORT
 #else
@@ -50,27 +61,25 @@
 #if MGL_HAVE_ATTRIBUTE
 #define MGL_FUNC_CONST	__attribute__((const))
 #define MGL_FUNC_PURE	__attribute__((pure))
+#define MGL_FUNC_INIT	__attribute__((constructor))
+#define MGL_FUNC_FINI	__attribute__((destructor))
 #else
 #define MGL_FUNC_CONST
 #define MGL_FUNC_PURE
+#define MGL_FUNC_INIT
+#define MGL_FUNC_FINI
 #endif
+
 #define MGL_EXPORT_CONST	MGL_EXPORT MGL_FUNC_CONST
 #define MGL_EXPORT_PURE		MGL_EXPORT MGL_FUNC_PURE
 #define MGL_LOCAL_CONST		MGL_NO_EXPORT MGL_FUNC_CONST
 #define MGL_LOCAL_PURE		MGL_NO_EXPORT MGL_FUNC_PURE
 
 #if MGL_HAVE_RVAL	// C++11 don't support register keyword
-#if (!defined(_MSC_VER)) || (defined(_MSC_VER) && (_MSC_VER < 1310))
-#define register
-#endif
 #endif
 
 #endif
 //-----------------------------------------------------------------------------
-#ifdef WIN32 //_MSC_VER needs this before math.h
-#define	_USE_MATH_DEFINES
-#endif
-
 #ifdef MGL_SRC
 
 #if MGL_USE_GETTEXT
@@ -113,6 +122,10 @@ typedef unsigned long long uint64_t;
 typedef unsigned long uintptr_t;
 #endif
 
+#if ((defined(_MSC_VER) || defined(__BORLANDC__)) && !defined(M_PI))	//_MSC_VER needs this before math.h
+#define	_USE_MATH_DEFINES
+#endif
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -120,6 +133,7 @@ typedef unsigned long uintptr_t;
 #include <wchar.h>
 
 #if defined(_MSC_VER)
+typedef long msize;
 #define collapse(a)	// MSVS don't support OpenMP 3.*
 #if (_MSC_VER<=1800)
 #define strtoull _strtoui64
@@ -127,15 +141,18 @@ typedef unsigned long uintptr_t;
 #define getcwd	_getcwd
 #define chdir	_chdir // BORLAND has chdir
 #endif
+#if (_MSC_VER<1500)
 #define snprintf _snprintf
+#endif
 #if (_MSC_VER<1600) // based on https://hg.python.org/cpython/rev/9aedb876c2d7
 #define hypot	_hypot
 #endif
+#else
+typedef size_t msize;
 #endif
 
 #if !MGL_SYS_NAN
 #include <float.h>
-#include <math.h>
 const unsigned long long mgl_nan[2] = {0x7fffffffffffffff, 0x7fffffff};
 const unsigned long long mgl_inf[2] = {0x7ff0000000000000, 0x7f800000};
 #define NANd    (*(double*)mgl_nan)
@@ -250,72 +267,40 @@ extern MGL_EXPORT uint64_t mgl_mask_val[16];
 #define MGL_MASK_ID		"-+=;oOsS~<>jdD*^"
 #define MGL_SOLID_MASK	0xffffffffffffffff
 //-----------------------------------------------------------------------------
-#define MGL_TRANSP_NORM		0x000000
-#define MGL_TRANSP_GLASS 	0x000001
-#define MGL_TRANSP_LAMP		0x000002
-#define MGL_ENABLE_CUT		0x000004 	///< Flag which determines how points outside bounding box are drown.
-#define MGL_ENABLE_RTEXT 	0x000008 	///< Use text rotation along axis
-#define MGL_AUTO_FACTOR		0x000010 	///< Enable autochange PlotFactor
-#define MGL_ENABLE_ALPHA 	0x000020 	///< Flag that Alpha is used
-#define MGL_ENABLE_LIGHT 	0x000040 	///< Flag of using lightning
-#define MGL_TICKS_ROTATE 	0x000080 	///< Allow ticks rotation
-#define MGL_TICKS_SKIP		0x000100 	///< Allow ticks rotation
+#define MGL_TRANSP_NORM		0x00000000
+#define MGL_TRANSP_GLASS 	0x00000001
+#define MGL_TRANSP_LAMP		0x00000002
+#define MGL_ENABLE_CUT		0x00000004 	///< Flag which determines how points outside bounding box are drown.
+#define MGL_ENABLE_RTEXT 	0x00000008 	///< Use text rotation along axis
+#define MGL_AUTO_FACTOR		0x00000010 	///< Enable autochange PlotFactor
+#define MGL_ENABLE_ALPHA 	0x00000020 	///< Flag that Alpha is used
+#define MGL_ENABLE_LIGHT 	0x00000040 	///< Flag of using lightning
+#define MGL_TICKS_ROTATE 	0x00000080 	///< Allow ticks rotation
+#define MGL_TICKS_SKIP		0x00000100 	///< Allow ticks rotation
 // flags for internal use only
-#define MGL_DISABLE_SCALE	0x000200 	///< Temporary flag for disable scaling (used for axis)
-#define MGL_FINISHED 		0x000400 	///< Flag that final picture (i.e. mglCanvas::G) is ready
-#define MGL_USE_GMTIME		0x000800 	///< Use gmtime instead of localtime
-#define MGL_SHOW_POS		0x001000 	///< Switch to show or not mouse click position
-#define MGL_CLF_ON_UPD		0x002000 	///< Clear plot before Update()
-#define MGL_NOSUBTICKS		0x004000 	///< Disable subticks drawing (for bounding box)
-#define MGL_LOCAL_LIGHT		0x008000 	///< Keep light sources for each inplot
-#define MGL_VECT_FRAME		0x010000 	///< Use DrwDat to remember all data of frames
-#define MGL_REDUCEACC		0x020000 	///< Reduce accuracy of points (to reduc size of output files)
-#define MGL_PREFERVC 		0x040000 	///< Prefer vertex color instead of texture if output format supports
-#define MGL_ONESIDED 		0x080000 	///< Render only front side of surfaces if output format supports (for debugging)
-#define MGL_NO_ORIGIN 		0x100000 	///< Don't draw tick labels at axis origin
-#define MGL_GRAY_MODE 		0x200000 	///< Convert all colors to gray ones
+#define MGL_DISABLE_SCALE	0x00000200 	///< Temporary flag for disable scaling (used for axis)
+#define MGL_FINISHED 		0x00000400 	///< Flag that final picture (i.e. mglCanvas::G) is ready
+#define MGL_USE_GMTIME		0x00000800 	///< Use gmtime instead of localtime
+#define MGL_SHOW_POS		0x00001000 	///< Switch to show or not mouse click position
+#define MGL_CLF_ON_UPD		0x00002000 	///< Clear plot before Update()
+#define MGL_NOSUBTICKS		0x00004000 	///< Disable subticks drawing (for bounding box)
+#define MGL_LOCAL_LIGHT		0x00008000 	///< Keep light sources for each inplot
+#define MGL_VECT_FRAME		0x00010000 	///< Use DrwDat to remember all data of frames
+#define MGL_REDUCEACC		0x00020000 	///< Reduce accuracy of points (to reduce size of output files)
+#define MGL_PREFERVC 		0x00040000 	///< Prefer vertex color instead of texture if output format supports
+#define MGL_ONESIDED 		0x00080000 	///< Render only front side of surfaces if output format supports (for debugging)
+#define MGL_NO_ORIGIN 		0x00100000 	///< Don't draw tick labels at axis origin
+#define MGL_GRAY_MODE 		0x00200000 	///< Convert all colors to gray ones
+#define MGL_FULL_CURV 		0x00400000 	///< Disable omitting points in straight-line part(s).
+#define MGL_NO_SCALE_REL 	0x00800000 	///< Disable font scaling in relative inplots
+#define MGL_FAST_PRIM		0x01000000	///< Disable accurate primitive cutting at axis borders
 //-----------------------------------------------------------------------------
-#if MGL_HAVE_C99_COMPLEX
-#include <complex.h>
-#if MGL_USE_DOUBLE
-typedef double _Complex mdual;
-#else
-typedef float _Complex mdual;
-#endif
-#ifndef _Complex_I
-#define _Complex_I	1.0i
-#endif
-const mdual mgl_I=_Complex_I;
-#define mgl_abs(x)	cabs(x)
-#endif
 #ifdef __cplusplus
 #include <string>
 #include <vector>
-#if defined(_MSC_VER)
-template class MGL_EXPORT std::allocator<char>;
-template class MGL_EXPORT std::allocator<wchar_t>;
-template struct MGL_EXPORT std::char_traits<char>;
-template struct MGL_EXPORT std::char_traits<wchar_t>;
-template class MGL_EXPORT std::basic_string< char, std::char_traits<char>, std::allocator<char> >;
-template class MGL_EXPORT std::basic_string< wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> >;
-template class MGL_EXPORT std::vector<long>;
-template class MGL_EXPORT std::vector<mreal>;
-#endif
-//-----------------------------------------------------------------------------
-extern float mgl_cos[360];	///< contain cosine with step 1 degree
-//-----------------------------------------------------------------------------
 #include <complex>
-#if defined(_MSC_VER)
-template class MGL_EXPORT std::complex<float>;
-template class MGL_EXPORT std::complex<double>;
-#endif
 typedef std::complex<mreal> dual;
 typedef std::complex<double> ddual;
-#if !MGL_HAVE_C99_COMPLEX
-#define mdual dual
-#define mgl_I dual(0,1)
-#define mgl_abs(x)	abs(x)
-#endif
 //-----------------------------------------------------------------------------
 inline bool mgl_isrange(double a, double b)
 {	return fabs(a-b)>MGL_MIN_VAL && a-a==0. && b-b==0.;	}
@@ -331,28 +316,67 @@ inline int mgl_sign(double a)	{	return a<0?-1:1;	}
 inline long mgl_int(double a)	{	return long(a+(a>=0?0.5:-0.5));	}
 inline double mgl_min(double a, double b)	{	return a>b?b:a;	}
 inline double mgl_max(double a, double b)	{	return a>b?a:b;	}
+inline long mgl_imin(long a, long b)	{	return a>b?b:a;	}
+inline long mgl_imax(long a, long b)	{	return a>b?a:b;	}
 inline void mgl_strncpy(char *a, const char *b, size_t s)	{	strncpy(a,b,s);	a[s-1]=0;	}
 //-----------------------------------------------------------------------------
 extern "C" {
-#else
-#include <complex.h>
-typedef double _Complex ddual;
-#define dual	mdual
 #endif
-/// Find length of wchar_t string (bypass standard wcslen bug)
+//-----------------------------------------------------------------------------
+struct cmdual	// complex number (bypass C/C++ incompatibility)
+{
+	mreal re,im;	// real and imaginary parts
+#ifdef __cplusplus
+	operator dual() const	{	return dual(re,im);	}
+	mreal real() const	{	return re;	}
+	mreal imag() const	{	return im;	}
+#endif
+};
+#ifdef __cplusplus
+struct mdual : public cmdual
+{
+	mdual(const cmdual &c)	{	re=c.re;	im=c.im;	}
+	mdual(const std::complex<float> &c)	{	re=c.real();	im=c.imag();	}
+	mdual(const std::complex<double> &c){	re=c.real();	im=c.imag();	}
+	mdual(mreal r=0, mreal i=0)	{	re=r;	im=i;	}
+	mdual &operator=(const cmdual &c)	{	re=c.re;	im=c.im;	return *this;	}
+	mdual &operator=(const std::complex<float> &c)	{	re=c.real();	im=c.imag();	return *this;	}
+	mdual &operator=(const std::complex<double> &c)	{	re=c.real();	im=c.imag();	return *this;	}
+	mdual &operator=(mreal r)	{	re=r;	im=0;	return *this;	}
+};
+#else
+typedef struct cmdual cmdual;
+typedef cmdual mdual;
+#if MGL_HAVE_C99_COMPLEX
+	#include <complex.h>
+	#if MGL_USE_DOUBLE
+		typedef double _Complex dual;
+	#else
+		typedef float _Complex dual;
+	#endif
+	MGL_EXPORT dual mdual2c(cmdual c);
+	MGL_EXPORT cmdual c2mdual(dual c);
+#endif
+#endif
+//-----------------------------------------------------------------------------
+extern float MGL_EXPORT mgl_cos[360];	///< contain cosine with step 1 degree
+void MGL_EXPORT MGL_FUNC_INIT mgl_init();	///< initialize MathGL structures
+void MGL_EXPORT MGL_FUNC_FINI mgl_fini();	///< free MathGL structures
+//-----------------------------------------------------------------------------
+/// Calculate sqrt(x*x+y*y)
 double MGL_EXPORT_CONST mgl_hypot(double x, double y);
 /// Find length of wchar_t string (bypass standard wcslen bug)
-size_t MGL_EXPORT mgl_wcslen(const wchar_t *str);
+size_t MGL_EXPORT_PURE mgl_wcslen(const wchar_t *str);
 /// Get RGB values for given color id or fill by -1 if no one found
 void MGL_EXPORT mgl_chrrgb(char id, float rgb[3]);
 /// Get number of colors in the string
-size_t MGL_EXPORT mgl_get_num_color(const char *s, int smooth);
+size_t MGL_EXPORT_PURE mgl_get_num_color(const char *s, int smooth);
 /// Check if string contain color id and return its number
-long MGL_EXPORT mgl_have_color(const char *stl);
+long MGL_EXPORT_PURE mgl_have_color(const char *stl);
 /// Find symbol in string excluding {} and return its position or NULL
-MGL_EXPORT const char *mglchr(const char *str, char ch);
+MGL_EXPORT_PURE const char *mglchr(const char *str, char ch);
 /// Find any symbol from chr in string excluding {} and return its position or NULL
-MGL_EXPORT const char *mglchrs(const char *str, const char *chr);
+MGL_EXPORT_PURE const char *mglchrs(const char *str, const char *chr);
 /// Set number of thread for plotting and data handling (for pthread version only)
 void MGL_EXPORT mgl_set_num_thr(int n);
 void MGL_EXPORT mgl_set_num_thr_(int *n);
@@ -372,8 +396,11 @@ void MGL_EXPORT mgl_clear_fft();
 void MGL_EXPORT mgl_set_global_warn(const char *text);
 void MGL_EXPORT mgl_set_global_warn_(const char *text,int);
 /// Get text of global warning message(s)
-MGL_EXPORT const char *mgl_get_global_warn();
+MGL_EXPORT_PURE const char *mgl_get_global_warn();
 int MGL_EXPORT mgl_get_global_warn_(char *out, int len);
+/// Clear global warning message
+void MGL_EXPORT mgl_clear_global_warn();
+void MGL_EXPORT mgl_clear_global_warn_();
 /// Setup gettext usage. NOTE: Russian translation MUST be installed.
 void MGL_EXPORT mgl_textdomain(const char *argv0, const char *locale);
 void MGL_EXPORT mgl_textdomain_(const char *locale, int);

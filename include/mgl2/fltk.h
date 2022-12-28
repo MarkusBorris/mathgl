@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -33,10 +33,12 @@ int MGL_EXPORT mgl_fltk_run();
 int MGL_EXPORT mgl_fltk_run_();
 /// Run main FLTK loop for event handling in separate thread.
 int MGL_EXPORT mgl_fltk_thr();
-/// Callback function for asking user.
+/// FLTK function for asking user.
 void MGL_EXPORT mgl_ask_fltk(const wchar_t *quest, wchar_t *res);
+/// FLTK function for displaying progress of something.
+void MGL_EXPORT mgl_progress_fltk(int value, int maximal, HMGL gr);
 /// Return pointer to widget (Fl_MGLView*) used for plotting
-MGL_EXPORT void *mgl_fltk_widget(HMGL gr);
+MGL_EXPORT_PURE void *mgl_fltk_widget(HMGL gr);
 #ifdef __cplusplus
 }
 //-----------------------------------------------------------------------------
@@ -63,8 +65,6 @@ public:
     virtual ~mglFLTK() {}
 	int Run()	{	return mgl_fltk_run();	}	///< Run main loop for event handling
 	int RunThr()	{	return mgl_fltk_thr();	}	///< Run main loop for event handling in separate thread
-	/// Return pointer to widget (Fl_MGLView*) used for plotting
-	void *Widget()	{	return mgl_fltk_widget(gr);	}
 };
 //-----------------------------------------------------------------------------
 #endif

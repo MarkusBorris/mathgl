@@ -1,6 +1,6 @@
 \input texinfo
 @documentencoding UTF-8
-@c @documentlanguage ru
+@documentlanguage ru
 
 @setfilename mgl_ru.info
 @documentencoding UTF-8
@@ -47,6 +47,7 @@
 * MathGL core::
 * Data processing::
 * Examples::
+* All samples::
 * Symbols and hot-keys::
 * Copying This Manual::
 * Index::
@@ -84,10 +85,13 @@
 @node Data processing, Examples, MathGL core, Top
 @include data_ru.texi
 
-@node Examples, Symbols and hot-keys, Data processing, Top
+@node Examples, All samples, Data processing, Top
 @include ex_mgl_ru.texi
 
-@node Symbols and hot-keys, Copying This Manual, Examples, Top
+@node All samples, Symbols and hot-keys, Examples, Top
+@include samples.texi
+
+@node Symbols and hot-keys, Copying This Manual, All samples, Top
 @appendix Symbols and hot-keys
 @include symbols_ru.texi
 

@@ -71,15 +71,15 @@ ArgsDialog::~ArgsDialog()	{}
 //-----------------------------------------------------------------------------
 void ArgsDialog::putArguments()
 {
-	int len=0, i, j, n;
-	for(i=0;i<10;i++)
+	int len=0;
+	for(int i=0;i<10;i++)
 			if(a[i]->text().length()>len)
 				len = a[i]->text().length();
 	wchar_t *str = new wchar_t[len+2];
-	QString s;
-	for(i=0;i<10;i++)
+	for(int i=0;i<10;i++)
 	{
-		s = a[i]->text();	n = s.length();
+		QString s = a[i]->text();
+		int j, n = s.length();
 		for(j=0;j<n;j++)	str[j] = (s[j]).unicode();
 		str[j] = 0;
 		parser.AddParam(i, str);

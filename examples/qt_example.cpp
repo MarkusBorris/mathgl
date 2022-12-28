@@ -55,7 +55,7 @@ void *calc(void *)
 }
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL);
+	mgl_textdomain(argv?argv[0]:NULL,"");
 	static pthread_t thr;
 	pthread_create(&thr,0,calc,0);
 	pthread_detach(thr);
@@ -88,7 +88,7 @@ int Foo::Draw(mglGraph *gr)
 }
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL);
+	mgl_textdomain(argv?argv[0]:NULL,"");
 	Foo *foo = new Foo;
 	mglQT gr(foo,"MathGL examples");
 	foo->Gr = &gr;

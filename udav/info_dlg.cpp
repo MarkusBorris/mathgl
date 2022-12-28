@@ -39,8 +39,10 @@ InfoDialog::InfoDialog(QWidget *parent) : QDialog(parent)
 	l = new QLabel(_("Select kind of plot"),this);	v->addWidget(l);
 	kind = new QComboBox(this);	v->addWidget(kind);
 	mgl = new QMathGL(this);	v->addWidget(mgl,1);
-	mgl->autoResize = true;		mgl->appName = _("Data preview");
+	//mgl->autoResize = true;	// TODO: something strange here !!!
+	mgl->appName = _("Data preview");
 	mgl->setToolTip(_("Data preview for current slice."));
+	mgl->setDotsPreview(false);
 
 	draw = new mglDrawScript(parser.Self());	mgl->setDraw(draw);
 
@@ -63,7 +65,7 @@ void InfoDialog::refresh(bool force)
 {
 	if(!var || (!force && (!allowRefresh || !isVisible())))	return;
 	QString text, name, sub;
-	name = QString::fromWCharArray(var->s.c_str());
+	name = QString::fromWCharArray(var->Name());
 	sub = "(:,:,"+QString::number(kz)+")\n";
 	int i = kind->currentIndex();
 	if(i<1)	text = "yrange "+name+"\nplot "+name + sub;

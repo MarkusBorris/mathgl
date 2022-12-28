@@ -2,7 +2,7 @@
  * Copyright (C) 2007-2014 Alexey Balakin <mathgl.abalakin@gmail.ru>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
+ * modify it under the terms of the GNU Lesser General Public License 
  * as published by the Free Software Foundation
  *
  * This program is distributed in the hope that it will be useful,
@@ -75,7 +75,7 @@ void help_out_cb(Fl_Widget*, void*v)
 void about_cb(Fl_Widget*, void*)
 {
 	static char s[128];
-	snprintf(s,128,_("mgllab v. 2.%g\n(c) Alexey Balakin, 2017\nhttp://mathgl.sf.net/"), MGL_VER2);
+	snprintf(s,128,_("mgllab v. %s\n(c) Alexey Balakin, 2017\nhttp://mathgl.sf.net/"), MGL_VER_STRING);
 	Fl_Double_Window* w = new Fl_Double_Window(355, 130, "About UDAV");
 	Fl_Box* o = new Fl_Box(10, 15, 65, 65);
 	o->box(FL_UP_BOX);	o->color(55);	o->image(new Fl_Pixmap(udav_xpm));
@@ -88,10 +88,10 @@ void about_cb(Fl_Widget*, void*)
 #include "xpm/zoom-out.xpm"
 #include "xpm/zoom-in.xpm"
 #include "xpm/help-faq.xpm"
-Fl_Widget *add_help(ScriptWindow *w)
+Fl_Widget *add_help(ScriptWindow *w, int txtW, int wndW, int wndH)
 {
-	Fl_Window *w1=new Fl_Window(300,30,630,430,0);
-	Fl_Group *g = new Fl_Group(0,0,290,30);
+	Fl_Window *w1=new Fl_Window(txtW,30,wndW-txtW,wndH-80,0);
+	Fl_Group *g = new Fl_Group(0,0,230,30);
 	Fl_Button *o;
 
 	w->link_cmd = new Fl_Input(0,1,150,25);
@@ -107,7 +107,7 @@ Fl_Widget *add_help(ScriptWindow *w)
 
 	g->end();	g->resizable(0);
 
-	w->hd = new Fl_Help_View(0,28,630,400);
+	w->hd = new Fl_Help_View(0,28,wndW-txtW,wndH-110);
 	w1->end();	link_cb(w,w);
 	w1->resizable(w->hd);	return w1;
 }
@@ -127,8 +127,8 @@ void mem_dlg_cb3(Fl_Widget *, void *v)
 void mem_dlg_cb4(Fl_Widget *, void *v)
 {	((ScriptWindow*)v)->mem_pressed(4);	}
 //-----------------------------------------------------------------------------
-void mem_update_cb(Fl_Widget *, void *v)
-{	((ScriptWindow*)v)->mem_init();	}
+// void mem_update_cb(Fl_Widget *, void *v)
+// {	((ScriptWindow*)v)->mem_init();	}
 //-----------------------------------------------------------------------------
 void delete_all_cb(Fl_Widget *, void *v)
 {
@@ -136,44 +136,48 @@ void delete_all_cb(Fl_Widget *, void *v)
 	{	Parse->DeleteAll();	((ScriptWindow*)v)->mem_init();	}
 }
 //-----------------------------------------------------------------------------
-Fl_Widget *add_mem(ScriptWindow *w)
+Fl_Widget *add_mem(ScriptWindow *w, int txtW, int wndW, int wndH)
 {
-	static int widths[] = {220,205,0};
+	static int widths[] = {220,205,205,0};
 	Fl_Button *o;
 	Fl_Box *b;
-	Fl_Window *wnd = new Fl_Window(300,30,630,430,0);
+	int ww = wndW-txtW, ws = widths[0]+widths[1]+widths[2];
+	Fl_Window *wnd = new Fl_Window(txtW,30,ww,wndH-80,0);
 
-	b = new Fl_Box(0, 10, 630, 25, _("Existed data arrays"));	b->labeltype(FL_ENGRAVED_LABEL);
-	b = new Fl_Box(0, 35, 220, 25, _("name"));
+	Fl_Group *g = new Fl_Group(0,0,ws,30);
+	b = new Fl_Box(0, 10, ww, 25, _("Existing data arrays"));	b->labeltype(FL_ENGRAVED_LABEL);
+	b = new Fl_Box(0, 35, widths[0], 25, _("name"));
 	b->box(FL_THIN_UP_BOX);	b->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-	b = new Fl_Box(220, 35, 205, 25, _("dimensions"));
+	b = new Fl_Box(widths[0], 35, widths[1], 25, _("dimensions"));
 	b->box(FL_THIN_UP_BOX);	b->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
-	b = new Fl_Box(425, 35, 205, 25, _("mem. usage"));
+	b = new Fl_Box(widths[0]+widths[1], 35, widths[2], 25, _("mem. usage"));
 	b->box(FL_THIN_UP_BOX);	b->align(FL_ALIGN_LEFT|FL_ALIGN_INSIDE);
+	g->end();	g->resizable(0);
 
-	w->var = new Fl_Select_Browser(0, 60, 630, 335);	w->var->column_char('\t');
+	w->var = new Fl_Select_Browser(0, 60, ww, wndH+(335-510));	w->var->column_char('\t');
 	w->var->align(FL_ALIGN_TOP);	w->var->column_widths(widths);
 	w->var->tooltip(_("List of available data."));
 
-	o = new Fl_Button(20, 400, 90, 25, _(" Edit"));	o->callback(mem_dlg_cb0,w);
+	int dx = (ww-(40+90))/5, yy = wndH-80-30;
+	o = new Fl_Button(20, yy, 90, 25, _(" Edit"));	o->callback(mem_dlg_cb0,w);
 	o->image(img_grid);	o->align(FL_ALIGN_IMAGE_NEXT_TO_TEXT);
 	o->tooltip(_("Open table with selected data for editing."));
-	o = new Fl_Button(120, 400, 90, 25, _(" Info"));	o->callback(mem_dlg_cb1,w);
+	o = new Fl_Button(dx+20, yy, 90, 25, _(" Info"));	o->callback(mem_dlg_cb1,w);
 	o->image(img_info);	o->align(FL_ALIGN_IMAGE_NEXT_TO_TEXT);
 	o->tooltip(_("Data information and preview."));
-	o = new Fl_Button(220, 400, 90, 25, _(" Delete"));	o->callback(mem_dlg_cb2,w);
+	o = new Fl_Button(2*dx+20, yy, 90, 25, _(" Delete"));	o->callback(mem_dlg_cb2,w);
 	o->image(img_delete);	o->align(FL_ALIGN_IMAGE_NEXT_TO_TEXT);
 	o->tooltip(_("Delete selected data."));
-	o = new Fl_Button(320, 400, 90, 25, _(" New"));	o->callback(mem_dlg_cb3,w);
+	o = new Fl_Button(3*dx+20, yy, 90, 25, _(" New"));	o->callback(mem_dlg_cb3,w);
 	o->image(img_new);	o->align(FL_ALIGN_IMAGE_NEXT_TO_TEXT);
 	o->tooltip(_("Open dialog for new data creation."));
-	o = new Fl_Button(420, 400, 90, 25, _(" Save"));	o->callback(mem_dlg_cb4,w);
+	o = new Fl_Button(4*dx+20, yy, 90, 25, _(" Save"));	o->callback(mem_dlg_cb4,w);
 	o->image(img_save);	o->align(FL_ALIGN_IMAGE_NEXT_TO_TEXT);
 	o->tooltip(_("Save selected data to file."));
-// 	o = new Fl_Button(420, 400, 90, 25, _(" Refresh"));	o->callback(mem_update_cb,w);
+// 	o = new Fl_Button(420, yy, 90, 25, _(" Refresh"));	o->callback(mem_update_cb,w);
 // 	o->image(img_update);	o->align(FL_ALIGN_IMAGE_NEXT_TO_TEXT);
 // 	o->tooltip(_("Refresh list of variables."));
-	o = new Fl_Button(520, 400, 90, 25, _(" Del.all"));	o->callback(delete_all_cb,w);
+	o = new Fl_Button(5*dx+20, yy, 90, 25, _(" Del.all"));	o->callback(delete_all_cb,w);
 	o->image(img_clear);	o->align(FL_ALIGN_IMAGE_NEXT_TO_TEXT);
 	o->tooltip(_("Delete @b all@. data arrays."));
 	wnd->end();	wnd->resizable(w->var);	return wnd;
@@ -209,14 +213,14 @@ void ScriptWindow::mem_init()
 			else if((sv>>20L)>0)	{	e=ext[3];	sv = sv>>20L;	}
 			else if((sv>>10L)>0)	{	e=ext[2];	sv = sv>>10L;	}
 			else	e=ext[1];
-			snprintf(str,128,"%ls\t%ld*%ld*%ld\t%ld %s", v->s.c_str(), v->GetNx(), v->GetNy(), v->GetNz(), sv, e);
+			snprintf(str,128,"%ls\t%ld*%ld*%ld\t%ld %s", v->Name(), v->GetNx(), v->GetNy(), v->GetNz(), sv, e);
 			var->add(str,v);
 		}
 	}
 	for(long i=0;i<Parse->GetNumConst();i++)
 	{
 		mglNum *v = Parse->GetConst(i);
-		snprintf(str,128,"%ls\t%s\t%zu b", v->s.c_str(), ("const="+mgl_str_num(v->c)).c_str(), sizeof(mglNum));
+		snprintf(str,128,"%ls\t%s\t%zu b", v->s.w, ("const="+mgl_str_num(v->c)).c_str(), sizeof(mglNum));
 		var->add(str,v);
 	}
 }
@@ -236,7 +240,7 @@ void ScriptWindow::mem_pressed(int kind)
 		w->update(v);	w->show();
 	}
 	else if(dat && kind==1)	info_dlg_cb(v);
-	else if(dat && kind==2)	Parse->DeleteVar(v->s.c_str());
+	else if(dat && kind==2)	Parse->DeleteVar(v->Name());
 	else if(kind==3)
 	{
 		const char *name = fl_input(_("Enter name for new variable"),"dat");
@@ -254,7 +258,7 @@ void ScriptWindow::mem_pressed(int kind)
 			const char *ext = fl_filename_ext(newfile);
 			if(!strcmp(ext,"h5") || !strcmp(ext,"hdf"))	// this is HDF file
 			{
-				std::string name = wcstombs(v->s);
+				std::string name = wcstombs(v->Name());
 				v->SaveHDF(newfile, name.c_str());
 			}
 			else	v->Save(newfile);
@@ -262,29 +266,6 @@ void ScriptWindow::mem_pressed(int kind)
 	}
 	mem_init();
 }
-//-----------------------------------------------------------------------------
-const char *hints[] = {
-	_("You can shift axis range by pressing middle button and moving mouse. Also, you can zoom in/out axis range by using mouse wheel."),
-	_("You can rotate/shift/zoom whole plot by mouse. Just press 'Rotate' toolbutton, click image and hold a mouse button: left button for rotation, right button for zoom/perspective, middle button for shift."),
-	_("You may quickly draw the data from file. Just use: udav 'filename.dat' in command line."),
-	_("You can copy the current image to clipboard by pressing Ctrl-Shift-C. Later you can paste it directly into yours document or presentation."),
-	_("You can export image into a set of format (EPS, SVG, PNG, JPEG) by pressing right mouse button inside image and selecting 'Export as ...'."),
-	_("You can setup colors for script highlighting in Property dialog. Just select menu item 'Settings/Properties'."),
-	_("You can save the parameter of animation inside MGL script by using comment started from '##a ' or '##c ' for loops."),
-	_("New drawing never clears things drawn already. For example, you can make a surface with contour lines by calling commands 'surf' and 'cont' one after another (in any order). "),
-	_("You can put several plots in the same image by help of commands 'subplot' or 'inplot'."),
-	_("All indexes (of data arrays, subplots and so on) are always start from 0."),
-	_("You can edit MGL file in any text editor. Also you can run it in console by help of commands: mglconv, mglview."),
-	_("You can use command 'once on|off' for marking the block which should be executed only once. For example, this can be the block of large data reading/creating/handling. Press F9 (or menu item 'Graphics/Reload') to re-execute this block."),
-	_("You can use command 'stop' for terminating script parsing. It is useful if you don't want to execute a part of script."),
-	_("You can type arbitrary expression as input argument for data or number. In last case (for numbers), the first value of data array is used."),
-	_("There is powerful calculator with a lot of special functions. You can use buttons or keyboard to type the expression. Also you can use existed variables in the expression."),
-	_("The calculator can help you to put complex expression in the script. Just type the expression (which may depend on coordinates x,y,z and so on) and put it into the script."),
-	_("You can easily insert file or folder names, last fitted formula or numerical value of selection by using menu Edit|Insert."),
-	_("The special dialog (Edit|Insert|New Command) help you select the command, fill its arguments and put it into the script."),
-	_("You can put several plotting commands in the same line or in separate function, for highlighting all of them simultaneously."),
-	NULL
-};
 //-----------------------------------------------------------------------------
 void cb_hint_prev(Fl_Widget*,void*);
 void cb_hint_next(Fl_Widget*,void*);
@@ -299,7 +280,7 @@ public:
 		Fl_Button *o;
 		w = new Fl_Double_Window(280, 265);	cur=0;
 		hint = new Fl_Help_View(10, 10, 260, 185);
-		hint->value(hints[0]);
+		hint->value(mgl_hints[0]);
 		start = new Fl_Check_Button(10, 200, 260, 25, _("Show hint on startup"));
 		o = new Fl_Button(10, 230, 80, 25, _("@<-  Prev"));
 		o->callback(cb_hint_prev);
@@ -315,15 +296,15 @@ public:
 	{	pref.set("show_hint",start->value());	hide();	}
 	void prev()
 	{
-		int n=0;	while(hints[n])	n++;
+		int n=0;	while(mgl_hints[n])	n++;
 		cur = cur>0?cur-1:n-1;
-		hint->value(hints[cur]);
+		hint->value(mgl_hints[cur]);
 	}
 	void next()
 	{
-		int n=0;	while(hints[n])	n++;
+		int n=0;	while(mgl_hints[n])	n++;
 		cur = cur<n-1?cur+1:0;
-		hint->value(hints[cur]);
+		hint->value(mgl_hints[cur]);
 	}
 } hint_dlg;
 //-----------------------------------------------------------------------------
@@ -409,7 +390,7 @@ public:
 		{
 			nx=dat->GetNx();	ny=dat->GetNy();	nz=dat->GetNz();
 			result = dat->PrintInfo();	out->value(result.c_str());
-			name = wcstombs(dat->s);
+			name = wcstombs(dat->Name());
 			if(nz>1)		plot_3d();
 			else if(ny>1)	plot_2d();
 			else			plot_1d();

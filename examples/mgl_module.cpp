@@ -6,7 +6,7 @@ int test1(mglGraph *gr, long , mglArg *a, const char *k, const char *)
 {
 	int res=0;
 	if(!strcmp(k,""))	{	gr->Box();	gr->Axis();	}
-	else if(!strcmp(k,"s"))	{	gr->Box();	gr->Axis(a[0].s.c_str());	}
+	else if(!strcmp(k,"s"))	{	gr->Box();	gr->Axis(a[0].s.s);	}
 	else res = 1;
 	return res;
 }
@@ -17,12 +17,12 @@ int test2(mglGraph *gr, long , mglArg *a, const char *k, const char *)
 	if(!strcmp(k,"nnnns"))
 	{
 		gr->FaceZ(mglPoint(a[0].v-a[2].v/2,a[1].v-a[3].v/2),a[2].v,a[3].v,"r");
-		gr->Putsw(mglPoint(a[0].v,a[1].v),a[4].w.c_str());
+		gr->Putsw(mglPoint(a[0].v,a[1].v),a[4].s.w);
 	}
 	else if(!strcmp(k,"nnnnss"))
 	{
-		gr->FaceZ(mglPoint(a[0].v-a[2].v/2,a[1].v-a[3].v/2),a[2].v,a[3].v,a[5].s.c_str());
-		gr->Putsw(mglPoint(a[0].v,a[1].v),a[4].w.c_str());
+		gr->FaceZ(mglPoint(a[0].v-a[2].v/2,a[1].v-a[3].v/2),a[2].v,a[3].v,a[5].s.s);
+		gr->Putsw(mglPoint(a[0].v,a[1].v),a[4].s.w);
 	}
 	else res = 1;
 	return res;

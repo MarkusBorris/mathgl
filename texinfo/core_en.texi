@@ -8,7 +8,7 @@ This chapter contains a lot of plotting commands for 1D, 2D and 3D data. It also
 @end ifset
 
 @ifclear UDAV
-The core of MathGL is @strong{mglGraph} class defined in @code{#include <mgl2/mgl.h>}. It contains a lot of plotting functions for 1D, 2D and 3D data. It also encapsulates parameters for axes drawing. Moreover an arbitrary coordinate transformation can be used for each axis. All plotting functions use data encapsulated in mglData class (see @ref{Data processing}) that allows to check sizes of used arrays easily. Also it have many functions for data handling: modify it by formulas, find momentums and distribution (histogram), apply operator (differentiate, integrate, transpose, Fourier and so on), change data sizes (interpolate, squeeze, crop and so on). Additional information about colors, fonts, formula parsing can be found in @ref{General concepts} and @ref{Other classes}.
+The core of MathGL is @strong{mglGraph} class defined in @code{#include <mgl2/mgl.h>}. It contains a lot of plotting functions for 1D, 2D and 3D data. It also encapsulates parameters for axes drawing. Moreover an arbitrary coordinate transformation can be used for each axis. All plotting functions use data encapsulated in mglData class (see @ref{Data processing}) that allows one to check sizes of used arrays easily. Also it have many functions for data handling: modify it by formulas, find momentums and distribution (histogram), apply operator (differentiate, integrate, transpose, Fourier and so on), change data sizes (interpolate, squeeze, crop and so on). Additional information about colors, fonts, formula parsing can be found in @ref{General concepts} and @ref{Other classes}.
 @end ifclear
 
 Some of MathGL features will appear only in novel versions. To test used MathGL version you can use following function.
@@ -66,6 +66,10 @@ Deletes the instance of class mglGraph.
 @deftypefn {Method on @code{mglGraph}} @code{HMGL} Self ()
 Returns the pointer to internal object of type @code{HMGL}.
 @end deftypefn
+
+@deftypefn {C function} @code{HMGL} mgl_default_graph ()
+Returns pointer to default instance of class mglGraph. This is default instance, used with new classes, which can be used to keep plot settings and to speed up initialization in small different plots.
+@end deftypefn
 @end ifclear
 
 @ifset UDAV
@@ -89,6 +93,46 @@ Functions and variables in this group influences on overall graphics appearance.
 @end ifclear
 Restore initial values for all of parameters and clear the image.
 @end deftypefn
+
+@anchor{setup}
+@deftypefn {MGL command} {} setup @code{val flag}
+@ifclear UDAV
+@deftypefnx {Method on @code{mglGraph}} @code{void} SetFlagAdv (@code{int} val, @code{uint32_t} flag)
+@deftypefnx {C function} @code{void} mgl_set_flag (@code{HMGL} gr, @code{int} val, @code{uint32_t} flag)
+@end ifclear
+Sets the value of internal binary @var{flag} to @var{val}. The list of flags can be found at @url{https://sourceforge.net/p/mathgl/code/HEAD/tree/mathgl-2x/include/mgl2/define.h#l267, define.h}. The current list of flags are: 
+@verbatim
+#define MGL_ENABLE_CUT		0x00000004 	///< Flag which determines how points outside bounding box are drown.
+#define MGL_ENABLE_RTEXT 	0x00000008 	///< Use text rotation along axis
+#define MGL_AUTO_FACTOR		0x00000010 	///< Enable autochange PlotFactor
+#define MGL_ENABLE_ALPHA 	0x00000020 	///< Flag that Alpha is used
+#define MGL_ENABLE_LIGHT 	0x00000040 	///< Flag of using lightning
+#define MGL_TICKS_ROTATE 	0x00000080 	///< Allow ticks rotation
+#define MGL_TICKS_SKIP		0x00000100 	///< Allow ticks rotation
+#define MGL_DISABLE_SCALE	0x00000200 	///< Temporary flag for disable scaling (used for axis)
+#define MGL_FINISHED 		0x00000400 	///< Flag that final picture (i.e. mglCanvas::G) is ready
+#define MGL_USE_GMTIME		0x00000800 	///< Use gmtime instead of localtime
+#define MGL_SHOW_POS		0x00001000 	///< Switch to show or not mouse click position
+#define MGL_CLF_ON_UPD		0x00002000 	///< Clear plot before Update()
+#define MGL_NOSUBTICKS		0x00004000 	///< Disable subticks drawing (for bounding box)
+#define MGL_LOCAL_LIGHT		0x00008000 	///< Keep light sources for each inplot
+#define MGL_VECT_FRAME		0x00010000 	///< Use DrwDat to remember all data of frames
+#define MGL_REDUCEACC		0x00020000 	///< Reduce accuracy of points (to reduce size of output files)
+#define MGL_PREFERVC 		0x00040000 	///< Prefer vertex color instead of texture if output format supports
+#define MGL_ONESIDED 		0x00080000 	///< Render only front side of surfaces if output format supports (for debugging)
+#define MGL_NO_ORIGIN 		0x00100000 	///< Don't draw tick labels at axis origin
+#define MGL_GRAY_MODE 		0x00200000 	///< Convert all colors to gray ones
+#define MGL_FULL_CURV 		0x00400000 	///< Disable omitting points in straight-line part(s)
+#define MGL_NO_SCALE_REL 	0x00800000 	///< Disable font scaling in relative inplots
+@end verbatim
+@end deftypefn
+
+@ifclear UDAV
+@deftypefn {C function} @code{void} mgl_bsize (@code{unsigned} bsize)
+Set buffer size for number of primitives as (1<<bsize)^2. I.e. as 10^12 for bsize=20 or 4*10^9 for bsize=16 (default). NOTE: you set it only once before any plotting. The current value is returned.
+@end deftypefn
+@end ifclear
+
 
 @menu
 * Transparency::
@@ -404,6 +448,24 @@ Font style for text and labels (see text). Initial style is 'fnt'=':rC' give Rom
 Sets to use or not text rotation.
 @end deftypefn
 
+@anchor{scaletext}
+@deftypefn {MGL command} {} scaletext @code{val}
+@ifclear UDAV
+@deftypefnx {Method on @code{mglGraph}} @code{void} SetScaleText (@code{bool} val)
+@deftypefnx {C function} @code{void} mgl_set_scale_text (@code{HMGL} gr, @code{int} val)
+@end ifclear
+Sets to scale text in relative @ref{inplot} (including @ref{columnplot}, @ref{gridplot}, @ref{stickplot}, @ref{shearplot}) or not.
+@end deftypefn
+
+@anchor{texparse}
+@deftypefn {MGL command} {} texparse @code{val}
+@ifclear UDAV
+@deftypefnx {Method on @code{mglGraph}} @code{void} SetTeXparse (@code{bool} val)
+@deftypefnx {C function} @code{void} mgl_set_tex_parse (@code{HMGL} gr, @code{int} val)
+@end ifclear
+Enables/disables TeX-like command parsing at text output.
+@end deftypefn
+
 @anchor{loadfont}
 @deftypefn {MGL command} {} loadfont ['name'='']
 @ifclear UDAV
@@ -501,15 +563,15 @@ Sets the gray-scale mode on/off.
 @cindex SetMaskAngle
 
 @anchor{mask}
-@deftypefn {MGL command} {} mask 'id' 'hex'
-@deftypefnx {Команда MGL} {} mask 'id' hex
+@deftypefn {MGL command} {} mask 'id' 'hex' [angle]
+@deftypefnx {Команда MGL} {} mask 'id' hex [angle]
 @ifclear UDAV
 @deftypefnx {Method on @code{mglGraph}} @code{void} SetMask (@code{char} id, @code{const char *}hex)
 @deftypefnx {Method on @code{mglGraph}} @code{void} SetMask (@code{char} id, @code{uint64_t} hex)
 @deftypefnx {C function} @code{void} mgl_set_mask (@code{HMGL} gr, @code{const char *}hex)
 @deftypefnx {C function} @code{void} mgl_set_mask_val (@code{HMGL} gr, @code{uint64_t} hex)
 @end ifclear
-Sets new bit matrix @var{hex} of size 8*8 for mask with given @var{id}. This is global setting which influence on any later usage of symbol @var{id}. The predefined masks are (see @ref{Color scheme}): @samp{-} is 000000FF00000000, @samp{+} is 080808FF08080808,	@samp{=} is 0000FF00FF000000,	@samp{;} is 0000007700000000, @samp{o} is 0000182424180000,	@samp{O} is 0000183C3C180000,	@samp{s} is 00003C24243C0000,	@samp{S} is 00003C3C3C3C0000, @samp{~} is 0000060990600000,	@samp{<} is 0060584658600000,	@samp{>} is 00061A621A060000,	@samp{j} is 0000005F00000000, @samp{d} is 0008142214080000,	@samp{D} is 00081C3E1C080000,	@samp{*} is 8142241818244281,	@samp{^} is 0000001824420000.
+Sets new bit matrix @var{hex} of size 8*8 for mask with given @var{id}. This is global setting which influence on any later usage of symbol @var{id}. The predefined masks are (see @ref{Color scheme}): @samp{-} give lines (@code{0x000000FF00000000}), @samp{+} give cross-lines (@code{080808FF08080808}),	@samp{=} give double lines (@code{0000FF00FF000000}),	@samp{;} give dash lines (@code{0x0000000F00000000}), @samp{o} give circles (@code{0000182424180000}),	@samp{O} give filled circles (@code{0000183C3C180000}),	@samp{s} give squares (@code{00003C24243C0000}),	@samp{S} give solid squares (@code{00003C3C3C3C0000}), @samp{~} give waves (@code{0000060990600000}),	@samp{<} give left triangles (@code{0060584658600000}),	@samp{>} give right triangles (@code{00061A621A060000}),	@samp{j} give dash-dot lines (@code{0000002700000000}), @samp{d} give pluses (@code{0x0008083E08080000}),	@samp{D} give tacks (@code{0x0139010010931000}),	@samp{*} give dots (@code{0x0000001818000000}),	@samp{^} give bricks (@code{0x101010FF010101FF}). Parameter @var{angle} set the rotation angle too. IMPORTANT: the rotation angle will be replaced by a multiple of 45 degrees at export to EPS.
 @end deftypefn
 
 @deftypefn {MGL command} {} mask angle
@@ -517,7 +579,7 @@ Sets new bit matrix @var{hex} of size 8*8 for mask with given @var{id}. This is 
 @deftypefnx {Method on @code{mglGraph}} @code{void} SetMaskAngle (@code{int} angle)
 @deftypefnx {C function} @code{void} mgl_set_mask_angle (@code{HMGL} gr, @code{int} angle)
 @end ifclear
-Sets the default rotation angle (in degrees) for masks. Note, you can use symbols @samp{\}, @samp{/}, @samp{I} in color scheme for setting rotation angles as 45, -45 and 90 degrees correspondingly.
+Sets the default rotation angle (in degrees) for masks. Note, you can use symbols @samp{\}, @samp{/}, @samp{I} in color scheme for setting rotation angles as 45, -45 and 90 degrees correspondingly. IMPORTANT: the rotation angle will be replaced by a multiple of 45 degrees at export to EPS.
 @end deftypefn
 
 
@@ -611,6 +673,11 @@ Set warning message @var{info} for global scope.
 @deftypefn {Method on @code{mglGraph}} @code{const char *} GlobalWarn () static
 @deftypefnx {C function} @code{const char *} mgl_get_global_warn ()
 Get warning message(s) for global scope.
+@end deftypefn
+
+@deftypefn {Method on @code{mglGraph}} @code{void} ClearGlobalWarn () static
+@deftypefnx {C function} @code{void} mgl_clear_global_warn ()
+Clears global warning messages.
 @end deftypefn
 
 @end ifclear
@@ -755,6 +822,14 @@ Additionally extend axis range for any settings made by @code{SetRange} or @code
 @end deftypefn
 
 
+@anchor{fastcut}
+@deftypefn {MGL command} {} fastcut @code{val}
+@ifclear UDAV
+@deftypefnx {Method on @code{mglGraph}} @code{void} SetFastCut (@code{bool} val=@code{true})
+@end ifclear
+Enable/disable accurate but slower primitive cutting at axis borders. In C/Fortran you can use @code{mgl_set_flag(gr,val, MGL_FAST_PRIM);}. It automatically set on for @ref{ternary} axis now.
+@end deftypefn
+
 @c ------------------------------------------------------------------
 @external{}
 @node Curved coordinates, Ticks, Ranges (bounding box), Axis settings
@@ -872,7 +947,10 @@ Set the ticks step, number of sub-ticks and initial ticks position to be the mos
 @deftypefn {MGL command} {} xtick @code{val [sub=0 org=nan 'fact'='']}
 @deftypefnx {MGL command} {} ytick @code{val [sub=0 org=nan 'fact'='']}
 @deftypefnx {MGL command} {} ztick @code{val [sub=0 org=nan 'fact'='']}
-@deftypefnx {MGL command} {} ctick @code{val [sub=0 org=nan 'fact'='']}
+@deftypefnx {MGL command} {} xtick @code{val sub ['fact'='']}
+@deftypefnx {MGL command} {} ytick @code{val sub ['fact'='']}
+@deftypefnx {MGL command} {} ztick @code{val sub ['fact'='']}
+@deftypefnx {MGL command} {} ctick @code{val ['fact'='']}
 @ifclear UDAV
 @deftypefnx {Method on @code{mglGraph}} @code{void} SetTicks (@code{char} dir, @code{mreal} d=@code{0}, @code{int} ns=@code{0}, @code{mreal} org=@code{NAN}, @code{const char *}fact=@code{""})
 @deftypefnx {Method on @code{mglGraph}} @code{void} SetTicks (@code{char} dir, @code{mreal} d, @code{int} ns, @code{mreal} org, @code{const wchar_t *}fact)
@@ -886,9 +964,11 @@ Set the ticks step @var{d}, number of sub-ticks @var{ns} (used for positive @var
 @deftypefn {MGL command} {} xtick @code{val1} 'lbl1' [@code{val2} 'lbl2' ...]
 @deftypefnx {MGL command} {} ytick @code{val1} 'lbl1' [@code{val2} 'lbl2' ...]
 @deftypefnx {MGL command} {} ztick @code{val1} 'lbl1' [@code{val2} 'lbl2' ...]
+@deftypefnx {MGL command} {} ctick @code{val1} 'lbl1' [@code{val2} 'lbl2' ...]
 @deftypefnx {MGL command} {} xtick vdat 'lbls' [@code{add=off}]
 @deftypefnx {MGL command} {} ytick vdat 'lbls' [@code{add=off}]
 @deftypefnx {MGL command} {} ztick vdat 'lbls' [@code{add=off}]
+@deftypefnx {MGL command} {} ctick vdat 'lbls' [@code{add=off}]
 @ifclear UDAV
 @deftypefnx {Method on @code{mglGraph}} @code{void} SetTicksVal (@code{char} dir, @code{const char *}lbl, @code{bool} add=@code{false})
 @deftypefnx {Method on @code{mglGraph}} @code{void} SetTicksVal (@code{char} dir, @code{const wchar_t *}lbl, @code{bool} add=@code{false})
@@ -1130,6 +1210,7 @@ font style (see, @ref{Font styles});
 @samp{#} for box around the title.
 @end itemize
 Parameter @var{size} set font size. This function set off any aspects or rotations. So it should be used just after creating subplot.
+Note, that each call of this command will reserve extra space. So, you need to manually call @ref{subplot} command after @ref{rasterize} if you want to combine bitmap and vector graphics.
 @end deftypefn
 
 @anchor{rotate}
@@ -1240,7 +1321,7 @@ Sets size of picture in pixels. This function @strong{should be} called before a
 @deftypefnx {Method on @code{mglGraph}} @code{void} SetSizeScl (@code{double} factor)
 @deftypefnx {C function} @code{void} mgl_set_size_scl (@code{HMGL} gr, @code{double} factor)
 @end ifclear
-Set factor for width and height in all further calls of @ref{setsize}.
+Set factor for width and height in all further calls of @ref{setsize}. This command is @strong{obsolete} since v.2.4.2.
 @end deftypefn
 
 @anchor{quality}
@@ -1361,7 +1442,7 @@ Exports current frame to EPS file using bitmap representation. Parameter @var{fn
 
 @deftypefn {Method on @code{mglGraph}} @code{void} WriteSVG (@code{const char *}fname, @code{const char *}descr=@code{""})
 @deftypefnx {C function} @code{void} mgl_write_svg (@code{HMGL} gr, @code{const char *}fname, @code{const char *}descr)
-Exports current frame to SVG (Scalable Vector Graphics) file using vector representation. In difference of EPS format, SVG format support transparency that allows to correctly draw semitransparent plot (like @ref{surfa}, @ref{surf3a} or @ref{cloud}). Note, the output file may be too large for graphic of large data array (especially for surfaces). It is better to use bitmap format (for example PNG or JPEG). However, program has no internal limitations for size of output file. Parameter @var{fname} specifies the file name, @var{descr} adds description to file (default is file name). If file name is terminated by @samp{z} (for example, @samp{fname.svgz}) then file will be compressed in gzip format. Note, that SVG format don't support color interpolation, and the resulting plot will look as you use @ref{quality}=1 for plotting.
+Exports current frame to SVG (Scalable Vector Graphics) file using vector representation. In difference of EPS format, SVG format support transparency that allows one to correctly draw semitransparent plot (like @ref{surfa}, @ref{surf3a} or @ref{cloud}). Note, the output file may be too large for graphic of large data array (especially for surfaces). It is better to use bitmap format (for example PNG or JPEG). However, program has no internal limitations for size of output file. Parameter @var{fname} specifies the file name, @var{descr} adds description to file (default is file name). If file name is terminated by @samp{z} (for example, @samp{fname.svgz}) then file will be compressed in gzip format. Note, that SVG format don't support color interpolation, and the resulting plot will look as you use @ref{quality}=1 for plotting.
 @end deftypefn
 
 @deftypefn {Method on @code{mglGraph}} @code{void} WriteTEX (@code{const char *}fname, @code{const char *}descr=@code{""})
@@ -1559,7 +1640,7 @@ Set the numeric id for object or subplot/inplot.
 
 @deftypefn {Method on @code{mglGraph}} @code{int} GetObjId (@code{int} xs, @code{int} ys)
 @deftypefnx {C function} @code{int} mgl_get_obj_id (@code{HMGL} gr, @code{int} xs, @code{int} ys)
-Get the numeric id for most upper object at pixel @{xs, ys@} of the picture.
+Get the numeric id for most upper object at pixel @{xs, ys@} of the picture. Note, that all plots in the same line of MGL script have the same id.
 @end deftypefn
 
 @deftypefn {Method on @code{mglGraph}} @code{int} GetSplId (@code{int} xs, @code{int} ys)
@@ -1644,6 +1725,7 @@ These functions change background image.
 @deftypefnx {C function} @code{void} mgl_clf_str (@code{HMGL} gr, @code{const char *} col)
 @deftypefnx {C function} @code{void} mgl_clf_chr (@code{HMGL} gr, @code{char} col)
 @deftypefnx {C function} @code{void} mgl_clf_rgb (@code{HMGL} gr, @code{mreal} r, @code{mreal} g, @code{mreal} b)
+@deftypefnx {C function} @code{void} mgl_clf_rgba (@code{HMGL} gr, @code{mreal} r, @code{mreal} g, @code{mreal} b, @code{mreal} a)
 @end ifclear
 Clear the picture and fill background by specified color.
 @end deftypefn
@@ -1654,18 +1736,28 @@ Clear the picture and fill background by specified color.
 @deftypefnx {Method on @code{mglGraph}} @code{void} Rasterize ()
 @deftypefnx {C function} @code{void} mgl_rasterize (@code{HMGL} gr)
 @end ifclear
-Force drawing the plot and use it as background. After it, function clear the list of primitives, like @ref{clf}. This function is useful if you want save part of plot as bitmap one (for example, large surfaces, isosurfaces or vector fields) and keep some parts as vector one (like annotation, curves, axis and so on).
+Force drawing the plot and use it as background. After it, function clear the list of primitives, like @ref{clf}. This function is useful if you want save part of plot as bitmap one (for example, large surfaces, isosurfaces or vector fields) and keep some parts as vector one (like annotation, curves, axis and so on). Often, you need to manually call @ref{subplot} command after @ref{rasterize} to avoid extra space allocation or plot rotation.
 @end deftypefn
 
 @anchor{background}
 @deftypefn {MGL command} {} background 'fname' [@code{alpha=1}]
+@deftypefnx {MGL command} {} background 'fname' 'how' [@code{alpha=1}]
 @ifclear UDAV
 @deftypefnx {Method on @code{mglGraph}} @code{void} LoadBackground (@code{const char *} fname, @code{double} alpha=@code{1})
 @deftypefnx {C function} @code{void} mgl_load_background (@code{HMGL} gr, @code{const char *} fname, @code{double} alpha)
+@deftypefnx {Method on @code{mglGraph}} @code{void} LoadBackground (@code{const char *} fname, @code{const char *} how, @code{double} alpha=@code{1})
+@deftypefnx {C function} @code{void} mgl_load_background_ext (@code{HMGL} gr, @code{const char *} fname, @code{const char *} how, @code{double} alpha)
 @end ifclear
-Load PNG or JPEG file @var{fname} as background for the plot. Parameter @var{alpha} manually set transparency of the background.
+Load PNG or JPEG file @var{fname} as background for the plot. Parameter @var{alpha} manually set transparency of the background. Parameter @var{how} can be: @samp{a} for filling current subplot only, @samp{s} for scaling (resizing) image to whole area, @samp{c} for centering image, @samp{m} for tessellate image as mosaic.
 @end deftypefn
 
+@deftypefn {MGL command} {} background @code{r g b}
+@ifclear UDAV
+@deftypefnx {Method on @code{mglGraph}} @code{void} FillBackground (@code{const mglColor &}rgb)
+@deftypefnx {C function} @code{void} mgl_fill_background (@code{HMGL} gr, @code{double} r, @code{double} g, @code{double} b, @code{double} a)
+@end ifclear
+Fill background by the specified color. Values should be in range [0,1].
+@end deftypefn
 
 
 @c ##################################################################
@@ -1740,13 +1832,13 @@ Draws Bezier-like curve from point @var{p1} to @var{p2} using line style @var{st
 @deftypefnx {Method on @code{mglGraph}} @code{void} Face (@code{mglPoint} p1, @code{mglPoint} p2, @code{mglPoint} p3, @code{mglPoint} p4, @code{const char *}stl=@code{"w"})
 @deftypefnx {C function} @code{void} mgl_face (@code{HMGL} gr, @code{mreal} x1, @code{mreal} y1, @code{mreal} z1, @code{mreal} x2, @code{mreal} y2, @code{mreal} z2, @code{mreal} x3, @code{mreal} y3, @code{mreal} z3, @code{mreal} x4, @code{mreal} y4, @code{mreal} z4, @code{const char *}stl)
 @end ifclear
-Draws the solid quadrangle (face) with vertexes @var{p1}, @var{p2}, @var{p3}, @var{p4} and with color(s) @var{stl}. At this colors can be the same for all vertexes or different if all 4 colors are specified for each vertex. Face will be drawn even if it lies out of bounding box.
+Draws the solid quadrangle (face) with vertexes @var{p1}, @var{p2}, @var{p3}, @var{p4} and with color(s) @var{stl}. At this colors can be the same for all vertexes or different if all 4 colors are specified for each vertex. Face will be drawn even if it lies out of bounding box. Argument @var{stl} can also contain mask specification (see @ref{Color scheme}).
 @end deftypefn
 
 @anchor{rect}
 @deftypefn {MGL command} {} rect @code{x1 y1 x2 y2} ['stl'='']
 @deftypefnx {MGL command} {} rect @code{x1 y1 z1 x2 y2 z2} ['stl'='']
-Draws the solid rectangle (face) with vertexes @{@var{x1}, @var{y1}, @var{z1}@} and @{@var{x2}, @var{y2}, @var{z2}@} with color @var{stl}. At this colors can be the same for all vertexes or separately if all 4 colors are specified for each vertex. Face will be drawn even if it lies out of bounding box.
+Draws the solid rectangle (face) with vertexes @{@var{x1}, @var{y1}, @var{z1}@} and @{@var{x2}, @var{y2}, @var{z2}@} with color @var{stl}. At this colors can be the same for all vertexes or separately if all 4 colors are specified for each vertex. Face will be drawn even if it lies out of bounding box. Argument @var{stl} can also contain mask specification (see @ref{Color scheme}).
 @end deftypefn
 
 @anchor{facex}
@@ -1763,7 +1855,7 @@ Draws the solid rectangle (face) with vertexes @{@var{x1}, @var{y1}, @var{z1}@} 
 @deftypefnx {C function} @code{void} mgl_facey (@code{HMGL} gr, @code{mreal} x0, @code{mreal} y0, @code{mreal} z0, @code{mreal} wx, @code{mreal} wz, @code{const char *}stl, @code{mreal} d1, @code{mreal} d2)
 @deftypefnx {C function} @code{void} mgl_facez (@code{HMGL} gr, @code{mreal} x0, @code{mreal} y0, @code{mreal} z0, @code{mreal} wx, @code{mreal} wy, @code{const char *}stl, @code{mreal} d1, @code{mreal} d2)
 @end ifclear
-Draws the solid rectangle (face) perpendicular to [x,y,z]-axis correspondingly at position @{@var{x0}, @var{y0}, @var{z0}@} with color @var{stl} and with widths @var{wx}, @var{wy}, @var{wz} along corresponding directions. At this colors can be the same for all vertexes or separately if all 4 colors are specified for each vertex. Parameters @var{d1}!=0, @var{d2}!=0 set additional shift of the last vertex (i.e. to draw quadrangle). Face will be drawn even if it lies out of bounding box.
+Draws the solid rectangle (face) perpendicular to [x,y,z]-axis correspondingly at position @{@var{x0}, @var{y0}, @var{z0}@} with color @var{stl} and with widths @var{wx}, @var{wy}, @var{wz} along corresponding directions. At this colors can be the same for all vertexes or separately if all 4 colors are specified for each vertex. Argument @var{stl} can also contain mask specification (see @ref{Color scheme}). Parameters @var{d1}!=0, @var{d2}!=0 set additional shift of the last vertex (i.e. to draw quadrangle). Face will be drawn even if it lies out of bounding box.
 @end deftypefn
 
 @anchor{sphere}
@@ -1818,7 +1910,9 @@ colors for filling and boundary (second one if style @samp{@@} is used, black co
 @item
 @samp{#} for wire figure (boundary only);
 @item
-@samp{@@} for filling and boundary.
+@samp{@@} for filling and boundary;
+@item
+mask specification (see @ref{Color scheme}).
 @end itemize
 @end deftypefn
 
@@ -1836,7 +1930,9 @@ colors for filling and boundary (second one if style @samp{@@} is used, black co
 @item
 @samp{#} for wire figure (boundary only);
 @item
-@samp{@@} for filling and boundary.
+@samp{@@} for filling and boundary;
+@item
+mask specification (see @ref{Color scheme}).
 @end itemize
 @end deftypefn
 
@@ -1854,7 +1950,9 @@ colors for filling and boundary (second one if style @samp{@@} is used, black co
 @item
 @samp{#} for wire figure (boundary only);
 @item
-@samp{@@} for filling and boundary.
+@samp{@@} for filling and boundary;
+@item
+mask specification (see @ref{Color scheme}).
 @end itemize
 @end deftypefn
 
@@ -1885,7 +1983,9 @@ colors for filling and boundary (second one if style @samp{@@} is used, black co
 @item
 @samp{#} for wire figure (boundary only);
 @item
-@samp{@@} for filling and boundary.
+@samp{@@} for filling and boundary;
+@item
+mask specification (see @ref{Color scheme}).
 @end itemize
 @end deftypefn
 
@@ -2046,8 +2146,8 @@ Styles of ticks and axis can be overrided by using @var{stl} string. Option @cod
 @anchor{colorbar}
 @deftypefn {MGL command} {} colorbar ['sch'='']
 @ifclear UDAV
-@deftypefnx {Method on @code{mglGraph}} @code{void} Colorbar (@code{const char *}sch=@code{""})
-@deftypefnx {C function} @code{void} mgl_colorbar (@code{HMGL} gr, @code{const char *}sch)
+@deftypefnx {Method on @code{mglGraph}} @code{void} Colorbar (@code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {C function} @code{void} mgl_colorbar (@code{HMGL} gr, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
 Draws colorbar. Parameter @var{sch} may contain:
 @itemize @bullet
@@ -2070,26 +2170,26 @@ color scheme (see @ref{Color scheme});
 
 @deftypefn {MGL command} {} colorbar vdat ['sch'='']
 @ifclear UDAV
-@deftypefnx {Method on @code{mglGraph}} @code{void} Colorbar (@code{const mglDataA &}v, @code{const char *}sch=@code{""})
-@deftypefnx {C function} @code{void} mgl_colorbar_val (@code{HMGL} gr, @code{HCDT} v, @code{const char *}sch)
+@deftypefnx {Method on @code{mglGraph}} @code{void} Colorbar (@code{const mglDataA &}v, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {C function} @code{void} mgl_colorbar_val (@code{HMGL} gr, @code{HCDT} v, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The same as previous but with sharp colors @var{sch} (current palette if @code{sch=""}) for values @var{v}. @sref{ContD sample}
+The same as previous but with sharp colors @var{sch} (current palette if @code{sch=""}) for values @var{v}. @sref{contd sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} colorbar 'sch' @code{x y [w=1 h=1]}
 @ifclear UDAV
-@deftypefnx {Method on @code{mglGraph}} @code{void} Colorbar (@code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w=@code{1}, @code{mreal} h=@code{1})
-@deftypefnx {C function} @code{void} mgl_colorbar_ext (@code{HMGL} gr, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w, @code{mreal} h)
+@deftypefnx {Method on @code{mglGraph}} @code{void} Colorbar (@code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w=@code{1}, @code{mreal} h=@code{1}, @code{const char *}opt=@code{""})
+@deftypefnx {C function} @code{void} mgl_colorbar_ext (@code{HMGL} gr, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w, @code{mreal} h, @code{const char *}opt)
 @end ifclear
 The same as first one but at arbitrary position of subplot @{@var{x}, @var{y}@} (supposed to be in range [0,1]). Parameters @var{w}, @var{h} set the relative width and height of the colorbar.
 @end deftypefn
 
 @deftypefn {MGL command} {} colorbar vdat 'sch' @code{x y [w=1 h=1]}
 @ifclear UDAV
-@deftypefnx {Method on @code{mglGraph}} @code{void} Colorbar (@code{const mglDataA &}v, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w=@code{1}, @code{mreal} h=@code{1})
-@deftypefnx {C function} @code{void} mgl_colorbar_val_ext (@code{HMGL} gr, @code{HCDT} v, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w, @code{mreal} h)
+@deftypefnx {Method on @code{mglGraph}} @code{void} Colorbar (@code{const mglDataA &}v, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w=@code{1}, @code{mreal} h=@code{1}, @code{const char *}opt=@code{""})
+@deftypefnx {C function} @code{void} mgl_colorbar_val_ext (@code{HMGL} gr, @code{HCDT} v, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w, @code{mreal} h, @code{const char *}opt)
 @end ifclear
-The same as previous but with sharp colors @var{sch} (current palette if @code{sch=""}) for values @var{v}. @sref{ContD sample}
+The same as previous but with sharp colors @var{sch} (current palette if @code{sch=""}) for values @var{v}. @sref{contd sample}
 @end deftypefn
 
 @anchor{grid}
@@ -2115,17 +2215,19 @@ Draws bounding box outside the plotting volume with color @var{col}. If @var{col
 @anchor{ylabel}
 @anchor{zlabel}
 @anchor{tlabel}
+@anchor{clabel}
 @deftypefn {MGL command} {} xlabel 'text' [@code{pos=1}]
 @deftypefnx {MGL command} {} ylabel 'text' [@code{pos=1}]
 @deftypefnx {MGL command} {} zlabel 'text' [@code{pos=1}]
 @deftypefnx {MGL command} {} tlabel 'text' [@code{pos=1}]
+@deftypefnx {MGL command} {} clabel 'text' [@code{pos=1}]
 @ifclear UDAV
 @deftypefnx {Method on @code{mglGraph}} @code{void} Label (@code{char} dir, @code{const char *}text, @code{mreal} pos=@code{1}, @code{const char *}opt=@code{""})
 @deftypefnx {Method on @code{mglGraph}} @code{void} Label (@code{char} dir, @code{const wchar_t *}text, @code{mreal} pos=@code{1}, @code{const char *}opt=@code{""})
 @deftypefnx {C function} @code{void} mgl_label (@code{HMGL} gr, @code{char} dir, @code{const char *}text, @code{mreal} pos, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_labelw (@code{HMGL} gr, @code{char} dir, @code{const wchar_t *}text, @code{mreal} pos, @code{const char *}opt)
 @end ifclear
-Prints the label @var{text} for axis @var{dir}=@samp{x},@samp{y},@samp{z},@samp{t} (here @samp{t} is ``ternary'' axis @math{t=1-x-y}). The position of label is determined by @var{pos} parameter. If @var{pos}=0 then label is printed at the center of axis. If @var{pos}>0 then label is printed at the maximum of axis. If @var{pos}<0 then label is printed at the minimum of axis. Option @code{value} set additional shifting of the label. @xref{Text printing}.
+Prints the label @var{text} for axis @var{dir}=@samp{x},@samp{y},@samp{z},@samp{t},@samp{c}, where @samp{t} is ``ternary'' axis @math{t=1-x-y}; @samp{c} is color axis (should be called after @ref{colorbar}). The position of label is determined by @var{pos} parameter. If @var{pos}=0 then label is printed at the center of axis. If @var{pos}>0 then label is printed at the maximum of axis. If @var{pos}<0 then label is printed at the minimum of axis. Option @code{value} set additional shifting of the label. @xref{Text printing}.
 @end deftypefn
 
 @c ##################################################################
@@ -2230,7 +2332,7 @@ Set the number of marks in the legend. By default 1 mark is used.
 
 These functions perform plotting of 1D data. 1D means that data depended from only 1 parameter like parametric curve @{x[i],y[i],z[i]@}, i=1...n. By default (if absent) values of @var{x}[i] are equidistantly distributed in axis range, and @var{z}[i] equal to minimal z-axis value. The plots are drawn for each row if one of the data is the matrix. By any case the sizes of 1st dimension @strong{must be equal} for all arrays @code{x.nx=y.nx=z.nx}.
 
-String @var{pen} specifies the color and style of line and marks (see @ref{Line styles}). By default (@code{pen=""}) solid line with color from palette is used (see @ref{Palette and colors}). Symbol @samp{!} set to use new color from palette for each point (not for each curve, as default). String @var{opt} contain command options (see @ref{Command options}). @sref{1D samples}
+String @var{pen} specifies the color and style of line and marks (see @ref{Line styles}). By default (@code{pen=""}) solid line with color from palette is used (see @ref{Palette and colors}). Symbol @samp{!} set to use new color from palette for each point (not for each curve, as default). String @var{opt} contain command options (see @ref{Command options}).
 
 @anchor{plot}
 @deftypefn {MGL command} {} plot ydat ['stl'='']
@@ -2244,7 +2346,7 @@ String @var{pen} specifies the color and style of line and marks (see @ref{Line 
 @deftypefnx {C function} @code{void} mgl_plot_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_plot_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw continuous lines between points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. If @var{pen} contain @samp{a} then segments between points outside of axis range are drawn too. If @var{pen} contain @samp{~} then number of segments is reduce for quasi-straight curves. See also @ref{area}, @ref{step}, @ref{stem}, @ref{tube}, @ref{mark}, @ref{error}, @ref{belt}, @ref{tens}, @ref{tape}, @ref{meshnum}. @sref{Plot sample}
+These functions draw continuous lines between points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. If @var{pen} contain @samp{a} then segments between points outside of axis range are drawn too. If @var{pen} contain @samp{~} then number of segments is reduce for quasi-straight curves. See also @ref{area}, @ref{step}, @ref{stem}, @ref{tube}, @ref{mark}, @ref{error}, @ref{belt}, @ref{tens}, @ref{tape}, @ref{meshnum}. @sref{plot sample}
 @end deftypefn
 
 @anchor{radar}
@@ -2253,7 +2355,7 @@ These functions draw continuous lines between points @{@var{x}[i], @var{y}[i], @
 @deftypefnx {Method on @code{mglGraph}} @code{void} Radar (@code{const mglDataA &}a, @code{const char *}pen=@code{""}, @code{const char *}opt=@code{""})
 @deftypefnx {C function} @code{void} mgl_radar (@code{HMGL} gr, @code{HCDT} a, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-This functions draws radar chart which is continuous lines between points located on an radial lines (like plot in Polar coordinates). Option @code{value} set the additional shift of data (i.e. the data @var{a}+@code{value} is used instead of @var{a}). If @code{value<0} then @code{r=max(0, -min(value)}. If @var{pen} containt @samp{#} symbol then "grid" (radial lines and circle for @var{r}) is drawn. If @var{pen} contain @samp{a} then segments between points outside of axis range are drawn too. See also @ref{plot}, @ref{meshnum}. @sref{Radar sample}
+This functions draws radar chart which is continuous lines between points located on an radial lines (like plot in Polar coordinates). Option @code{value} set the additional shift of data (i.e. the data @var{a}+@code{value} is used instead of @var{a}). If @code{value<0} then @code{r=max(0, -min(value)}. If @var{pen} containt @samp{#} symbol then "grid" (radial lines and circle for @var{r}) is drawn. If @var{pen} contain @samp{a} then segments between points outside of axis range are drawn too. See also @ref{plot}, @ref{meshnum}. @sref{radar sample}
 @end deftypefn
 
 @anchor{step}
@@ -2268,7 +2370,7 @@ This functions draws radar chart which is continuous lines between points locate
 @deftypefnx {C function} @code{void} mgl_step_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_step_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw continuous stairs for points to axis plane. If @var{x}.nx>@var{y}.nx then @var{x} set the edges of bars, rather than its central positions. See also @ref{plot}, @ref{stem}, @ref{tile}, @ref{boxs}, @ref{meshnum}. @sref{Step sample}
+These functions draw continuous stairs for points to axis plane. If @var{x}.nx>@var{y}.nx then @var{x} set the edges of bars, rather than its central positions. See also @ref{plot}, @ref{stem}, @ref{tile}, @ref{boxs}, @ref{meshnum}. @sref{step sample}
 @end deftypefn
 
 @anchor{tens}
@@ -2283,7 +2385,7 @@ These functions draw continuous stairs for points to axis plane. If @var{x}.nx>@
 @deftypefnx {C function} @code{void} mgl_tens_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} c, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_tens_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw continuous lines between points @{@var{x}[i], @var{y}[i], @var{z}[i]@} with color defined by the special array @var{c}[i] (look like tension plot). String @var{pen} specifies the color scheme (see @ref{Color scheme}) and style and/or width of line (see @ref{Line styles}). If @var{pen} contain @samp{a} then segments between points outside of axis range are drawn too. If @var{pen} contain @samp{~} then number of segments is reduce for quasi-straight curves. See also @ref{plot}, @ref{mesh}, @ref{fall}, @ref{meshnum}. @sref{Tens sample}
+These functions draw continuous lines between points @{@var{x}[i], @var{y}[i], @var{z}[i]@} with color defined by the special array @var{c}[i] (look like tension plot). String @var{pen} specifies the color scheme (see @ref{Color scheme}) and style and/or width of line (see @ref{Line styles}). If @var{pen} contain @samp{a} then segments between points outside of axis range are drawn too. If @var{pen} contain @samp{~} then number of segments is reduce for quasi-straight curves. See also @ref{plot}, @ref{mesh}, @ref{fall}, @ref{meshnum}. @sref{tens sample}
 @end deftypefn
 
 @anchor{tape}
@@ -2298,7 +2400,7 @@ These functions draw continuous lines between points @{@var{x}[i], @var{y}[i], @
 @deftypefnx {C function} @code{void} mgl_tape_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_tape_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw tapes of normals for curve between points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Initial tape(s) was selected in x-y plane (for @samp{x} in @var{pen}) and/or y-z plane (for @samp{x} in @var{pen}). The width of tape is proportional to @ref{barwidth} and can be changed by option @code{value}. See also @ref{plot}, @ref{flow}, @ref{barwidth}. @sref{Tape sample}
+These functions draw tapes of normals for curve between points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Initial tape(s) was selected in x-y plane (for @samp{x} in @var{pen}) and/or y-z plane (for @samp{x} in @var{pen}). Argument @var{pen} can also contain mask specification (see @ref{Color scheme}). The width of tape is proportional to @ref{barwidth} and can be changed by option @code{value}. See also @ref{plot}, @ref{flow}, @ref{barwidth}. @sref{tape sample}
 @end deftypefn
 
 @anchor{area}
@@ -2313,7 +2415,7 @@ These functions draw tapes of normals for curve between points @{@var{x}[i], @va
 @deftypefnx {C function} @code{void} mgl_area_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_area_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw continuous lines between points and fills it to axis plane. Also you can use gradient filling if number of specified colors is equal to 2*number of curves. If @var{pen} contain @samp{#} then wired plot is drawn. If @var{pen} contain @samp{a} then segments between points outside of axis range are drawn too. See also @ref{plot}, @ref{bars}, @ref{stem}, @ref{region}. @sref{Area sample}
+These functions draw continuous lines between points and fills it to axis plane. Also you can use gradient filling if number of specified colors is equal to 2*number of curves. If @var{pen} contain @samp{#} then wired plot is drawn. If @var{pen} contain @samp{a} then segments between points outside of axis range are drawn too. Argument @var{pen} can also contain mask specification (see @ref{Color scheme}). See also @ref{plot}, @ref{bars}, @ref{stem}, @ref{region}. @sref{area sample}
 @end deftypefn
 
 @anchor{region}
@@ -2330,7 +2432,7 @@ These functions draw continuous lines between points and fills it to axis plane.
 @deftypefnx {C function} @code{void} mgl_region_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y1, @code{HCDT} y2, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_region_3d (@code{HMGL} gr, @code{HCDT} x1, @code{HCDT} y1, @code{HCDT} z1, @code{HCDT} x2, @code{HCDT} y2, @code{HCDT} z2, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions fill area between 2 curves. Dimensions of arrays @var{y1} and @var{y2} must be equal. Also you can use gradient filling if number of specified colors is equal to 2*number of curves. If for 2D version @var{pen} contain symbol @samp{i} then only area with y1<y<y2 will be filled else the area with y2<y<y1 will be filled too. If @var{pen} contain @samp{#} then wired plot is drawn. If @var{pen} contain @samp{a} then segments between points outside of axis range are drawn too. See also @ref{area}, @ref{bars}, @ref{stem}. @sref{Region sample}
+These functions fill area between 2 curves. Dimensions of arrays @var{y1} and @var{y2} must be equal. Also you can use gradient filling if number of specified colors is equal to 2*number of curves. If for 2D version @var{pen} contain symbol @samp{i} then only area with y1<y<y2 will be filled else the area with y2<y<y1 will be filled too. If @var{pen} contain @samp{#} then wired plot is drawn. If @var{pen} contain @samp{a} then segments between points outside of axis range are drawn too. Argument @var{pen} can also contain mask specification (see @ref{Color scheme}). See also @ref{area}, @ref{bars}, @ref{stem}. @sref{region sample}
 @end deftypefn
 
 @anchor{stem}
@@ -2345,7 +2447,7 @@ These functions fill area between 2 curves. Dimensions of arrays @var{y1} and @v
 @deftypefnx {C function} @code{void} mgl_stem_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_stem_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw vertical lines from points to axis plane. See also @ref{area}, @ref{bars}, @ref{plot}, @ref{mark}. @sref{Stem sample}
+These functions draw vertical lines from points to axis plane. See also @ref{area}, @ref{bars}, @ref{plot}, @ref{mark}. @sref{stem sample}
 @end deftypefn
 
 @anchor{bars}
@@ -2369,9 +2471,11 @@ These functions draw vertical bars from points to axis plane. Parameter @var{pen
 @item
 @samp{F} for using fixed (minimal) width for all bars;
 @item
-@samp{<}, @samp{^} or @samp{>} for aligning boxes left, right or centering them at its x-coordinates.
+@samp{<}, @samp{^} or @samp{>} for aligning boxes left, right or centering them at its x-coordinates;
+@item 
+mask specification (see @ref{Color scheme}).
 @end itemize
-You can give different colors for positive and negative values if number of specified colors is equal to 2*number of curves. If @var{x}.nx>@var{y}.nx then @var{x} set the edges of bars, rather than its central positions. See also @ref{barh}, @ref{cones}, @ref{area}, @ref{stem}, @ref{chart}, @ref{barwidth}. @sref{Bars sample}
+You can give different colors for positive and negative values if number of specified colors is equal to 2*number of curves. If @var{x}.nx>@var{y}.nx then @var{x} set the edges of bars, rather than its central positions. See also @ref{barh}, @ref{cones}, @ref{area}, @ref{stem}, @ref{chart}, @ref{barwidth}. @sref{bars sample}
 @end deftypefn
 
 @anchor{barh}
@@ -2392,9 +2496,11 @@ These functions draw horizontal bars from points to axis plane. Parameter @var{p
 @item
 @samp{F} for using fixed (minimal) width for all bars;
 @item
-@samp{<}, @samp{^} or @samp{>} for aligning boxes left, right or centering them at its x-coordinates.
+@samp{<}, @samp{^} or @samp{>} for aligning boxes left, right or centering them at its x-coordinates;
+@item 
+mask specification (see @ref{Color scheme}).
 @end itemize
-You can give different colors for positive and negative values if number of specified colors is equal to 2*number of curves. If @var{x}.nx>@var{y}.nx then @var{x} set the edges of bars, rather than its central positions. See also @ref{bars}, @ref{barwidth}. @sref{Barh sample}
+You can give different colors for positive and negative values if number of specified colors is equal to 2*number of curves. If @var{x}.nx>@var{y}.nx then @var{x} set the edges of bars, rather than its central positions. See also @ref{bars}, @ref{barwidth}. @sref{barh sample}
 @end deftypefn
 
 @anchor{cones}
@@ -2422,7 +2528,7 @@ These functions draw cones from points to axis plane. If string contain symbol @
 @item
 @samp{<}, @samp{^} or @samp{>} for aligning boxes left, right or centering them at its x-coordinates.
 @end itemize
-See also @ref{bars}, @ref{cone}, @ref{barwidth}. @sref{Cones sample}
+See also @ref{bars}, @ref{cone}, @ref{barwidth}. @sref{cones sample}
 @end deftypefn
 
 
@@ -2433,7 +2539,7 @@ See also @ref{bars}, @ref{cone}, @ref{barwidth}. @sref{Cones sample}
 @deftypefnx {Method on @code{mglGraph}} @code{void} Chart (@code{const mglDataA &}a, @code{const char *}col=@code{""}, @code{const char *}opt=@code{""})
 @deftypefnx {C function} @code{void} mgl_chart (@code{HMGL} gr, @code{HCDT} a, @code{const char *}col, @code{const char *}opt)
 @end ifclear
-The function draws colored stripes (boxes) for data in array @var{a}. The number of stripes is equal to the number of rows in @var{a} (equal to @var{a.ny}). The color of each next stripe is cyclically changed from colors specified in string @var{col} or in palette Pal (see @ref{Palette and colors}). Spaces in colors denote transparent ``color'' (i.e. corresponding stripe(s) are not drawn). The stripe width is proportional to value of element in @var{a}. Chart is plotted only for data with non-negative elements. If string @var{col} have symbol @samp{#} then black border lines are drawn. The most nice form the chart have in 3d (after rotation of coordinates) or in cylindrical coordinates (becomes so called Pie chart). @sref{Chart sample}
+The function draws colored stripes (boxes) for data in array @var{a}. The number of stripes is equal to the number of rows in @var{a} (equal to @var{a.ny}). The color of each next stripe is cyclically changed from colors specified in string @var{col} or in palette Pal (see @ref{Palette and colors}).  Argument @var{col} can also contain mask specification (see @ref{Color scheme}). Spaces in colors denote transparent ``color'' (i.e. corresponding stripe(s) are not drawn). The stripe width is proportional to value of element in @var{a}. Chart is plotted only for data with non-negative elements. If string @var{col} have symbol @samp{#} then black border lines are drawn. The most nice form the chart have in 3d (after rotation of coordinates) or in cylindrical coordinates (becomes so called Pie chart). @sref{chart sample}
 @end deftypefn
 
 @anchor{boxplot}
@@ -2445,7 +2551,7 @@ The function draws colored stripes (boxes) for data in array @var{a}. The number
 @deftypefnx {C function} @code{void} mgl_boxplot (@code{HMGL} gr, @code{HCDT} a, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_boxplot_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} a, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw boxplot (also known as a box-and-whisker diagram) at points @var{x}[i]. This is five-number summaries of data @var{a}[i,j] (minimum, lower quartile (Q1), median (Q2), upper quartile (Q3) and maximum) along second (j-th) direction. If @var{pen} contain @samp{<}, @samp{^} or @samp{>} then boxes will be aligned left, right or centered at its x-coordinates. See also @ref{plot}, @ref{error}, @ref{bars}, @ref{barwidth}. @sref{BoxPlot sample}
+These functions draw boxplot (also known as a box-and-whisker diagram) at points @var{x}[i]. This is five-number summaries of data @var{a}[i,j] (minimum, lower quartile (Q1), median (Q2), upper quartile (Q3) and maximum) along second (j-th) direction. If @var{pen} contain @samp{<}, @samp{^} or @samp{>} then boxes will be aligned left, right or centered at its x-coordinates. See also @ref{plot}, @ref{error}, @ref{bars}, @ref{barwidth}. @sref{boxplot sample}
 @end deftypefn
 
 @anchor{candle}
@@ -2464,7 +2570,7 @@ These functions draw boxplot (also known as a box-and-whisker diagram) at points
 @deftypefnx {C function} @code{void} mgl_candle_yv (@code{HMGL} gr, @code{HCDT} v1, @code{HCDT} v2, @code{HCDT} y1, @code{HCDT} y2, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_candle_xyv (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} v1, @code{HCDT} v2, @code{HCDT} y1, @code{HCDT} y2, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw candlestick chart at points @var{x}[i]. This is a combination of a line-chart and a bar-chart, in that each bar represents the range of price movement over a given time interval. Wire (or white) candle correspond to price growth @var{v1}[i]<@var{v2}[i], opposite case -- solid (or dark) candle. You can give different colors for growth and decrease values if number of specified colors is equal to 2. If @var{pen} contain @samp{#} then the wire candle will be used even for 2-color scheme. "Shadows" show the minimal @var{y1} and maximal @var{y2} prices. If @var{v2} is absent then it is determined as @var{v2}[i]=@var{v1}[i+1]. See also @ref{plot}, @ref{bars}, @ref{ohlc}, @ref{barwidth}. @sref{Candle sample}
+These functions draw candlestick chart at points @var{x}[i]. This is a combination of a line-chart and a bar-chart, in that each bar represents the range of price movement over a given time interval. Wire (or white) candle correspond to price growth @var{v1}[i]<@var{v2}[i], opposite case -- solid (or dark) candle. You can give different colors for growth and decrease values if number of specified colors is equal to 2. If @var{pen} contain @samp{#} then the wire candle will be used even for 2-color scheme. Argument @var{pen} can also contain mask specification (see @ref{Color scheme}). "Shadows" show the minimal @var{y1} and maximal @var{y2} prices. If @var{v2} is absent then it is determined as @var{v2}[i]=@var{v1}[i+1]. See also @ref{plot}, @ref{bars}, @ref{ohlc}, @ref{barwidth}. @sref{candle sample}
 @end deftypefn
 
 @anchor{ohlc}
@@ -2476,7 +2582,7 @@ These functions draw candlestick chart at points @var{x}[i]. This is a combinati
 @deftypefnx {C function} @code{void} mgl_ohlc (@code{HMGL} gr, @code{HCDT} o, @code{HCDT} h, @code{HCDT} l, @code{HCDT} c, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_ohlc_x (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} o, @code{HCDT} h, @code{HCDT} l, @code{HCDT} c, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw Open-High-Low-Close diagram. This diagram show vertical line for between maximal(high @var{h}) and minimal(low @var{l}) values, as well as horizontal lines before/after vertical line for initial(open @var{o})/final(close @var{c}) values of some process (usually price). You can give different colors for up and down values (when closing values higher or not as in previous point) if number of specified colors is equal to 2*number of curves. See also @ref{candle}, @ref{plot}, @ref{barwidth}. @sref{OHLC sample}
+These functions draw Open-High-Low-Close diagram. This diagram show vertical line for between maximal(high @var{h}) and minimal(low @var{l}) values, as well as horizontal lines before/after vertical line for initial(open @var{o})/final(close @var{c}) values of some process (usually price). You can give different colors for up and down values (when closing values higher or not as in previous point) if number of specified colors is equal to 2*number of curves. See also @ref{candle}, @ref{plot}, @ref{barwidth}. @sref{ohlc sample}
 @end deftypefn
 
 
@@ -2492,7 +2598,7 @@ These functions draw Open-High-Low-Close diagram. This diagram show vertical lin
 @deftypefnx {C function} @code{void} mgl_error_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} ey, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_error_exy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} ex, @code{HCDT} ey, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw error boxes @{@var{ex}[i], @var{ey}[i]@} at points @{@var{x}[i], @var{y}[i]@}. This can be useful, for example, in experimental points, or to show numeric error or some estimations and so on. If string @var{pen} contain symbol @samp{@@} than large semitransparent mark is used instead of error box. See also @ref{plot}, @ref{mark}. @sref{Error sample}
+These functions draw error boxes @{@var{ex}[i], @var{ey}[i]@} at points @{@var{x}[i], @var{y}[i]@}. This can be useful, for example, in experimental points, or to show numeric error or some estimations and so on. If string @var{pen} contain symbol @samp{@@} than large semitransparent mark is used instead of error box. See also @ref{plot}, @ref{mark}. @sref{error sample}
 @end deftypefn
 
 @anchor{mark}
@@ -2507,7 +2613,7 @@ These functions draw error boxes @{@var{ex}[i], @var{ey}[i]@} at points @{@var{x
 @deftypefnx {C function} @code{void} mgl_mark_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} r, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_mark_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw marks with size @var{r}[i]*@ref{marksize} at points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. If you need to draw markers of the same size then you can use @ref{plot} function with empty line style @samp{ }. For markers with size in axis range use @ref{error} with style @samp{@@}. See also @ref{plot}, @ref{textmark}, @ref{error}, @ref{stem}, @ref{meshnum}. @sref{Mark sample}
+These functions draw marks with size @var{r}[i]*@ref{marksize} at points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. If you need to draw markers of the same size then you can use @ref{plot} function with empty line style @samp{ }. For markers with size in axis range use @ref{error} with style @samp{@@}. See also @ref{plot}, @ref{textmark}, @ref{error}, @ref{stem}, @ref{meshnum}. @sref{mark sample}
 @end deftypefn
 
 @anchor{textmark}
@@ -2533,7 +2639,7 @@ These functions draw marks with size @var{r}[i]*@ref{marksize} at points @{@var{
 @deftypefnx {C function} @code{void} mgl_textmark_xyzr (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{const char *}txt, @code{const char *}fnt, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_textmarkw_xyzr (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{const wchar_t *}txt, @code{const char *}fnt, @code{const char *}opt)
 @end ifclear
-These functions draw string @var{txt} as marks with size proportional to @var{r}[i]*@var{marksize} at points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. By default (if omitted) @var{r}[i]=1. See also @ref{plot}, @ref{mark}, @ref{stem}, @ref{meshnum}. @sref{TextMark sample}
+These functions draw string @var{txt} as marks with size proportional to @var{r}[i]*@var{marksize} at points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. By default (if omitted) @var{r}[i]=1. See also @ref{plot}, @ref{mark}, @ref{stem}, @ref{meshnum}. @sref{textmark sample}
 @end deftypefn
 
 @anchor{label}
@@ -2564,7 +2670,7 @@ These functions draw string @var{txt} at points @{@var{x}[i], @var{y}[i], @var{z
 @item @samp{-} for printing usual @samp{-};
 @item @samp{0123456789} for precision at printing numbers.
 @end itemize
-See also @ref{plot}, @ref{mark}, @ref{textmark}, @ref{table}. @sref{Label sample}
+See also @ref{plot}, @ref{mark}, @ref{textmark}, @ref{table}. @sref{label sample}
 @end deftypefn
 
 @anchor{table}
@@ -2591,7 +2697,7 @@ These functions draw table with values of @var{val} and captions from string @va
 @item @samp{-} for printing usual @samp{-};
 @item @samp{0123456789} for precision at printing numbers.
 @end itemize
-Option @code{value} set the width of the table (default is 1). See also @ref{plot}, @ref{label}. @sref{Table sample}
+Option @code{value} set the width of the table (default is 1). See also @ref{plot}, @ref{label}. @sref{table sample}
 @end deftypefn
 
 @anchor{iris}
@@ -2607,7 +2713,7 @@ Option @code{value} set the width of the table (default is 1). See also @ref{plo
 @deftypefnx {C function} @code{void} mgl_iris (@code{HMGL} gr, @code{HCDT} dats, @code{HCDT} rngs, @code{const char *}ids, @code{const char *}stl, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_irisw (@code{HMGL} gr, @code{HCDT} dats, @code{HCDT} rngs, @code{const wchar_t *}ids, @code{const char *}stl, @code{const char *}opt)
 @end ifclear
-Draws Iris plots for determining cross-dependences of data arrays @var{dats} (see @uref{http://en.wikipedia.org/wiki/Iris_flower_data_set}). Data @var{rngs} of size 2*@var{dats}.nx provide manual axis ranges for each column. String @var{ids} contain column names, separated by @samp{;} symbol. Option @code{value} set the text size for column names. You can add another data set to existing Iris plot by providing the same ranges @var{rngs} and empty column names @var{ids}. See also @ref{plot}. @sref{Iris sample}
+Draws Iris plots for determining cross-dependences of data arrays @var{dats} (see @uref{http://en.wikipedia.org/wiki/Iris_flower_data_set}). Data @var{rngs} of size 2*@var{dats}.nx provide manual axis ranges for each column. String @var{ids} contain column names, separated by @samp{;} symbol. Option @code{value} set the text size for column names. You can add another data set to existing Iris plot by providing the same ranges @var{rngs} and empty column names @var{ids}. See also @ref{plot}. @sref{iris sample}
 @end deftypefn
 
 @anchor{tube}
@@ -2631,7 +2737,7 @@ Draws Iris plots for determining cross-dependences of data arrays @var{dats} (se
 @deftypefnx {C function} @code{void} mgl_tube_xyzr (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_tube_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{mreal} r, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw the tube with variable radius @var{r}[i] along the curve between points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. See also @ref{plot}. @sref{Tube sample}
+These functions draw the tube with variable radius @var{r}[i] along the curve between points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Option @code{value} set the number of segments at cross-section (default is 25). See also @ref{plot}. @sref{tube sample}
 @end deftypefn
 
 @anchor{torus}
@@ -2640,7 +2746,7 @@ These functions draw the tube with variable radius @var{r}[i] along the curve be
 @deftypefnx {Method on @code{mglGraph}} @code{void} Torus (@code{const mglDataA &}r, @code{const mglDataA &}z, @code{const char *}pen=@code{""}, @code{const char *}opt=@code{""})
 @deftypefnx {C function} @code{void} mgl_torus (@code{HMGL} gr, @code{HCDT} r, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-These functions draw surface which is result of curve @{@var{r}, @var{z}@} rotation around axis. If string @var{pen} contain symbols @samp{x} or @samp{z} then rotation axis will be set to specified direction (default is @samp{y}). If string @var{pen} have symbol @samp{#} then wire plot is produced. If string @var{pen} have symbol @samp{.} then plot by dots is produced. See also @ref{plot}, @ref{axial}. @sref{Torus sample}
+These functions draw surface which is result of curve @{@var{r}, @var{z}@} rotation around axis. If string @var{pen} contain symbols @samp{x} or @samp{z} then rotation axis will be set to specified direction (default is @samp{y}). If string @var{pen} have symbol @samp{#} then wire plot is produced. If string @var{pen} have symbol @samp{.} then plot by dots is produced. See also @ref{plot}, @ref{axial}. @sref{torus sample}
 @end deftypefn
 
 @anchor{lamerey}
@@ -2652,7 +2758,7 @@ These functions draw surface which is result of curve @{@var{r}, @var{z}@} rotat
 @deftypefnx {C function} @code{void} mgl_lamerey_dat (@code{HMGL} gr, @code{double} x0, @code{HCDT} y, @code{const char *}stl, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_lamerey_str (@code{HMGL} gr, @code{double} x0, @code{const char *}y, @code{const char *}stl, @code{const char *}opt)
 @end ifclear
-These functions draw Lamerey diagram for mapping x_new = y(x_old) starting from point @var{x0}. String @var{stl} may contain line style, symbol @samp{v} for drawing arrows, symbol @samp{~} for disabling first segment. Option @code{value} set the number of segments to be drawn (default is 20). See also @ref{plot}, @ref{fplot}, @ref{bifurcation}, @ref{pmap}. @sref{Lamerey sample}
+These functions draw Lamerey diagram for mapping x_new = y(x_old) starting from point @var{x0}. String @var{stl} may contain line style, symbol @samp{v} for drawing arrows, symbol @samp{~} for disabling first segment. Option @code{value} set the number of segments to be drawn (default is 20). See also @ref{plot}, @ref{fplot}, @ref{bifurcation}, @ref{pmap}. @sref{lamerey sample}
 @end deftypefn
 
 @anchor{bifurcation}
@@ -2664,7 +2770,7 @@ These functions draw Lamerey diagram for mapping x_new = y(x_old) starting from 
 @deftypefnx {C function} @code{void} mgl_bifurcation_dat (@code{HMGL} gr, @code{double} dx, @code{HCDT} y, @code{const char *}stl, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_bifurcation_str (@code{HMGL} gr, @code{double} dx, @code{const char *}y, @code{const char *}stl, @code{const char *}opt)
 @end ifclear
-These functions draw bifurcation diagram for mapping x_new = y(x_old). Parameter @var{dx} set the accuracy along x-direction. String @var{stl} set color. Option @code{value} set the number of stationary points (default is 1024). See also @ref{plot}, @ref{fplot}, @ref{lamerey}. @sref{Bifurcation sample}
+These functions draw bifurcation diagram for mapping x_new = y(x_old). Parameter @var{dx} set the accuracy along x-direction. String @var{stl} set color. Option @code{value} set the number of stationary points (default is 1024). See also @ref{plot}, @ref{fplot}, @ref{lamerey}. @sref{bifurcation sample}
 @end deftypefn
 
 @anchor{pmap}
@@ -2679,7 +2785,7 @@ These functions draw bifurcation diagram for mapping x_new = y(x_old). Parameter
 @deftypefnx {C function} @code{void} mgl_pmap_xy (@code{HMGL} gr, @code{HCDT} x, @code{HMDT} y, @code{HCDT} s, @code{const char *}stl, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_pmap_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HMDT} y, @code{HCDT} z, @code{HCDT} s, @code{const char *}stl, @code{const char *}opt)
 @end ifclear
-These functions draw Poincare map for curve @{@var{x}, @var{y}, @var{z}@} at surface @var{s}=0. Basically, it show intersections of the curve and the surface. String @var{stl} set the style of marks. See also @ref{plot}, @ref{mark}, @ref{lamerey}. @sref{Pmap sample}
+These functions draw Poincare map for curve @{@var{x}, @var{y}, @var{z}@} at surface @var{s}=0. Basically, it show intersections of the curve and the surface. String @var{stl} set the style of marks. See also @ref{plot}, @ref{mark}, @ref{lamerey}. @sref{pmap sample}
 @end deftypefn
 
 
@@ -2702,7 +2808,7 @@ These functions draw Poincare map for curve @{@var{x}, @var{y}, @var{z}@} at sur
 @cindex Grad
 @cindex Grid
 
-These functions perform plotting of 2D data. 2D means that data depend from 2 independent parameters like matrix @math{f(x_i,y_j), i=1...n, j=1...m}.  By default (if absent) values of @var{x}, @var{y} are equidistantly distributed in axis range. The plots are drawn for each z slice of the data. The minor dimensions of arrays @var{x}, @var{y}, @var{z} should be equal @code{x.nx=z.nx && y.nx=z.ny} or @code{x.nx=y.nx=z.nx && x.ny=y.ny=z.ny}. Arrays @var{x} and @var{y} can be vectors (not matrices as @var{z}). String @var{sch} sets the color scheme (see @ref{Color scheme}) for plot. String @var{opt} contain command options (see @ref{Command options}). @sref{2D samples}
+These functions perform plotting of 2D data. 2D means that data depend from 2 independent parameters like matrix @math{f(x_i,y_j), i=1...n, j=1...m}.  By default (if absent) values of @var{x}, @var{y} are equidistantly distributed in axis range. The plots are drawn for each z slice of the data. The minor dimensions of arrays @var{x}, @var{y}, @var{z} should be equal @code{x.nx=z.nx && y.nx=z.ny} or @code{x.nx=y.nx=z.nx && x.ny=y.ny=z.ny}. Arrays @var{x} and @var{y} can be vectors (not matrices as @var{z}). String @var{sch} sets the color scheme (see @ref{Color scheme}) for plot. String @var{opt} contain command options (see @ref{Command options}).
 
 @anchor{surf}
 @deftypefn {MGL command} {} surf zdat ['sch'='']
@@ -2713,7 +2819,7 @@ These functions perform plotting of 2D data. 2D means that data depend from 2 in
 @deftypefnx {C function} @code{void} mgl_surf (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_surf_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{.} then plot by dots is produced. See also @ref{mesh}, @ref{dens}, @ref{belt}, @ref{tile}, @ref{boxs}, @ref{surfc}, @ref{surfa}. @sref{Surf sample}
+The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{.} then plot by dots is produced. See also @ref{mesh}, @ref{dens}, @ref{belt}, @ref{tile}, @ref{boxs}, @ref{surfc}, @ref{surfa}. @sref{surf sample}
 @end deftypefn
 
 @anchor{mesh}
@@ -2725,7 +2831,7 @@ The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j]
 @deftypefnx {C function} @code{void} mgl_mesh (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_mesh_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws mesh lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. See also @ref{surf}, @ref{fall}, @ref{meshnum}, @ref{cont}, @ref{tens}. @sref{Mesh sample}
+The function draws mesh lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. See also @ref{surf}, @ref{fall}, @ref{meshnum}, @ref{cont}, @ref{tens}. @sref{mesh sample}
 @end deftypefn
 
 @anchor{fall}
@@ -2737,7 +2843,7 @@ The function draws mesh lines for surface specified parametrically @{@var{x}[i,j
 @deftypefnx {C function} @code{void} mgl_fall (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_fall_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws fall lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. This plot can be used for plotting several curves shifted in depth one from another. If @var{sch} contain @samp{x} then lines are drawn along x-direction else (by default) lines are drawn along y-direction. See also @ref{belt}, @ref{mesh}, @ref{tens}, @ref{meshnum}. @sref{Fall sample}
+The function draws fall lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. This plot can be used for plotting several curves shifted in depth one from another. If @var{sch} contain @samp{x} then lines are drawn along x-direction else (by default) lines are drawn along y-direction. See also @ref{belt}, @ref{mesh}, @ref{tens}, @ref{meshnum}. @sref{fall sample}
 @end deftypefn
 
 @anchor{belt}
@@ -2749,7 +2855,7 @@ The function draws fall lines for surface specified parametrically @{@var{x}[i,j
 @deftypefnx {C function} @code{void} mgl_belt (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_belt_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws belts for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. This plot can be used as 3d generalization of @ref{plot}). If @var{sch} contain @samp{x} then belts are drawn along x-direction else (by default) belts are drawn along y-direction. See also @ref{fall}, @ref{surf}, @ref{beltc}, @ref{plot}, @ref{meshnum}. @sref{Belt sample}
+The function draws belts for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. This plot can be used as 3d generalization of @ref{plot}). If @var{sch} contain @samp{x} then belts are drawn along x-direction else (by default) belts are drawn along y-direction. See also @ref{fall}, @ref{surf}, @ref{beltc}, @ref{plot}, @ref{meshnum}. @sref{belt sample}
 @end deftypefn
 
 @anchor{boxs}
@@ -2761,7 +2867,7 @@ The function draws belts for surface specified parametrically @{@var{x}[i,j], @v
 @deftypefnx {C function} @code{void} mgl_boxs (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_boxs_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws vertical boxes for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Symbol @samp{@@} in @var{sch} set to draw filled boxes. See also @ref{surf}, @ref{dens}, @ref{tile}, @ref{step}. @sref{Boxs sample}
+The function draws vertical boxes for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Symbol @samp{@@} in @var{sch} set to draw filled boxes. See also @ref{surf}, @ref{dens}, @ref{tile}, @ref{step}. @sref{boxs sample}
 @end deftypefn
 
 @anchor{tile}
@@ -2776,7 +2882,7 @@ The function draws vertical boxes for surface specified parametrically @{@var{x}
 @deftypefnx {C function} @code{void} mgl_tile_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_tile_xyc (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws horizontal tiles for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} and color it by matrix @var{c}[i,j] (@var{c}=@var{z} if @var{c} is not provided). If string @var{sch} contain style @samp{x} or @samp{y} then tiles will be oriented perpendicular to x- or y-axis. Such plot can be used as 3d generalization of @ref{step}. See also @ref{surf}, @ref{boxs}, @ref{step}, @ref{tiles}. @sref{Tile sample}
+The function draws horizontal tiles for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} and color it by matrix @var{c}[i,j] (@var{c}=@var{z} if @var{c} is not provided). If string @var{sch} contain style @samp{x} or @samp{y} then tiles will be oriented perpendicular to x- or y-axis. Such plot can be used as 3d generalization of @ref{step}. See also @ref{surf}, @ref{boxs}, @ref{step}, @ref{tiles}. @sref{tile sample}
 @end deftypefn
 
 @anchor{dens}
@@ -2788,7 +2894,7 @@ The function draws horizontal tiles for surface specified parametrically @{@var{
 @deftypefnx {C function} @code{void} mgl_dens (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_dens_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws density plot for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} at @var{z} equal to minimal z-axis value. If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{.} then plot by dots is produced. See also @ref{surf}, @ref{cont}, @ref{contf}, @ref{boxs}, @ref{tile}, @code{dens[xyz]}. @sref{Dens sample}
+The function draws density plot for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} at @var{z} equal to minimal z-axis value. If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{.} then plot by dots is produced. See also @ref{surf}, @ref{cont}, @ref{contf}, @ref{boxs}, @ref{tile}, @code{dens[xyz]}. @sref{dens sample}
 @end deftypefn
 
 @anchor{cont}
@@ -2800,7 +2906,7 @@ The function draws density plot for surface specified parametrically @{@var{x}[i
 @deftypefnx {C function} @code{void} mgl_cont_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_cont_xy_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws contour lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} at @var{z}=@var{v}[k], or at @var{z} equal to minimal z-axis value if @var{sch} contain symbol @samp{_}. Contours are plotted for @var{z}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v}. If string @var{sch} have symbol @samp{t} or @samp{T} then contour labels @var{v}[k] will be drawn below (or above) the contours. See also @ref{dens}, @ref{contf}, @ref{contd}, @ref{axial}, @code{cont[xyz]}. @sref{Cont sample}
+The function draws contour lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} at @var{z}=@var{v}[k], or at @var{z} equal to minimal z-axis value if @var{sch} contain symbol @samp{_}. Contours are plotted for @var{z}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v}. If string @var{sch} have symbol @samp{t} or @samp{T} then contour labels @var{v}[k] will be drawn below (or above) the contours. See also @ref{dens}, @ref{contf}, @ref{contd}, @ref{axial}, @code{cont[xyz]}. @sref{cont sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} cont zdat ['sch'='']
@@ -2811,7 +2917,15 @@ The function draws contour lines for surface specified parametrically @{@var{x}[
 @deftypefnx {C function} @code{void} mgl_cont (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_cont_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The same as previous with vector @var{v} of @var{num}-th elements equidistantly distributed in color range. Here @var{num} is equal to parameter @code{value} in options @var{opt} (default is 7).
+The same as previous with vector @var{v} of @var{num}-th elements equidistantly distributed in color range. Here @var{num} is equal to parameter @code{value} in options @var{opt} (default is 7). If string @var{sch} contain symbol @samp{.} then only contours at levels with saddle points will be drawn.
+@end deftypefn
+
+@deftypefn  {MGL command} {} cont @code{val} adat xdat ydat zdat ['sch'='']
+@ifclear UDAV
+@deftypefnx {Method on @code{mglGraph}} @code{void} ContGen (@code{mreal} val, @code{const mglDataA &}a, @code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {C function} @code{void} mgl_cont_gen (@code{HMGL} gr, @code{mreal} val, @code{HCDT} a, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
+@end ifclear
+Draws contour lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} at @var{a}[i,j]=@var{val}. If string @var{sch} have symbol @samp{t} or @samp{T} then contour labels @var{v}[k] will be drawn below (or above) the contours.
 @end deftypefn
 
 @anchor{contf}
@@ -2823,7 +2937,7 @@ The same as previous with vector @var{v} of @var{num}-th elements equidistantly 
 @deftypefnx {C function} @code{void} mgl_contf_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_contf_xy_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws solid (or filled) contour lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} at @var{z}=@var{v}[k], or at @var{z} equal to minimal z-axis value if @var{sch} contain symbol @samp{_}. Contours are plotted for @var{z}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v} (must be @code{v.nx>2}). See also @ref{dens}, @ref{cont}, @ref{contd}, @code{contf[xyz]}. @sref{ContF sample}
+The function draws solid (or filled) contour lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} at @var{z}=@var{v}[k], or at @var{z} equal to minimal z-axis value if @var{sch} contain symbol @samp{_}. Contours are plotted for @var{z}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v} (must be @code{v.nx>2}). See also @ref{dens}, @ref{cont}, @ref{contd}, @code{contf[xyz]}. @sref{contf sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} contf zdat ['sch'='']
@@ -2837,6 +2951,14 @@ The function draws solid (or filled) contour lines for surface specified paramet
 The same as previous with vector @var{v} of @var{num}-th elements equidistantly distributed in color range. Here @var{num} is equal to parameter @code{value} in options @var{opt} (default is 7).
 @end deftypefn
 
+@deftypefn  {MGL command} {} contf @code{v1 v2} adat xdat ydat zdat ['sch'='']
+@ifclear UDAV
+@deftypefnx {Method on @code{mglGraph}} @code{void} ContFGen (@code{mreal} v1, @code{mreal} v2, @code{const mglDataA &}a, @code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {C function} @code{void} mgl_contf_gen (@code{HMGL} gr, @code{mreal} v1, @code{mreal} v2, @code{HCDT} a, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
+@end ifclear
+Draws solid (or filled) contour lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} between @var{a}[i,j]=@var{v1} and @var{a}[i,j]=@var{v2}.
+@end deftypefn
+
 @anchor{contd}
 @deftypefn {MGL command} {} contd vdat zdat ['sch'='']
 @deftypefnx {MGL command} {} contd vdat xdat ydat zdat ['sch'='']
@@ -2846,7 +2968,7 @@ The same as previous with vector @var{v} of @var{num}-th elements equidistantly 
 @deftypefnx {C function} @code{void} mgl_contd_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_contd_xy_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws solid (or filled) contour lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} at @var{z}=@var{v}[k] (or at @var{z} equal to minimal z-axis value if @var{sch} contain symbol @samp{_}) with manual colors. Contours are plotted for @var{z}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v} (must be @code{v.nx>2}). String @var{sch} sets the contour colors: the color of k-th contour is determined by character @code{sch[k%strlen(sch)]}. See also @ref{dens}, @ref{cont}, @ref{contf}. @sref{ContD sample}
+The function draws solid (or filled) contour lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} at @var{z}=@var{v}[k] (or at @var{z} equal to minimal z-axis value if @var{sch} contain symbol @samp{_}) with manual colors. Contours are plotted for @var{z}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v} (must be @code{v.nx>2}). String @var{sch} sets the contour colors: the color of k-th contour is determined by character @code{sch[k%strlen(sch)]}. See also @ref{dens}, @ref{cont}, @ref{contf}. @sref{contd sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} contd zdat ['sch'='']
@@ -2866,7 +2988,7 @@ The same as previous with vector @var{v} of @var{num}-th elements equidistantly 
 @deftypefnx {Method on @code{mglGraph}} @code{void} ContP (@code{const mglDataA &}v, @code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
 @deftypefnx {C function} @code{void} mgl_contp_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws contour lines on surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Contours are plotted for @var{a}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v}. If string @var{sch} have symbol @samp{t} or @samp{T} then contour labels @var{v}[k] will be drawn below (or above) the contours. If string @var{sch} have symbol @samp{f} then solid contours will be drawn. See also @ref{cont}, @ref{contf}, @ref{surfc}, @code{cont[xyz]}. @c TODO @sref{Cont sample}
+The function draws contour lines on surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Contours are plotted for @var{a}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v}. If string @var{sch} have symbol @samp{t} or @samp{T} then contour labels @var{v}[k] will be drawn below (or above) the contours. If string @var{sch} have symbol @samp{f} then solid contours will be drawn. See also @ref{cont}, @ref{contf}, @ref{surfc}, @code{cont[xyz]}. @c TODO @sref{contp sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} contp xdat ydat zdat adat ['sch'='']
@@ -2887,7 +3009,7 @@ The same as previous with vector @var{v} of @var{num}-th elements equidistantly 
 @deftypefnx {C function} @code{void} mgl_contv_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_contv_xy_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws vertical cylinder (tube) at contour lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} at @var{z}=@var{v}[k], or at @var{z} equal to minimal z-axis value if @var{sch} contain symbol @samp{_}. Contours are plotted for @var{z}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v}. See also @ref{cont}, @ref{contf}. @sref{ContV sample}
+The function draws vertical cylinder (tube) at contour lines for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} at @var{z}=@var{v}[k], or at @var{z} equal to minimal z-axis value if @var{sch} contain symbol @samp{_}. Contours are plotted for @var{z}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v}. See also @ref{cont}, @ref{contf}. @sref{contv sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} contv zdat ['sch'='']
@@ -2910,7 +3032,7 @@ The same as previous with vector @var{v} of @var{num}-th elements equidistantly 
 @deftypefnx {C function} @code{void} mgl_axial_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_axial_xy_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws surface which is result of contour plot rotation for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Contours are plotted for @var{z}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v}. If string @var{sch} have symbol @samp{#} then wire plot is produced. If string @var{sch} have symbol @samp{.} then plot by dots is produced. If string contain symbols @samp{x} or @samp{z} then rotation axis will be set to specified direction (default is @samp{y}). See also @ref{cont}, @ref{contf}, @ref{torus}, @ref{surf3}. @sref{Axial sample}
+The function draws surface which is result of contour plot rotation for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Contours are plotted for @var{z}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v}. If string @var{sch} have symbol @samp{#} then wire plot is produced. If string @var{sch} have symbol @samp{.} then plot by dots is produced. If string contain symbols @samp{x} or @samp{z} then rotation axis will be set to specified direction (default is @samp{y}). See also @ref{cont}, @ref{contf}, @ref{torus}, @ref{surf3}. @sref{axial sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} axial zdat ['sch'='']
@@ -2950,7 +3072,7 @@ The function draws grid lines for density plot of surface specified parametrical
 @cindex Cloud
 @cindex Beam
 
-These functions perform plotting of 3D data. 3D means that data depend from 3 independent parameters like matrix @math{f(x_i,y_j,z_k), i=1...n, j=1...m, k=1...l}. By default (if absent) values of @var{x}, @var{y}, @var{z} are equidistantly distributed in axis range. The minor dimensions of arrays @var{x}, @var{y}, @var{z}, @var{a} should be equal @code{x.nx=a.nx && y.nx=a.ny && z.nz=a.nz} or @code{x.nx=y.nx=z.nx=a.nx && x.ny=y.ny=z.ny=a.ny && x.nz=y.nz=z.nz=a.nz}. Arrays @var{x}, @var{y} and @var{z} can be vectors (not matrices as @var{a}). String @var{sch} sets the color scheme (see @ref{Color scheme}) for plot. String @var{opt} contain command options (see @ref{Command options}). @sref{3D samples}
+These functions perform plotting of 3D data. 3D means that data depend from 3 independent parameters like matrix @math{f(x_i,y_j,z_k), i=1...n, j=1...m, k=1...l}. By default (if absent) values of @var{x}, @var{y}, @var{z} are equidistantly distributed in axis range. The minor dimensions of arrays @var{x}, @var{y}, @var{z}, @var{a} should be equal @code{x.nx=a.nx && y.nx=a.ny && z.nz=a.nz} or @code{x.nx=y.nx=z.nx=a.nx && x.ny=y.ny=z.ny=a.ny && x.nz=y.nz=z.nz=a.nz}. Arrays @var{x}, @var{y} and @var{z} can be vectors (not matrices as @var{a}). String @var{sch} sets the color scheme (see @ref{Color scheme}) for plot. String @var{opt} contain command options (see @ref{Command options}).
 
 @anchor{surf3}
 @deftypefn {MGL command} {} surf3 adat @code{val} ['sch'='']
@@ -2961,7 +3083,7 @@ These functions perform plotting of 3D data. 3D means that data depend from 3 in
 @deftypefnx {C function} @code{void} mgl_surf3_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_surf3_xyz_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws isosurface plot for 3d array specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) at @var{a}(x,y,z)=@var{val}. If string contain @samp{#} then wire plot is produced. If string @var{sch} have symbol @samp{.} then plot by dots is produced. Note, that there is possibility of incorrect plotting due to uncertainty of cross-section defining if there are two or more isosurface intersections inside one cell. See also @ref{cloud}, @ref{dens3}, @ref{surf3c}, @ref{surf3a}, @ref{axial}. @sref{Surf3 sample}
+The function draws isosurface plot for 3d array specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) at @var{a}(x,y,z)=@var{val}. If string contain @samp{#} then wire plot is produced. If string @var{sch} have symbol @samp{.} then plot by dots is produced. Note, that there is possibility of incorrect plotting due to uncertainty of cross-section defining if there are two or more isosurface intersections inside one cell. See also @ref{cloud}, @ref{dens3}, @ref{surf3c}, @ref{surf3a}, @ref{axial}. @sref{surf3 sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} surf3 adat ['sch'='']
@@ -2984,7 +3106,7 @@ Draws @var{num}-th uniformly distributed in color range isosurfaces for 3d data.
 @deftypefnx {C function} @code{void} mgl_cloud (@code{HMGL} gr, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_cloud_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws cloud plot for 3d data specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). This plot is a set of cubes with color and transparency proportional to value of @var{a}. The resulting plot is like cloud -- low value is transparent but higher ones are not. The number of plotting cells depend on @ref{meshnum}. If string @var{sch} contain symbol @samp{.} then lower quality plot will produced with much low memory usage. If string @var{sch} contain symbol @samp{i} then transparency will be inversed, i.e. higher become transparent and lower become not transparent. See also @ref{surf3}, @ref{meshnum}. @sref{Cloud sample}
+The function draws cloud plot for 3d data specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). This plot is a set of cubes with color and transparency proportional to value of @var{a}. The resulting plot is like cloud -- low value is transparent but higher ones are not. The number of plotting cells depend on @ref{meshnum}. If string @var{sch} contain symbol @samp{.} then lower quality plot will produced with much low memory usage. If string @var{sch} contain symbol @samp{i} then transparency will be inversed, i.e. higher become transparent and lower become not transparent. See also @ref{surf3}, @ref{meshnum}. @sref{cloud sample}
 @end deftypefn
 
 @anchor{dens3}
@@ -2996,7 +3118,7 @@ The function draws cloud plot for 3d data specified parametrically @var{a}[i,j,k
 @deftypefnx {C function} @code{void} mgl_dens3 (@code{HMGL} gr, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_dens3_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-The function draws density plot for 3d data specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Density is plotted at slice @var{sVal} in direction @{@samp{x}, @samp{y}, @samp{z}@} if @var{sch} contain corresponding symbol (by default, @samp{y} direction is used). If string @var{stl} have symbol @samp{#} then grid lines are drawn. See also @ref{cont3}, @ref{contf3}, @ref{dens}, @ref{grid3}. @sref{Dens3 sample}
+The function draws density plot for 3d data specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Density is plotted at slice @var{sVal} in direction @{@samp{x}, @samp{y}, @samp{z}@} if @var{sch} contain corresponding symbol (by default, @samp{y} direction is used). If string @var{stl} have symbol @samp{#} then grid lines are drawn. See also @ref{cont3}, @ref{contf3}, @ref{dens}, @ref{grid3}. @sref{dens3 sample}
 @end deftypefn
 
 @anchor{cont3}
@@ -3008,13 +3130,13 @@ The function draws density plot for 3d data specified parametrically @var{a}[i,j
 @deftypefnx {C function} @code{void} mgl_cont3_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_cont3_xyz_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-The function draws contour plot for 3d data specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Contours are plotted for values specified in array @var{v} at slice @var{sVal} in direction @{@samp{x}, @samp{y}, @samp{z}@} if @var{sch} contain corresponding symbol (by default, @samp{y} direction is used). If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{t} or @samp{T} then contour labels will be drawn below (or above) the contours. See also @ref{dens3}, @ref{contf3}, @ref{cont}, @ref{grid3}. @sref{Cont3 sample}
+The function draws contour plot for 3d data specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Contours are plotted for values specified in array @var{v} at slice @var{sVal} in direction @{@samp{x}, @samp{y}, @samp{z}@} if @var{sch} contain corresponding symbol (by default, @samp{y} direction is used). If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{t} or @samp{T} then contour labels will be drawn below (or above) the contours. See also @ref{dens3}, @ref{contf3}, @ref{cont}, @ref{grid3}. @sref{cont3 sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} cont3 adat ['sch'='' @code{sval=-1}]
 @deftypefnx {MGL command} {} cont3 xdat ydat zdat adat ['sch'='' @code{sval=-1}]
 @ifclear UDAV
-@deftypefnx {Method on @code{mglGraph}} @code{void} Cont3 (@code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Method on @code{mglGraph}} @code{void} Cont3 (@code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""})
 @deftypefnx {Method on @code{mglGraph}} @code{void} Cont3 (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""})
 @deftypefnx {C function} @code{void} mgl_cont3 (@code{HMGL} gr, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_cont3_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
@@ -3031,13 +3153,13 @@ The same as previous with vector @var{v} of @var{num}-th elements equidistantly 
 @deftypefnx {C function} @code{void} mgl_contf3_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_contf3_xyz_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-The function draws solid (or filled) contour plot for 3d data specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Contours are plotted for values specified in array @var{v} at slice @var{sVal} in direction @{@samp{x}, @samp{y}, @samp{z}@} if @var{sch} contain corresponding symbol (by default, @samp{y} direction is used). If string @var{sch} have symbol @samp{#} then grid lines are drawn. See also @ref{dens3}, @ref{cont3}, @ref{contf}, @ref{grid3}. @sref{ContF3 sample}
+The function draws solid (or filled) contour plot for 3d data specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Contours are plotted for values specified in array @var{v} at slice @var{sVal} in direction @{@samp{x}, @samp{y}, @samp{z}@} if @var{sch} contain corresponding symbol (by default, @samp{y} direction is used). If string @var{sch} have symbol @samp{#} then grid lines are drawn. See also @ref{dens3}, @ref{cont3}, @ref{contf}, @ref{grid3}. @sref{contf3 sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} contf3 adat ['sch'='' @code{sval=-1}]
 @deftypefnx {MGL command} {} contf3 xdat ydat zdat adat ['sch'='' @code{sval=-1}]
 @ifclear UDAV
-@deftypefnx {Method on @code{mglGraph}} @code{void} Contf3 (@code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Method on @code{mglGraph}} @code{void} Contf3 (@code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""})
 @deftypefnx {Method on @code{mglGraph}} @code{void} Contf3 (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""})
 @deftypefnx {C function} @code{void} mgl_contf3 (@code{HMGL} gr, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_contf3_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
@@ -3055,6 +3177,30 @@ The same as previous with vector @var{v} of @var{num}-th elements equidistantly 
 @deftypefnx {C function} @code{void} mgl_grid3_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
 The function draws grid for 3d data specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Grid is plotted at slice @var{sVal} in direction @{@samp{x}, @samp{y}, @samp{z}@} if @var{sch} contain corresponding symbol (by default, @samp{y} direction is used). See also @ref{cont3}, @ref{contf3}, @ref{dens3}, @ref{grid2}, @ref{meshnum}.
+@end deftypefn
+
+
+@anchor{dcont}
+@deftypefn {MGL command} {} dcont vdat adat bdat ['sch'='']
+@deftypefnx {MGL command} {} dcont vdat xdat ydat zdat adat bdat ['sch'='']
+@ifclear UDAV
+@deftypefnx {Method on @code{mglGraph}} @code{void} DCont (@code{const mglDataA &}v, @code{const mglDataA &}a, @code{const mglDataA &}b, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Method on @code{mglGraph}} @code{void} DCont (@code{const mglDataA &}v, @code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}a, @code{const mglDataA &}b, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {C function} @code{void} mgl_dcont_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} a, @code{HCDT} b, @code{const char *}sch, @code{const char *}opt)
+@deftypefnx {C function} @code{void} mgl_dcont_xyz_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{HCDT} b, @code{const char *}sch, @code{const char *}opt)
+@end ifclear
+The function draws lines at intersections of isosurfaces for 3d data @var{a}, @var{b} specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Isosurfaces are taken for values specified in array @var{v}. See also @ref{cont}, @ref{cont3}. @sref{dcont sample}
+@end deftypefn
+
+@deftypefn {MGL command} {} dcont adat bdat ['sch'='' @code{sval=-1}]
+@deftypefnx {MGL command} {} dcont xdat ydat zdat adat bdat ['sch'='' @code{sval=-1}]
+@ifclear UDAV
+@deftypefnx {Method on @code{mglGraph}} @code{void} DCont (@code{const mglDataA &}a, @code{const mglDataA &}b, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Method on @code{mglGraph}} @code{void} DCont (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}a, @code{const mglDataA &}b, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {C function} @code{void} mgl_dcont (@code{HMGL} gr, @code{HCDT} a, @code{HCDT} b, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
+@deftypefnx {C function} @code{void} mgl_@code{HCDT} b, cont_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{HCDT} b, @code{const char *}sch, @code{const char *}opt)
+@end ifclear
+The same as previous with vector @var{v} of @var{num}-th elements equidistantly distributed in color range. Here @var{num} is equal to parameter @code{value} in options @var{opt} (default is 7).
 @end deftypefn
 
 @anchor{beam}
@@ -3093,7 +3239,7 @@ These plotting functions draw @emph{two matrix} simultaneously. There are 5 gene
 @deftypefnx {C function} @code{void} mgl_surfc (@code{HMGL} gr, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_surfc_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} and color it by matrix @var{c}[i,j]. If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{.} then plot by dots is produced. All dimensions of arrays @var{z} and @var{c} must be equal. Surface is plotted for each z slice of the data. See also @ref{surf}, @ref{surfa}, @ref{surfca}, @ref{beltc}, @ref{surf3c}. @sref{SurfC sample}
+The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} and color it by matrix @var{c}[i,j]. If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{.} then plot by dots is produced. All dimensions of arrays @var{z} and @var{c} must be equal. Surface is plotted for each z slice of the data. See also @ref{surf}, @ref{surfa}, @ref{surfca}, @ref{beltc}, @ref{surf3c}. @sref{surfc sample}
 @end deftypefn
 
 
@@ -3106,7 +3252,7 @@ The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j]
 @deftypefnx {C function} @code{void} mgl_beltc (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_beltc_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws belts for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} and color it by matrix @var{c}[i,j]. This plot can be used as 3d generalization of @ref{plot}). If @var{sch} contain @samp{x} then belts are drawn along x-direction else (by default) belts are drawn along y-direction. See also @ref{belt}, @ref{surfc}, @ref{meshnum}. @c TODO @sref{BeltC sample}
+The function draws belts for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} and color it by matrix @var{c}[i,j]. This plot can be used as 3d generalization of @ref{plot}). If @var{sch} contain @samp{x} then belts are drawn along x-direction else (by default) belts are drawn along y-direction. See also @ref{belt}, @ref{surfc}, @ref{meshnum}. @sref{beltc sample}
 @end deftypefn
 
 
@@ -3120,7 +3266,7 @@ The function draws belts for surface specified parametrically @{@var{x}[i,j], @v
 @deftypefnx {C function} @code{void} mgl_surf3c_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} a, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_surf3c_xyz_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws isosurface plot for 3d array specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) at @var{a}(x,y,z)=@var{val}. It is mostly the same as @ref{surf3} function but the color of isosurface depends on values of array @var{c}. If string @var{sch} contain @samp{#} then wire plot is produced. If string @var{sch} have symbol @samp{.} then plot by dots is produced. See also @ref{surf3}, @ref{surfc}, @ref{surf3a}, @ref{surf3ca}. @sref{Surf3C sample}
+The function draws isosurface plot for 3d array specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) at @var{a}(x,y,z)=@var{val}. It is mostly the same as @ref{surf3} function but the color of isosurface depends on values of array @var{c}. If string @var{sch} contain @samp{#} then wire plot is produced. If string @var{sch} have symbol @samp{.} then plot by dots is produced. See also @ref{surf3}, @ref{surfc}, @ref{surf3a}, @ref{surf3ca}. @sref{surf3c sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} surf3c adat cdat ['sch'='']
@@ -3144,7 +3290,7 @@ Draws @var{num}-th uniformly distributed in color range isosurfaces for 3d data.
 @deftypefnx {C function} @code{void} mgl_surfa (@code{HMGL} gr, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_surfa_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} and transparent it by matrix @var{c}[i,j]. If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{.} then plot by dots is produced. All dimensions of arrays @var{z} and @var{c} must be equal. Surface is plotted for each z slice of the data. See also @ref{surf}, @ref{surfc}, @ref{surfca}, @ref{surf3a}. @sref{SurfA sample}
+The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} and transparent it by matrix @var{c}[i,j]. If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{.} then plot by dots is produced. All dimensions of arrays @var{z} and @var{c} must be equal. Surface is plotted for each z slice of the data. See also @ref{surf}, @ref{surfc}, @ref{surfca}, @ref{surf3a}. @sref{surfa sample}
 @end deftypefn
 
 @anchor{surf3a}
@@ -3156,7 +3302,7 @@ The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j]
 @deftypefnx {C function} @code{void} mgl_surf3a_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} a, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_surf3a_xyz_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws isosurface plot for 3d array specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) at @var{a}(x,y,z)=@var{val}. It is mostly the same as @ref{surf3} function but the transparency of isosurface depends on values of array @var{c}. If string @var{sch} contain @samp{#} then wire plot is produced. If string @var{sch} have symbol @samp{.} then plot by dots is produced. See also @ref{surf3}, @ref{surfc}, @ref{surf3a}, @ref{surf3ca}. @sref{Surf3A sample}
+The function draws isosurface plot for 3d array specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) at @var{a}(x,y,z)=@var{val}. It is mostly the same as @ref{surf3} function but the transparency of isosurface depends on values of array @var{c}. If string @var{sch} contain @samp{#} then wire plot is produced. If string @var{sch} have symbol @samp{.} then plot by dots is produced. See also @ref{surf3}, @ref{surfc}, @ref{surf3a}, @ref{surf3ca}. @sref{surf3a sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} surf3a adat cdat ['sch'='']
@@ -3181,7 +3327,7 @@ Draws @var{num}-th uniformly distributed in color range isosurfaces for 3d data.
 @deftypefnx {C function} @code{void} mgl_surfca (@code{HMGL} gr, @code{HCDT} z, @code{HCDT} c, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_surfca_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}, color it by matrix @var{c}[i,j] and transparent it by matrix @var{a}[i,j]. If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{.} then plot by dots is produced. All dimensions of arrays @var{z} and @var{c} must be equal. Surface is plotted for each z slice of the data. Note, you can use @ref{map}-like coloring if use @samp{%} in color scheme. See also @ref{surf}, @ref{surfc}, @ref{surfa}, @ref{surf3ca}. @sref{SurfCA sample}
+The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}, color it by matrix @var{c}[i,j] and transparent it by matrix @var{a}[i,j]. If string @var{sch} have symbol @samp{#} then grid lines are drawn. If string @var{sch} have symbol @samp{.} then plot by dots is produced. All dimensions of arrays @var{z} and @var{c} must be equal. Surface is plotted for each z slice of the data. Note, you can use @ref{map}-like coloring if use @samp{%} in color scheme. See also @ref{surf}, @ref{surfc}, @ref{surfa}, @ref{surf3ca}. @sref{surfca sample}
 @end deftypefn
 
 @anchor{surf3ca}
@@ -3193,7 +3339,7 @@ The function draws surface specified parametrically @{@var{x}[i,j], @var{y}[i,j]
 @deftypefnx {C function} @code{void} mgl_surf3ca_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} a, @code{HCDT} c, @code{HCDT} b, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_surf3ca_xyz_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{HCDT} c, @code{HCDT} b,@code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws isosurface plot for 3d array specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) at @var{a}(x,y,z)=@var{val}. It is mostly the same as @ref{surf3} function but the color and the transparency of isosurface depends on values of array @var{c} and @var{b} correspondingly. If string @var{sch} contain @samp{#} then wire plot is produced. If string @var{sch} have symbol @samp{.} then plot by dots is produced. Note, you can use @ref{map}-like coloring if use @samp{%} in color scheme. See also @ref{surf3}, @ref{surfca}, @ref{surf3c}, @ref{surf3a}. @sref{Surf3CA sample}
+The function draws isosurface plot for 3d array specified parametrically @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) at @var{a}(x,y,z)=@var{val}. It is mostly the same as @ref{surf3} function but the color and the transparency of isosurface depends on values of array @var{c} and @var{b} correspondingly. If string @var{sch} contain @samp{#} then wire plot is produced. If string @var{sch} have symbol @samp{.} then plot by dots is produced. Note, you can use @ref{map}-like coloring if use @samp{%} in color scheme. See also @ref{surf3}, @ref{surfca}, @ref{surf3c}, @ref{surf3a}. @sref{surf3ca sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} surf3ca adat cdat bdat ['sch'='']
@@ -3219,7 +3365,7 @@ Draws @var{num}-th uniformly distributed in color range isosurfaces for 3d data.
 @deftypefnx {C function} @code{void} mgl_tiles_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_tiles_xyc (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws horizontal tiles for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} and color it by matrix @var{c}[i,j]. It is mostly the same as @ref{tile} but the size of tiles is determined by @var{r} array. If string @var{sch} contain style @samp{x} or @samp{y} then tiles will be oriented perpendicular to x- or y-axis. This is some kind of ``transparency'' useful for exporting to EPS files. Tiles is plotted for each z slice of the data. See also @ref{surfa}, @ref{tile}. @sref{TileS sample}
+The function draws horizontal tiles for surface specified parametrically @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} and color it by matrix @var{c}[i,j]. It is mostly the same as @ref{tile} but the size of tiles is determined by @var{r} array. If string @var{sch} contain style @samp{x} or @samp{y} then tiles will be oriented perpendicular to x- or y-axis. This is some kind of ``transparency'' useful for exporting to EPS files. Tiles is plotted for each z slice of the data. See also @ref{surfa}, @ref{tile}. @sref{tiles sample}
 @end deftypefn
 
 @anchor{map}
@@ -3243,7 +3389,7 @@ The function draws mapping plot for matrices @{@var{ax}, @var{ay} @} which param
 @deftypefnx {C function} @code{void} mgl_stfa (@code{HMGL} gr, @code{HCDT} re, @code{HCDT} im, @code{int} dn, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_stfa_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} re, @code{HCDT} im, @code{int} dn, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Draws spectrogram of complex array @var{re}+i*@var{im} for Fourier size of @var{dn} points at plane @var{z} equal to minimal z-axis value. For example in 1D case, result is density plot of data @math{res[i,j]=|\sum_d^dn exp(I*j*d)*(re[i*dn+d]+I*im[i*dn+d])|/dn} with size @{int(nx/dn), dn, ny@}. At this array @var{re}, @var{im} parametrically depend on coordinates @var{x}, @var{y}. The size of @var{re} and @var{im} must be the same. The minor dimensions of arrays @var{x}, @var{y}, @var{re} should be equal. Arrays @var{x}, @var{y} can be vectors (not matrix as @var{re}).  @sref{STFA sample}
+Draws spectrogram of complex array @var{re}+i*@var{im} for Fourier size of @var{dn} points at plane @var{z} equal to minimal z-axis value. For example in 1D case, result is density plot of data @math{res[i,j]=|\sum_d^dn exp(I*j*d)*(re[i*dn+d]+I*im[i*dn+d])|/dn} with size @{int(nx/dn), dn, ny@}. At this array @var{re}, @var{im} parametrically depend on coordinates @var{x}, @var{y}. The size of @var{re} and @var{im} must be the same. The minor dimensions of arrays @var{x}, @var{y}, @var{re} should be equal. Arrays @var{x}, @var{y} can be vectors (not matrix as @var{re}).  @sref{stfa sample}
 @end deftypefn
 
 
@@ -3252,6 +3398,7 @@ Draws spectrogram of complex array @var{re}+i*@var{im} for Fourier size of @var{
 @node Vector fields, Other plotting, Dual plotting, MathGL core
 @section Vector fields
 @nav{}
+@cindex Lines
 @cindex Traj
 @cindex Vect
 @cindex Dew
@@ -3260,6 +3407,21 @@ Draws spectrogram of complex array @var{re}+i*@var{im} for Fourier size of @var{
 @cindex Pipe
 
 These functions perform plotting of 2D and 3D vector fields. There are 5 generally different types of vector fields representations: simple vector field (Vect), vectors along the curve (Traj), vector field by dew-drops (Dew), flow threads (Flow, FlowP), flow pipes (Pipe). By default (if absent) values of @var{x}, @var{y}, @var{z} are equidistantly distributed in axis range. The minor dimensions of arrays @var{x}, @var{y}, @var{z}, @var{ax} should be equal. The size of @var{ax}, @var{ay} and @var{az} must be equal. Arrays @var{x}, @var{y}, @var{z} can be vectors (not matrices as @var{ax}). String @var{sch} sets the color scheme (see @ref{Color scheme}) for plot. String @var{opt} contain command options (see @ref{Command options}).
+
+@anchor{lines}
+@deftypefn {MGL command} {} lines y1dat y2dat ['sch'='']
+@deftypefnx {MGL command} {} lines x1dat y1dat x2dat y2dat ['sch'='']
+@deftypefnx {MGL command} {} lines x1dat y1dat z1dat x2dat y2dat z2dat ['sch'='']
+@ifclear UDAV
+@deftypefnx {Method on @code{mglGraph}} @code{void} Lines (@code{const mglDataA &}y1, @code{const mglDataA &}y2, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Method on @code{mglGraph}} @code{void} Lines (@code{const mglDataA &}x1, @code{const mglDataA &}y1, @code{const mglDataA &}x2, @code{const mglDataA &}y2, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Method on @code{mglGraph}} @code{void} Lines (@code{const mglDataA &}x1, @code{const mglDataA &}y1, @code{const mglDataA &}z1, @code{const mglDataA &}x2, @code{const mglDataA &}y2, @code{const mglDataA &}z2, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {C function} @code{void} mgl_lines_xyz (@code{HMGL} gr, @code{HCDT}x1, @code{HCDT}y1, @code{HCDT}z1, @code{HCDT}x2, @code{HCDT}y2, @code{HCDT}z2, @code{const char *}sch, @code{const char *}opt)
+@deftypefnx {C function} @code{void} mgl_lines_xy (@code{HMGL} gr, @code{HCDT}x1, @code{HCDT}y1, @code{HCDT}x2, @code{HCDT}y2, @code{const char *}sch, @code{const char *}opt)
+@deftypefnx {C function} @code{void} mgl_lines (@code{HMGL} gr, @code{HCDT}y1, @code{HCDT}y2, @code{const char *}sch, @code{const char *}opt)
+@end ifclear
+The function draws lines between points @{@var{x1}, @var{y1}, @var{z1}@} and @{@var{x2}, @var{y2}, @var{z2}@}. String @var{pen} specifies the color (see @ref{Line styles}). By default (@code{pen=""}) color from palette is used (see @ref{Palette and colors}). The minor sizes of all arrays must be the same. The plots are drawn for each row if one of the data is the matrix. See also @ref{plot}, @ref{traj}. @sref{lines sample}
+@end deftypefn
 
 @anchor{traj}
 @deftypefn {MGL command} {} traj xdat ydat udat vdat ['sch'='']
@@ -3270,7 +3432,7 @@ These functions perform plotting of 2D and 3D vector fields. There are 5 general
 @deftypefnx {C function} @code{void} mgl_traj_xyz (@code{HMGL} gr, @code{HCDT}x, @code{HCDT}y, @code{HCDT}z, @code{HCDT}ax, @code{HCDT}ay, @code{HCDT}az, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_traj_xy (@code{HMGL} gr, @code{HCDT}x, @code{HCDT}y, @code{HCDT}ax, @code{HCDT}ay, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws vectors @{@var{ax}, @var{ay}, @var{az}@} along a curve @{@var{x}, @var{y}, @var{z}@}. The length of arrows are proportional to @math{\sqrt@{ax^2+ay^2+az^2@}}. String @var{pen} specifies the color (see @ref{Line styles}). By default (@code{pen=""}) color from palette is used (see @ref{Palette and colors}). Option @code{value} set the vector length factor (if non-zero) or vector length to be proportional the distance between curve points (if @code{value=0}). The minor sizes of all arrays must be equal and large 2. The plots are drawn for each row if one of the data is the matrix. See also @ref{vect}. @sref{Traj sample}
+The function draws vectors @{@var{ax}, @var{ay}, @var{az}@} along a curve @{@var{x}, @var{y}, @var{z}@}. The length of arrows are proportional to @math{\sqrt@{ax^2+ay^2+az^2@}}. String @var{pen} specifies the color (see @ref{Line styles}). By default (@code{pen=""}) color from palette is used (see @ref{Palette and colors}). Option @code{value} set the vector length factor (if non-zero) or vector length to be proportional the distance between curve points (if @code{value=0}). The minor sizes of all arrays must be equal and large 2. The plots are drawn for each row if one of the data is the matrix. See also @ref{vect}. @sref{traj sample}
 @end deftypefn
 
 @anchor{vect}
@@ -3293,7 +3455,7 @@ The function draws plane vector field plot for the field @{@var{ax}, @var{ay}@} 
 @item
 @samp{=} for enabling color gradient along arrows.
 @end itemize
-See also @ref{flow}, @ref{dew}. @sref{Vect sample}
+See also @ref{flow}, @ref{dew}. @sref{vect sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} vect udat vdat wdat ['sch'='']
@@ -3327,7 +3489,7 @@ The function draws 3D vector field plot for the field @{@var{ax}, @var{ay}, @var
 @item
 @samp{=} for enabling color gradient along arrows.
 @end itemize
-See also @ref{vect}, @ref{flow}, @ref{dew}. @sref{Vect3 sample}
+See also @ref{vect}, @ref{flow}, @ref{dew}. @sref{vect3 sample}
 @end deftypefn
 
 @anchor{dew}
@@ -3339,7 +3501,7 @@ See also @ref{vect}, @ref{flow}, @ref{dew}. @sref{Vect3 sample}
 @deftypefnx {C function} @code{void} mgl_dew (@code{HMGL} gr, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_dew_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws dew-drops for plane vector field @{@var{ax}, @var{ay}@} depending parametrically on coordinates @var{x}, @var{y} at level @var{z} equal to minimal z-axis value. Note that this is very expensive plot in memory usage and creation time! The color of drops is proportional to @math{\sqrt@{ax^2+ay^2@}}. The number of drops depend on @ref{meshnum}. See also @ref{vect}. @sref{Dew sample}
+The function draws dew-drops for plane vector field @{@var{ax}, @var{ay}@} depending parametrically on coordinates @var{x}, @var{y} at level @var{z} equal to minimal z-axis value. Note that this is very expensive plot in memory usage and creation time! The color of drops is proportional to @math{\sqrt@{ax^2+ay^2@}}. The number of drops depend on @ref{meshnum}. See also @ref{vect}. @sref{dew sample}
 @end deftypefn
 
 @anchor{flow}
@@ -3351,12 +3513,14 @@ The function draws dew-drops for plane vector field @{@var{ax}, @var{ay}@} depen
 @deftypefnx {C function} @code{void} mgl_flow_2d (@code{HMGL} gr, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_flow_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws flow threads for the plane vector field @{@var{ax}, @var{ay}@} parametrically depending on coordinates @var{x}, @var{y} at level @var{z} equal to minimal z-axis value. Number of threads is proportional to @code{value} option (default is 5). String @var{sch} may contain:
+The function draws flow threads for the plane vector field @{@var{ax}, @var{ay}@} parametrically depending on coordinates @var{x}, @var{y} at level @var{z} equal to minimal z-axis value. Option @code{value} set the approximate number of threads (default is 5), or accuracy for stationary points (if style @samp{.} is used) . String @var{sch} may contain:
 @itemize @bullet
 @item
 color scheme -- up-half (warm) corresponds to normal flow (like attractor), bottom-half (cold) corresponds to inverse flow (like source);
 @item
 @samp{#} for starting threads from edges only;
+@item
+@samp{.} for drawing separatrices only (flow threads to/from stationary points).
 @item
 @samp{*} for starting threads from a 2D array of points inside the data;
 @item
@@ -3364,7 +3528,7 @@ color scheme -- up-half (warm) corresponds to normal flow (like attractor), bott
 @item
 @samp{x}, @samp{z} for drawing tapes of normals in x-y and y-z planes correspondingly.
 @end itemize
-See also @ref{pipe}, @ref{vect}, @ref{tape}, @ref{barwidth}. @sref{Flow sample}
+See also @ref{pipe}, @ref{vect}, @ref{tape}, @ref{flow3}, @ref{barwidth}. @sref{flow sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} flow udat vdat wdat ['sch'='']
@@ -3386,7 +3550,7 @@ This is 3D version of the first functions. Here arrays @var{ax}, @var{ay}, @var{
 @deftypefnx {C function} @code{void} mgl_flowp_2d (@code{HMGL} gr, @code{mreal} x0, @code{mreal} y0, @code{mreal} z0, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_flowp_xy (@code{HMGL} gr, @code{mreal} x0, @code{mreal} y0, @code{mreal} z0, @code{HCDT} x, @code{HCDT} y, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The same as first one (@ref{flow}) but draws single flow thread starting from point @var{p0}=@{@var{x0},@var{y0},@var{z0}@}.
+The same as first one (@ref{flow}) but draws single flow thread starting from point @var{p0}=@{@var{x0},@var{y0},@var{z0}@}. String @var{sch} may also contain: @samp{>} or @samp{<} for drawing in forward or backward direction only (default is both).
 @end deftypefn
 
 @deftypefn {MGL command} {} flow @code{x0 y0 z0} udat vdat wdat ['sch'='']
@@ -3399,6 +3563,30 @@ The same as first one (@ref{flow}) but draws single flow thread starting from po
 @end ifclear
 This is 3D version of the previous functions.
 @end deftypefn
+
+@anchor{flow3}
+@deftypefn {MGL command} {} flow3 udat vdat wdat ['sch'='']
+@deftypefnx {MGL command} {} flow3 xdat ydat zdat udat vdat ['sch'='']
+@ifclear UDAV
+@deftypefnx {Method on @code{mglGraph}} @code{void} Flow3 (@code{const mglDataA &}ax, @code{const mglDataA &}ay, @code{const mglDataA &}az, @code{const char *}sch=@code{""}, @code{double} sVal=@code{-1}, @code{const char *}opt=@code{""})
+@deftypefnx {Method on @code{mglGraph}} @code{void} Flow3 (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}ax, @code{const mglDataA &}ay, @code{const mglDataA &}az, @code{const char *}sch=@code{""}, @code{double} sVal=@code{-1}, @code{const char *}opt=@code{""})
+@deftypefnx {C function} @code{void} mgl_flow3 (@code{HMGL} gr, @code{HCDT} ax, @code{HCDT} ay, @code{HCDT} az, @code{const char *}sch, @code{double} sVal, @code{const char *}opt)
+@deftypefnx {C function} @code{void} mgl_flow3_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} ax, @code{HCDT} ay, @code{HCDT} az, @code{const char *}sch, @code{double} sVal, @code{const char *}opt)
+@end ifclear
+The function draws flow threads for the 3D vector field @{@var{ax}, @var{ay}, @var{az}@} parametrically depending on coordinates @var{x}, @var{y}, @var{z}. Flow threads starts from given plane. Option @code{value} set the approximate number of threads (default is 5). String @var{sch} may contain:
+@itemize @bullet
+@item
+color scheme -- up-half (warm) corresponds to normal flow (like attractor), bottom-half (cold) corresponds to inverse flow (like source);
+@item
+@samp{x}, @samp{z} for normal of starting plane (default is y-direction);
+@item
+@samp{v} for drawing arrows on the threads;
+@item
+@samp{t} for drawing tapes of normals in x-y and y-z planes.
+@end itemize
+See also @ref{flow}, @ref{pipe}, @ref{vect}. @sref{flow3 sample}
+@end deftypefn
+
 
 @anchor{grad}
 @deftypefn {MGL command} {} grad pdat ['sch'='']
@@ -3424,7 +3612,7 @@ The function draws gradient lines for scalar field @var{phi}[i,j] (or @var{phi}[
 @deftypefnx {C function} @code{void} mgl_pipe_2d (@code{HMGL} gr, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{mreal} r0, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_pipe_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{mreal} r0, @code{const char *}opt)
 @end ifclear
-The function draws flow pipes for the plane vector field @{@var{ax}, @var{ay}@} parametrically depending on coordinates @var{x}, @var{y} at level @var{z} equal to minimal z-axis value. Number of pipes is proportional to @code{value} option (default is 5). If @samp{#} symbol is specified then pipes start only from edges of axis range. The color of lines is proportional to @math{\sqrt@{ax^2+ay^2@}}. Warm color corresponds to normal flow (like attractor). Cold one corresponds to inverse flow (like source). Parameter @var{r0} set the base pipe radius. If @var{r0}<0 or symbol @samp{i} is specified then pipe radius is inverse proportional to amplitude. The vector field is plotted for each z slice of @var{ax}, @var{ay}. See also @ref{flow}, @ref{vect}. @sref{Pipe sample}
+The function draws flow pipes for the plane vector field @{@var{ax}, @var{ay}@} parametrically depending on coordinates @var{x}, @var{y} at level @var{z} equal to minimal z-axis value. Number of pipes is proportional to @code{value} option (default is 5). If @samp{#} symbol is specified then pipes start only from edges of axis range. The color of lines is proportional to @math{\sqrt@{ax^2+ay^2@}}. Warm color corresponds to normal flow (like attractor). Cold one corresponds to inverse flow (like source). Parameter @var{r0} set the base pipe radius. If @var{r0}<0 or symbol @samp{i} is specified then pipe radius is inverse proportional to amplitude. The vector field is plotted for each z slice of @var{ax}, @var{ay}. See also @ref{flow}, @ref{vect}. @sref{pipe sample}
 @end deftypefn
 
 @deftypefn {MGL command} {} pipe udat vdat wdat ['sch'='' @code{r0=0.05}]
@@ -3469,7 +3657,7 @@ These functions perform miscellaneous plotting. There is unstructured data point
 @deftypefnx {C function} @code{void} mgl_dens_y (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_dens_z (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-These plotting functions draw density plot in x, y, or z plain. If @var{a} is a tensor (3-dimensional data) then interpolation to a given @var{sVal} is performed. These functions are useful for creating projections of the 3D data array to the bounding box. See also @ref{ContXYZ}, @ref{ContFXYZ}, @ref{dens}, @ref{Data manipulation}. @sref{Dens projection sample}
+These plotting functions draw density plot in x, y, or z plain. If @var{a} is a tensor (3-dimensional data) then interpolation to a given @var{sVal} is performed. These functions are useful for creating projections of the 3D data array to the bounding box. See also @ref{ContXYZ}, @ref{ContFXYZ}, @ref{dens}, @ref{Data manipulation}. @sref{dens_xyz sample}
 @end deftypefn
 
 @anchor{contz} @anchor{conty} @anchor{contx} @anchor{ContXYZ}
@@ -3484,7 +3672,7 @@ These plotting functions draw density plot in x, y, or z plain. If @var{a} is a 
 @deftypefnx {C function} @code{void} mgl_cont_y (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_cont_z (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-These plotting functions draw contour lines in x, y, or z plain. If @var{a} is a tensor (3-dimensional data) then interpolation to a given @var{sVal} is performed. These functions are useful for creating projections of the 3D data array to the bounding box. Option @code{value} set the number of contours. See also @ref{ContFXYZ}, @ref{DensXYZ}, @ref{cont}, @ref{Data manipulation}. @sref{Cont projection sample}
+These plotting functions draw contour lines in x, y, or z plain. If @var{a} is a tensor (3-dimensional data) then interpolation to a given @var{sVal} is performed. These functions are useful for creating projections of the 3D data array to the bounding box. Option @code{value} set the number of contours. See also @ref{ContFXYZ}, @ref{DensXYZ}, @ref{cont}, @ref{Data manipulation}. @sref{cont_xyz sample}
 @end deftypefn
 
 @ifclear UDAV
@@ -3510,7 +3698,7 @@ The same as previous with manual contour levels.
 @deftypefnx {C function} @code{void} mgl_contf_y (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_contf_z (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-These plotting functions draw solid contours in x, y, or z plain. If @var{a} is a tensor (3-dimensional data) then interpolation to a given @var{sVal} is performed. These functions are useful for creating projections of the 3D data array to the bounding box. Option @code{value} set the number of contours. See also @ref{ContFXYZ}, @ref{DensXYZ}, @ref{cont}, @ref{Data manipulation}. @sref{ContF projection sample}
+These plotting functions draw solid contours in x, y, or z plain. If @var{a} is a tensor (3-dimensional data) then interpolation to a given @var{sVal} is performed. These functions are useful for creating projections of the 3D data array to the bounding box. Option @code{value} set the number of contours. See also @ref{ContFXYZ}, @ref{DensXYZ}, @ref{cont}, @ref{Data manipulation}. @sref{contf_xyz sample}
 @end deftypefn
 
 @ifclear UDAV
@@ -3570,7 +3758,7 @@ Draws command parametrical surface @{@samp{x(u,v)}, @samp{y(u,v)}, @samp{z(u,v)}
 @deftypefnx {C function} @code{void} mgl_triplot_xyz (@code{HMGL} gr, @code{HCDT} id, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_triplot_xyzc (@code{HMGL} gr, @code{HCDT} id, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws the surface of triangles. Triangle vertexes are set by indexes @var{id} of data points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. String @var{sch} sets the color scheme. If string contain @samp{#} then wire plot is produced. First dimensions of @var{id} must be 3 or greater. Arrays @var{x}, @var{y}, @var{z} must have equal sizes. Parameter @var{c} set the colors of triangles (if @var{id}.ny=@var{c}.nx) or colors of vertexes (if @var{x}.nx=@var{c}.nx). See also @ref{dots}, @ref{crust}, @ref{quadplot}, @ref{triangulation}. @sref{TriPlot and QuadPlot}
+The function draws the surface of triangles. Triangle vertexes are set by indexes @var{id} of data points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. String @var{sch} sets the color scheme. If string contain @samp{#} then wire plot is produced. First dimensions of @var{id} must be 3 or greater. Arrays @var{x}, @var{y}, @var{z} must have equal sizes. Parameter @var{c} set the colors of triangles (if @var{id}.ny=@var{c}.nx) or colors of vertexes (if @var{x}.nx=@var{c}.nx). See also @ref{dots}, @ref{crust}, @ref{quadplot}, @ref{triangulation}. @sref{triplot sample}
 @end deftypefn
 
 @anchor{tricont}
@@ -3590,6 +3778,7 @@ The function draws the surface of triangles. Triangle vertexes are set by indexe
 The function draws contour lines for surface of triangles at @var{z}=@var{v}[k] (or at  @var{z} equal to minimal z-axis value if @var{sch} contain symbol @samp{_}). Triangle vertexes are set by indexes @var{id} of data points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Contours are plotted for @var{z}[i,j]=@var{v}[k] where @var{v}[k] are values of data array @var{v}. If @var{v} is absent then arrays of option @code{value} elements  equidistantly distributed in color range is used. String @var{sch} sets the color scheme. Array @var{c} (if specified) is used for contour coloring. First dimensions of @var{id} must be 3 or greater. Arrays @var{x}, @var{y}, @var{z} must have equal sizes. Parameter @var{c} set the colors of triangles (if @var{id}.ny=@var{c}.nx) or colors of vertexes (if @var{x}.nx=@var{c}.nx). See also @ref{triplot}, @ref{cont}, @ref{triangulation}.
 @end deftypefn
 
+
 @anchor{quadplot}
 @deftypefn {MGL command} {} quadplot idat xdat ydat ['sch'='']
 @deftypefnx {MGL command} {} quadplot idat xdat ydat zdat ['sch'='']
@@ -3602,7 +3791,7 @@ The function draws contour lines for surface of triangles at @var{z}=@var{v}[k] 
 @deftypefnx {C function} @code{void} mgl_quadplot_xyz (@code{HMGL} gr, @code{HCDT} id, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_quadplot_xyzc (@code{HMGL} gr, @code{HCDT} id, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws the surface of quadrangles. Quadrangles vertexes are set by indexes @var{id} of data points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. String @var{sch} sets the color scheme. If string contain @samp{#} then wire plot is produced. First dimensions of @var{id} must be 4 or greater. Arrays @var{x}, @var{y}, @var{z} must have equal sizes. Parameter @var{c} set the colors of quadrangles (if @var{id}.ny=@var{c}.nx) or colors of vertexes (if @var{x}.nx=@var{c}.nx). See also @ref{triplot}. @sref{TriPlot and QuadPlot}
+The function draws the surface of quadrangles. Quadrangles vertexes are set by indexes @var{id} of data points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. String @var{sch} sets the color scheme. If string contain @samp{#} then wire plot is produced. First dimensions of @var{id} must be 4 or greater. Arrays @var{x}, @var{y}, @var{z} must have equal sizes. Parameter @var{c} set the colors of quadrangles (if @var{id}.ny=@var{c}.nx) or colors of vertexes (if @var{x}.nx=@var{c}.nx). See also @ref{triplot}. @sref{triplot sample}
 @end deftypefn
 
 @anchor{dots}
@@ -3616,7 +3805,7 @@ The function draws the surface of quadrangles. Quadrangles vertexes are set by i
 @deftypefnx {C function} @code{void} mgl_dots_a (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {C function} @code{void} mgl_dots_ca (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function draws the arbitrary placed points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. String @var{sch} sets the color scheme and kind of marks. If arrays @var{c}, @var{a} are specified then they define colors and transparencies of dots. You can use @ref{tens} plot with style @samp{ .} to draw non-transparent dots with specified colors. Arrays @var{x}, @var{y}, @var{z}, @var{a} must have equal sizes. See also @ref{crust}, @ref{tens}, @ref{mark}, @ref{plot}. @sref{Dots sample}
+The function draws the arbitrary placed points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. String @var{sch} sets the color scheme and kind of marks. If arrays @var{c}, @var{a} are specified then they define colors and transparencies of dots. You can use @ref{tens} plot with style @samp{ .} to draw non-transparent dots with specified colors. Arrays @var{x}, @var{y}, @var{z}, @var{a} must have equal sizes. See also @ref{crust}, @ref{tens}, @ref{mark}, @ref{plot}. @sref{dots sample}
 @end deftypefn
 
 @anchor{crust}
@@ -3625,7 +3814,7 @@ The function draws the arbitrary placed points @{@var{x}[i], @var{y}[i], @var{z}
 @deftypefnx {Method on @code{mglGraph}} @code{void} Crust (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
 @deftypefnx {C function} @code{void} mgl_crust (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-The function reconstruct and draws the surface for arbitrary placed points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. String @var{sch} sets the color scheme. If string contain @samp{#} then wire plot is produced. Arrays @var{x}, @var{y}, @var{z} must have equal sizes. See also @ref{dots}, @ref{triplot}. @c @sref{Crust sample}
+The function reconstruct and draws the surface for arbitrary placed points @{@var{x}[i], @var{y}[i], @var{z}[i]@}. String @var{sch} sets the color scheme. If string contain @samp{#} then wire plot is produced. Arrays @var{x}, @var{y}, @var{z} must have equal sizes. See also @ref{dots}, @ref{triplot}. @c @sref{crust sample}
 @end deftypefn
 
 @c ##################################################################

@@ -58,6 +58,8 @@ Creates a FLTK-based window for plotting. Parameter @var{draw} sets a pointer to
 Creates a GLUT-based window for plotting. Parameter @var{draw} sets a pointer to drawing function (this is the name of function) or instance of @code{mglDraw} class. There is support of a list of plots (frames). So as one can prepare a set of frames at first and redraw it fast later (but it requires more memory). Function should return positive number of frames for the list or zero if it will plot directly. Note, that @var{draw} can be @code{NULL} for displaying static bitmaps only (no animation or slides). Parameter @var{title} sets the title of the window. Parameter @var{par} contains pointer to data for the plotting function @var{draw}. GLUT-based windows are fastest one but there is no toolbar, and plot have some issues due to OpenGL limitations.
 
 There are some keys handles for manipulating by the plot: 'a', 'd', 'w', 's' for the rotating; ',', '.' for viewing of the previous or next frames in the list; 'r' for the switching of transparency; 'f' for the switching of lightning; 'x' for hiding (closing) the window.
+
+Note, that you can terminate GLUT event loop by call @code{glutLeaveMainLoop()}.
 @end deftypefn
 
 @menu

@@ -280,15 +280,13 @@ void NewCmdDialog::kindChanged(int s)
 //return;
 	args->setRowCount(nn);	args->setColumnCount(2);
 	QTableWidgetItem *it;
-	QString a;
 	QFont f;
-	bool optional;
 	for(int i=0;i<nn;i++)
 	{
 		it = new QTableWidgetItem;	args->setItem(i,0,it);
 		it = new QTableWidgetItem;	args->setItem(i,1,it);
-		a = argn[s].at(i);
-		optional = (a[0]=='_' || a[0]=='+');	if(optional)	a=a.mid(1);
+		QString a = argn[s].at(i);
+		bool optional = (a[0]=='_' || a[0]=='+');	if(optional)	a=a.mid(1);
 		f.setItalic(a[0].isUpper());	f.setBold(!optional);
 		args->item(i,0)->setText(a);	args->item(i,0)->setFont(f);
 		args->item(i,0)->setFlags(Qt::ItemIsEnabled);

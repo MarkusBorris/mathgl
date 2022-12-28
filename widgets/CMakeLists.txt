@@ -1,5 +1,9 @@
 include(GenerateExportHeader)
 
+if(MSVC)
+	add_definitions(-DMGL_LIB_MSVC -DMGL_WIDGETS_DLL)
+endif(MSVC)
+
 if(MGL_HAVE_FLTK)
 	mgl_add_lib(fltk fltk.cpp  image.cpp  image.h ../include/mgl2/fltk.h ../include/mgl2/Fl_MathGL.h)
 	target_include_directories(mgl-fltk SYSTEM PUBLIC ${FLTK_INCLUDE_DIR})
@@ -23,7 +27,7 @@ if(MGL_HAVE_WX)
 	target_link_libraries(mgl-wx-static mgl-static ${wxWidgets_LIBRARIES})
 endif(MGL_HAVE_WX)
 
-add_subdirectory( qt4 )
+#add_subdirectory( qt4 )
 add_subdirectory( qt5 )
 
 mgl_po_src(fltk.cpp ../include/mgl2/fltk.h ../include/mgl2/Fl_MathGL.h glut.cpp ../include/mgl2/glut.h wx.cpp ../include/mgl2/wx.h qt.cpp ../include/mgl2/qt.h  ../include/mgl2/qmathgl.h)

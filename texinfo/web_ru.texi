@@ -53,8 +53,18 @@ Generally, MathGL is GPL library. However, you can use LGPL license for MathGL c
 @strong{Latest news}
 @itemize
 
-@item @strong{20 July 2017.}
-New version (v.2.4.1) with bugfixes of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released.
+@item @strong{12 January 2022}
+New version (v.8.0.1) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released. There are increase accuracy at line segment skipping, changes in SOVERSION numbering, minor spelling fix (thanks to Rafael Laboissière).
+
+@item @strong{1 January 2022.}
+New version (v.8.0) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released. There are change version numbering according Debian rules, and add accurate line segment and quadrangle/triangle face cutting at axis border crossing.
+
+@item @strong{8 December 2021.}
+New version (v.2.5) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released. There are big improve in formula evaluation (user-defined function, summation and product, new functions for data interpolation), new plot kind @ref{dcont} and @ref{lines}, set of functions for random distributions, new data handling functions (like, @ref{keep}), extend @ref{ode} to solve PDE/cascade/etc, add mask for most of plotting functions and bugfixes, which denoted @ref{News, here}.
+
+@item @strong{8 July 2019.}
+New version (v.2.4.4) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released. There are new @ref{minmax} for positions of local minimums and maximums, add @ref{conts} for coordinates of contour lines, extend formula evaluation to read and interpolate data files.
+
 @item @emph{17 May 2017.}
 New version (v.2.4) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released. There are @code{mgllab} executable, string manipulation in MGL, new functions, plot types and styles, translation to Russian using @code{gettext} and bugfixes, which denoted @ref{News, here}.
 @end itemize
@@ -75,6 +85,142 @@ Javascript interface was developed with support of @url{http://www.datadvance.ne
 @nav{}
 
 @itemize
+
+@item @strong{12 January 2022}
+New version (v.8.0.1) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released.
+@itemize @bullet
+@item Increase accuracy at line segment skipping.
+@item Changes in SOVERSION numbering.
+@item Minor spelling fix (thanks to Rafael Laboissière).
+@end itemize
+
+@item @strong{1 January 2022}
+New version (v.8.0) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released.
+@itemize @bullet
+
+@item  Change version numbering according Debian rules.
+@item  Add accurate line segment and quadrangle/triangle face cutting at axis border crossing.
+@item  Add @ref{fastcut} for disable accurate but slow line/trig/quad primitives cutting at axis borders.
+@item  Restore back transparent background by default. You can set non-transparent background by using @ref{clf} or @ref{background} functions.
+@item  Compatibility changes for Qt5.15 and MSVC.
+
+@strong{INCOMPATIBLE:}
+@item  Change @ref{colorbar} C-functions by adding last argument for options.
+@item Add alpha-value in @ref{background}.
+@item  Disable Qt4 interface by default.
+
+@end itemize
+
+@item @strong{8 December 2021}
+New version (v.2.5) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released.
+@itemize @bullet
+
+@item Add functions @samp{sum}, @samp{prod} at formula evaluation, like @samp{sum(_i^2,5)} will produce @code{30=0+1^2+2^2+3^2+4^2}, and @samp{prod(1+_i,5)} will produce @code{120=5!}. You can nest them for variables @samp{_i},@samp{_j},...,@samp{_z}, like @samp{sum(sum(_j+_i^2,5),5)} will give @code{200}.
+@item Add user-defined functions @samp{fn1()}...@samp{fn9()} at formula evaluation, like @samp{fn1(3)\x^_1} will produce @code{x^3}.
+@item Add functions @samp{value}, @samp{spline} at formula evaluation, like @samp{value(a,5)} will give value of 6-th element of a, i.e. a[5].
+@item Add @ref{keep} for keeping the data phase/sign or value along line @var{i} and @var{j} in given direction
+@item Add mglODEs() (i.e. extend @ref{ode}) for solving PDE, cascades and etc.
+@item Add @ref{dcont} to draw a set of curves, which are intersection of two isosurfaces at given level.
+@item Add @ref{lines} to draw a set of lines with arrows between points.
+@item Add @ref{first}, @ref{last} to get array of first/last indexes of values larger specified one along given direction.
+@item Add @ref{bernoulli}, @ref{binomial}, @ref{brownian}, @ref{discrete}, @ref{exponential}, @ref{gaussian}, @ref{shuffle}, @ref{uniform}, @ref{uniformint} for data filling by random numbers with different distributions.
+@item Add @ref{readbin} to read data from binary files.
+@item Add @ref{texparse} to enable/disable TeX-like command parsing at text output.
+@item Update @ref{ode}: regularization is used if dt*tmax<0 (total time may differ, but number of steps still the same).
+@item Add mgl_default_graph() -- the global (default) pointer to HMGL for keeping plot settings, simplifying external scripts and capture it in GUI.
+@item Add style @samp{p} in command @ref{smooth} to use parabolic smoothing of arbitrary points.
+@item Allow @ref{background} for scaling image, centering image and tessellate image as mosaic.
+@item Allow filling @ref{background} by the specified color.
+@item Allow masks for @ref{candle}, @ref{area}, @ref{region}, @ref{bars}, @ref{barh}, @ref{chart}, @ref{tape}, @ref{face}, @ref{polygon}, @ref{ellipse}, @ref{rhomb}.
+@item Allow single value specification for contour level in @ref{cont}, @ref{contd}, @ref{contp}, @ref{contv}, @ref{cont3}, @ref{dcont}, @ref{tricont}.
+@item Add mgl_dual_save_hdf(), mgl_real_save_hdf(), mgl_int_save_hdf() for saving single number in HDF5 file. Correspondingly, commands @ref{save} and @ref{savehdf} can save single value now.
+@item Add mgl_formula_calc(), mgl_formula_calc_c() for evaluating textual formulas of arbitrary set of data arrays.
+@item Add mglDataList -- global mglDataA* collection for viewing/changing in GUI data from external languages (like, Python, ...).
+@item Add Armadillo interface for mglData and mglDataC.
+@item If nsub parameter of command @ref{hist} is negative (nsub<0) then the linear interpolation is used instead of spline one.
+@item Add dark text colors for mgllab.
+@item Minor bugfixes.
+@item OBSOLETE: Qt4 interface will be disabled in the next release.
+@item OBSOLETE: Functions @ref{colorbar} will have extra argument @var{opt} for options, similarly to @ref{axis} and other plotting functions. In C++ and SWIG-based interfaces this change "masked" by providing the default value for the argument.
+@end itemize
+
+@item @strong{8 July 2019}
+New version (v.2.4.4) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released.
+@itemize @bullet
+
+@item Add @ref{minmax} for positions of local maximums and minimums.
+@item Add ContGen() and ContFGen() to draw contour lines manually. Correspondingly @ref{cont} and @ref{contf} commands are extended.
+@item Add @ref{conts} for coordinate of contour lines.
+@item Extend @ref{put} for partial filling if data size(s) are smaller as destination.
+@item Classes mglFormula and mglFormulaC now can read file with given sizes if string have the format ":fname:x1:x2:y1:y2:z1:z2". Here data is supposed in range [x1,x2]*[y1,y2]*[z1,z2] (by default [0,1]*[0,1]*[0,1]). Calc() in this case return the interpolated values.
+@item mglData now have operator() which work as SubData() function.
+@item Minor bugfixes.
+@end itemize
+
+@item @strong{14 March 2019}
+New version (v.2.4.3) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released.
+@itemize @bullet
+
+@item Add @ref{clabel} command for drawing colorbar labels. Should be used @strong{after} drawing colorbar!
+@item Extend @ref{ctick} command.
+@item Add subpixel smoothing for @ref{mask}.
+@item Boxes around @ref{text} (style @samp{@@}) now use actual height and position of the text.
+@item Add mask to EPS export. Note, @ref{mask} angles are reduced to 45*(0,1,...7) degrees for decreasing pattern size in the EPS.
+@item Update default masks: @samp{*} become dot, @samp{^} become bricks, @samp{d} become plus, @samp{D} become tacks, @samp{;} and @samp{j} change lengths. Note, you can use @code{brush.ods} to prepare user-defined masks.
+@item Add styles @samp{^} and @samp{_} for command @ref{smooth} to find upper/lower bound of the data.
+@item Improve @code{FlowP()} to draw both branches (in positive and negative time direction).
+@item Improve CGI interface and update website.
+@item Introduce struct @code{mdual} as interface for C and C++ complex numbers. It is implicitly converted to @code{std::complex<>} in C++. And need to call @code{c2mdual()} and @code{mdual2c()} in pure C. However @code{mdual} is binary compatible with C @code{_Complex} numbers.
+@item Add flag in CMake to manually disable support of C99 complex numbers.
+@item Bypass user-specified extension in base font family name.
+@item Improve hints in @code{mgllab} and @code{udav}.
+@item Add utility @code{mgltask} for making output file with a set of copies of mask-file. It useful for making set of initial conditions with a few parameters varied in specified range.
+@item Add example of @ref{OpenGL output}.
+@item Bugfix for approximate min and max position.
+@item Bugfix for position of SVG output.
+@item Compatibility fixes for new versions of CMake, compilers and libraries.
+
+@strong{INCOMPATIBLE:}
+@item Formally pure C interface handle complex numbers by new way due to strict following of C/C++ standards. However, the MathGL library is binary compatible with previous version(s).
+
+@end itemize
+
+@item @strong{31 March 2018.}
+Bugfix version (v.2.4.2.1) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released.
+
+@item @strong{21 March 2018.}
+New version (v.2.4.2) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is released.
+@itemize @bullet
+
+@item Add custom dialog for FLTK widgets. This can be constructed from C/C++ code, or from MGL script using @ref{Special comments}.
+@item Add @ref{progress} for displaying the progress of execution (by '#' symbols in console, or by progress-bar widget).
+
+@item Add @ref{contp} for contour lines on parametrically specified surface.
+@item Add @ref{flow3} for flow threads of 3D vector field, which start from the plain.
+@item Add variant of @ref{flow} for drawing a flow thread, starting from specified point.
+@item Add @ref{scaletext} for disabling text size scaling in relative @ref{inplot}-s (like @ref{columnplot}, ...).
+@item Add @ref{setup} for setting all low-level flags.
+
+@item Add @ref{coil} for projecting periodical data.
+@item Add modulo operation @samp{@code{%}} (@code{x%y=fmod(x,y)}) to the list of known operations in real-valued formulas.
+
+@item Add style @samp{.} for @ref{cont} to draw contour lines from saddle points.
+@item Add style @samp{.} for @ref{flow} to draw flow thread from saddle points.
+@item Add option @code{value} in @ref{tube} for setting number of edges manually.
+@item Crop output of @ref{ode} if NAN or INFINITY value occurs.
+@item Remove style @samp{~} for @ref{plot} and @ref{tens}. Now, all curves try to omit points.
+@item Add setup flag @code{MGL_FULL_CURV} which disable omitting points of curve.
+
+@item Shift axis labels closer to @ref{axis}.
+@item Change size of LaTeX-like commands @code{\sup, \sub} to be the same as @code{\overset, \underset}.
+@item Change ticks drawing in @ref{colorbar}.
+
+@item Add new section @ref{All samples} of documentation with large set of samples for most of MathGL features.
+@item Samples in documentation are generated automatically now (from @code{sample.cpp}).
+@item @strong{INCOMPATIBLE:} Make obsolete MGL command @ref{setsizescl}. At this, the similar C/C++/Fortran/... functions still working.
+@item Bugfixes.
+
+@end itemize
 
 
 @item @strong{20 July 2017.}
@@ -184,19 +330,19 @@ New version (v.2.4) of @uref{http://sourceforge.net/projects/mathgl, MathGL} is 
 MathGL can plot a wide range of graphics. It includes:
 @itemize @bullet
 @item
-one-dimensional: Plot, Area, Bars, Step, Stem, Torus, Chart, Error, Tube, Mark, (@ref{1D plotting});
+one-dimensional: @ref{plot}, @ref{area}, @ref{bars}, @ref{step}, @ref{stem}, @ref{torus}, @ref{chart}, @ref{error}, @ref{tube}, @ref{mark}, (@ref{1D plotting});
 
 @item
-two-dimensional plots: Mesh, Surf, Dens, Cont, ContF, Boxs, Axial, Fall, Belt, Tile, including surfaces transparent (SurfA) or colored (SurfC) by another data (@ref{2D plotting});
+two-dimensional plots: @ref{mesh}, @ref{surf}, @ref{dens}, @ref{cont}, @ref{contf}, @ref{boxs}, @ref{axial}, @ref{fall}, @ref{belt}, @ref{tile}, including surfaces transparent (@ref{surfa}) or colored (@ref{surfc}) by another data (@ref{2D plotting});
 
 @item
-three-dimensional plots: Surf3, Dens3, Cont3, ContF3, Cloud-like, including isosurfaces transparent (Surf3A) or colored (Surf3C) by another data (@ref{3D plotting});
+three-dimensional plots: @ref{surf3}, @ref{dens3}, @ref{cont3}, @ref{contf3}, @ref{cloud}-like, including isosurfaces transparent (@ref{surf3a}) or colored (@ref{surf3c}) by another data (@ref{3D plotting});
 
 @item
-vector fields plots: vector fields Vect, Vect3 and Traj, flow threads Flow, flow pipes Pipe, mapping chart Map, and so on (@ref{Vector fields});
+vector fields plots: vector fields @ref{vect}, @ref{vect3} and @ref{traj}, @ref{flow} threads, flow @ref{pipe}, @ref{map} chart, and so on (@ref{Vector fields});
 
 @item
-and so on. See also @ref{Extra samples}.
+and so on. See also @ref{All samples}.
 @end itemize
 
 In fact, I created the functions for drawing of all the types of scientific plots that I know. The list of plots is growing; if you need some special type of a plot then please email me @email{mathgl.abalakin@@gmail.com, e-mail} and it will appear in the new version.
@@ -215,125 +361,7 @@ There is fast evaluation of a textual mathematical expression. It is based on st
 @section Pictures
 @nav{}
 
-There are samples for @ref{1D data plotting, 1D arrays}, @ref{2D data plotting, 2D arrays}, @ref{3D data plotting, 3D arrays}, @ref{Vector fields plotting} and some @ref{Extra samples}.
-
-@anchor{1D data plotting}
-@subheading Examples of graphics for 1d arrays
-
-@sfig{plot, Plot sample}
-@sfig{radar, Radar sample}
-@sfig{step, Step sample}
-@sfig{tens, Tens sample}
-
-@sfig{area, Area sample}
-@sfig{region,Region sample}
-@sfig{stem, Stem sample}
-@sfig{torus,Torus sample}
-
-@sfig{bars, Bars sample}
-@sfig{barh, Barh sample}
-@sfig{cones,Cones sample}
-@sfig{chart,Chart sample}
-
-@sfig{boxplot,BoxPlot sample}
-@sfig{candle, Candle sample}
-@sfig{tube, Tube sample}
-@sfig{tape, Tape sample}
-
-@sfig{error,Error sample}
-@sfig{mark, Mark sample}
-@sfig{textmark, TextMark sample}
-@sfig{label,Label sample}
-
-@anchor{2D data plotting}
-@subheading Examples of graphics for 2d arrays
-
-@sfig{surf, Surf sample}
-@sfig{surfc,SurfC sample}
-@sfig{surfa,SurfA sample}
-@sfig{mesh, Mesh sample}
-
-@sfig{fall, Fall sample}
-@sfig{belt, Belt sample}
-@sfig{boxs, Boxs sample}
-@sfig{axial,Axial sample}
-
-@sfig{dens, Dens sample}
-@sfig{tile, Tile sample}
-@sfig{tiles,TileS sample}
-@sfig{grad, Grad sample}
-
-@sfig{cont, Cont sample}
-@sfig{contf,ContF sample}
-@sfig{contd,ContD sample}
-@sfig{contv,ContV sample}
-
-@anchor{3D data plotting}
-@subheading Examples of graphics for 3d arrays
-
-@sfig{surf3, Surf3 sample}
-@sfig{surf3c,Surf3C sample}
-@sfig{surf3a,Surf3A sample}
-@sfig{cloud, Cloud sample}
-
-@sfig{densa, Dens3 sample}
-@sfig{conta, Cont3 sample}
-@sfig{contfa,ContF3 sample}
-@sfig{dots,  Dots sample}
-
-@sfig{dens_xyz, Dens projection sample}
-@sfig{cont_xyz, Cont projection sample}
-@sfig{contf_xyz,ContF projection sample}
-@sfig{triplot, TriPlot and QuadPlot}
-
-@anchor{Vector fields plotting}
-@subheading Examples of graphics for vector fields
-
-@sfig{vect, Vect sample}
-@sfig{vecta,Vect3 sample}
-@sfig{flow, Flow sample}
-@sfig{pipe, Pipe sample}
-
-@sfig{traj, Traj sample}
-@sfig{dew, Dew sample}
-
-@anchor{Extra samples}
-@subheading Examples of additional features
-
-@sfig{inplot, Subplots}
-@sfig{axis, Axis and ticks}
-@sfig{ticks, Axis and ticks}
-@sfig{loglog, Axis and ticks}
-
-@sfig{curvcoor, Curvilinear coordinates}
-@sfig{colorbar, Colorbars}
-@sfig{box, Bounding box}
-@sfig{ternary, Ternary axis}
-
-@sfig{text, Text features}
-@sfig{legend, Legend sample}
-@sfig{cut, Cutting sample}
-@sfig{alpha, Transparency and lighting}
-
-@sfig{type0, Types of transparency}
-@sfig{type1, Types of transparency}
-@sfig{type2, Types of transparency}
-@sfig{fog, Adding fog}
-
-@sfig{combined, ``Compound'' graphics}
-@sfig{several_light, Lighting sample}
-@sfig{stereo, Stereo image}
-@sfig{primitives, Using primitives}
-
-@sfig{stfa, STFA sample}
-@sfig{dat_diff, Change data}
-@sfig{dat_extra, Change data}
-@sfig{map, Mapping visualization}
-
-@sfig{hist, Making histogram}
-@sfig{fit, Nonlinear fitting hints}
-@sfig{pde, PDE solving hints}
-@sfig{parser, Using MGL parser}
+@include samples_list.texi
 
 @external{}
 
@@ -353,6 +381,7 @@ You may download current version of MathGL for following configurations:
 @uref{http://downloads.sourceforge.net/mathgl/mathgl-@value{VERSION}@value{MINVER}-mingw.win64.7z,GPL} or @uref{http://downloads.sourceforge.net/mathgl/mathgl-@value{VERSION}@value{MINVER}.LGPL-mingw.win64.7z,LGPL} binaries for MinGW, 64-bit build.
 @item
 MathGL utilities with all required DLL files for @uref{http://downloads.sourceforge.net/mathgl/mgl_scripts-@value{VERSION}.win32.7z,32-bit} and @uref{http://downloads.sourceforge.net/mathgl/mgl_scripts-@value{VERSION}.win64.7z,64-bit} versions of MS Windows.
+MathGL utilities with all required DLL files for @uref{http://downloads.sourceforge.net/mathgl/mgl_scripts-@value{VERSION}.win64.7z,64-bit} versions of MS Windows.
 @item
 @uref{http://downloads.sourceforge.net/mathgl/mathgl-@value{VERSION}@value{MINVER}.eng.pdf,PDF} documentation in English.
 @item

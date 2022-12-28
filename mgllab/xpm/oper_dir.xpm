@@ -2,7 +2,7 @@
 static const char * oper_dir_xpm[] = {
 "16 16 2 1",
 " 	c None",
-".	c #000000",
+".	c #007f7f",
 "   .            ",
 "  .   .         ",
 "  .   .         ",

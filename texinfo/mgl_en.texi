@@ -47,6 +47,7 @@ This file documents the MGL script language. It corresponds to release @value{VE
 * MathGL core::
 * Data processing::
 * Examples::
+* All samples::
 * Symbols and hot-keys::
 * Copying This Manual::
 * Index::
@@ -82,10 +83,13 @@ This file documents the MGL script language. It corresponds to release @value{VE
 @node Data processing, Examples, MathGL core, Top
 @include data_en.texi
 
-@node Examples, Symbols and hot-keys, Data processing, Top
+@node Examples, All samples, Data processing, Top
 @include ex_mgl_en.texi
 
-@node Symbols and hot-keys, Copying This Manual, Examples, Top
+@node All samples, Symbols and hot-keys, Examples, Top
+@include samples.texi
+
+@node Symbols and hot-keys, Copying This Manual, All samples, Top
 @appendix Symbols and hot-keys
 @include symbols_en.texi
 

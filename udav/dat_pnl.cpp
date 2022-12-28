@@ -85,8 +85,7 @@ void DatPanel::refresh()
 	if(ny!=var->GetNy())	{	ny = var->GetNy();	tab->setRowCount(ny);	rc=true;	}
 	if(kz>=var->GetNz())	{	kz = 0;	emit sliceChanged(0);	}
 	if(nz!=var->GetNz())	{	nz = var->GetNz();	emit nzChanged(nz);		}
-	const mglData *dd = dynamic_cast<const mglData *>(var);	if(dd)	id = QString(dd->id.c_str());
-	const mglDataC *dc = dynamic_cast<const mglDataC *>(var);	if(dc)	id = QString(dc->id.c_str());
+	id = QString(var->GetColumnId());
 	if(nz==1 && ny>1 && !id.isEmpty())
 	{
 		QStringList head;
@@ -99,7 +98,6 @@ void DatPanel::refresh()
 		}
 		tab->setHorizontalHeaderLabels(head);
 	}
-	long m=var->s.length();
 	QString s,d;
 	if(rc)
 	{
@@ -117,9 +115,9 @@ void DatPanel::refresh()
 		dual f = cc->a[i+nx*(j+ny*kz)];
 		if(mgl_isnan(f))	s = "nan";
 		else if(mgl_isbad(f))	s="inf";
-		else if(imag(f)>0)	s.sprintf("%.15g+%.15gi",real(f),imag(f));
-		else if(imag(f)<0)	s.sprintf("%.15g-%.15gi",real(f),-imag(f));
-		else	s.sprintf("%15g",real(f));
+		else if(imag(f)>0)	s.asprintf("%.15g+%.15gi",real(f),imag(f));
+		else if(imag(f)<0)	s.asprintf("%.15g-%.15gi",real(f),-imag(f));
+		else	s.asprintf("%15g",real(f));
 		tab->item(j,i)->setText(s);
 	}
 	else	for(long i=0;i<nx;i++)	for(long j=0;j<ny;j++)
@@ -127,14 +125,16 @@ void DatPanel::refresh()
 		double f = var->v(i,j,kz);
 		if(mgl_isnan(f))	s = "nan";
 		else if(mgl_isbad(f))	s=f>0?"inf":"-inf";
-		else	s.sprintf("%.15g",f);
+		else	s.asprintf("%.15g",f);
 		tab->item(j,i)->setText(s);
 	}
 	infoDlg->allowRefresh=true;	infoDlg->refresh();
+	const wchar_t *vs = var->Name();
+	long m=wcslen(vs);
 	QChar *ss = new QChar[m+1];
-	for(long i=0;i<m;i++)	ss[i] = var->s[i];
+	for(long i=0;i<m;i++)	ss[i] = vs[i];
 	s = QString(ss, m);	delete []ss;
-	d.sprintf("%d * %d * %d", nx, ny, nz);
+	d.asprintf("%d * %d * %d", nx, ny, nz);
 	ready = true;
 }
 //-----------------------------------------------------------------------------
@@ -146,7 +146,7 @@ void DatPanel::setVar(mglDataA *v)
 	nx = ny = nz = kz = 0;
 	if(v)
 	{
-		QString s = QString::fromWCharArray(v->s.c_str());
+		QString s = QString::fromWCharArray(v->Name());
 		v->o = this;	v->func = deleteDat;
 		refresh();
 		setWindowTitle(s + _(" - UDAV variable"));
@@ -222,9 +222,9 @@ void DatPanel::putValue(int r, int c)
 		{
 			if(mgl_isnan(g))	s="nan";
 			else if(mgl_isbad(g))	s="inf";
-			else if(imag(g)>0)	s.sprintf("%g+%gi",real(g),imag(g));
-			else if(imag(g)<0)	s.sprintf("%g-%gi",real(g),-imag(g));
-			else	s.sprintf("%g",real(g));
+			else if(imag(g)>0)	s.asprintf("%g+%gi",real(g),imag(g));
+			else if(imag(g)<0)	s.asprintf("%g-%gi",real(g),-imag(g));
+			else	s.asprintf("%g",real(g));
 			tab->item(r,c)->setText(s);
 		}
 		cc->a[c+nx*(r+ny*kz)] = g;
@@ -235,7 +235,7 @@ void DatPanel::putValue(int r, int c)
 		{
 			if(mgl_isnan(f))	s="nan";
 			else if(mgl_isbad(f))	s=f>0?"inf":"-inf";
-			else	s.sprintf("%g", f);
+			else	s.asprintf("%g", f);
 			tab->item(r,c)->setText(s);
 		}
 		var->set_v(f,c,r,kz);
@@ -258,7 +258,7 @@ void DatPanel::save()
 	else if(ext=="h5" || ext=="hdf")
 	{
 		bool ok;
-		QString s = QInputDialog::getText(this, _("UDAV - Save to HDF"), _("Enter data name"), QLineEdit::Normal, QString::fromWCharArray(var->s.c_str()), &ok);
+		QString s = QInputDialog::getText(this, _("UDAV - Save to HDF"), _("Enter data name"), QLineEdit::Normal, QString::fromWCharArray(var->Name()), &ok);
 		if(ok)	var->SaveHDF(fn.toLocal8Bit().constData(), s.toLocal8Bit().constData());
 	}
 	else 	var->Save(fn.toLocal8Bit().constData());
@@ -280,7 +280,7 @@ void DatPanel::load()
 	else if(ext=="h5" || ext=="hdf")
 	{
 		bool ok;
-		QString s = QInputDialog::getText(this, _("UDAV - Read from HDF"), _("Enter data name"), QLineEdit::Normal, QString::fromWCharArray(var->s.c_str()), &ok);
+		QString s = QInputDialog::getText(this, _("UDAV - Read from HDF"), _("Enter data name"), QLineEdit::Normal, QString::fromWCharArray(var->Name()), &ok);
 		if(ok)	d->ReadHDF(fn.toLocal8Bit().constData(), s.toLocal8Bit().constData());
 	}
 	else 	d->Read(fn.toLocal8Bit().constData());
@@ -290,7 +290,7 @@ void DatPanel::load()
 void DatPanel::copy()
 {
 	QTableWidgetSelectionRange ts = tab->selectedRanges().first();
-	QString res, s;
+	QString res;
 	for(long j=ts.topRow();j<=ts.bottomRow();j++)
 	{
 		for(long i=ts.leftColumn();i<=ts.rightColumn();i++)
@@ -338,7 +338,7 @@ void DatPanel::list()	// TODO: in which script insert ???
 	{
 	for(long i=0;i<nx;i++)
 		{
-			s.sprintf("%g\t",d->a[i+nx*(j+kz*ny)]);
+			s.asprintf("%g\t",d->a[i+nx*(j+kz*ny)]);
 			res += s;
 		}
 		if(j<ny-1)	res = res + "|\t";
@@ -398,7 +398,7 @@ void DatPanel::create()
 void DatPanel::reSize()
 {
 	QString mx, my, mz;
-	mx.sprintf("%d",nx);	my.sprintf("%d",ny);	mz.sprintf("%d",nz);
+	mx.asprintf("%d",nx);	my.asprintf("%d",ny);	mz.asprintf("%d",nz);
 	if(sizesDialog(_("UDAV - Resize data"), _("Enter new data sizes"), _("X-size"), _("Y-size"), _("Z-size"), mx, my, mz))
 	{
 		mglData *d = dynamic_cast<mglData *>(var);
@@ -410,7 +410,7 @@ void DatPanel::reSize()
 void DatPanel::squize()
 {
 	QString mx("1"), my("1"), mz("1");
-	if(sizesDialog(_("UDAV - Squeeze data"), _("Enter step of saved points. For example, '1' save all, '2' save each 2nd point, '3' save each 3d and so on."), _("X-direction"), _("Y-direction"), _("Z-direction"), mx, my, mz))
+	if(sizesDialog(_("UDAV - Squeeze data"), _("Enter step of saved points. For example, '1' save all, '2' save each 2nd point, '3' save each 3rd and so on."), _("X-direction"), _("Y-direction"), _("Z-direction"), mx, my, mz))
 	{
 		mglData *d = dynamic_cast<mglData *>(var);
 		if(d)	d->Squeeze(mx.toInt(), my.toInt(), mz.toInt());
@@ -432,7 +432,7 @@ void DatPanel::crop()
 void DatPanel::rearrange()
 {
 	QString mx, my, mz;
-	mx.sprintf("%d",nx);	my.sprintf("%d",ny);	mz.sprintf("%d",nz);
+	mx.asprintf("%d",nx);	my.asprintf("%d",ny);	mz.asprintf("%d",nz);
 	if(sizesDialog(_("UDAV - Rearrange data"), _("Enter new data sizes"), _("X-size"), _("Y-size"), _("Z-size"), mx, my, mz))
 	{
 		mglData *d = dynamic_cast<mglData *>(var);
@@ -558,7 +558,7 @@ void DatPanel::newdat()
 	bool res = d->exec();
 	QString 	val = f1->text(), mgl;
 	int k = c->currentIndex();
-	QString self = QString::fromWCharArray(var->s.c_str());
+	QString self = QString::fromWCharArray(var->Name());
 	if(res)
 	{
 		if(k<0)
@@ -635,7 +635,7 @@ void DatPanel::oper()
 	bool res = d->exec();
 	QString 	val = f1->text(), mgl;
 	int k = c->currentIndex();
-	QString self = QString::fromWCharArray(var->s.c_str());
+	QString self = QString::fromWCharArray(var->Name());
 	if(res)
 	{
 		if(k<0)
@@ -836,5 +836,5 @@ void DatPanel::toolLeft(QBoxLayout *l)
 	bb = new QToolButton(this);	l->addWidget(bb);	bb->setDefaultAction(a);
 }
 //-----------------------------------------------------------------------------
-QString DatPanel::dataName()	{	return QString::fromWCharArray(var->s.c_str());	}
+QString DatPanel::dataName()	{	return QString::fromWCharArray(var->Name());	}
 //-----------------------------------------------------------------------------

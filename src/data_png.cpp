@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,11 +12,12 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#include "mgl2/base.h"
 #include "mgl2/data.h"
 #if MGL_HAVE_PNG
 #include <png.h>
@@ -25,13 +26,10 @@
 #include <jpeglib.h>
 #endif
 //-----------------------------------------------------------------------------
-size_t MGL_LOCAL_PURE mgl_col_dif(unsigned char *c1,unsigned char *c2,bool sum)
+unsigned MGL_LOCAL_PURE mgl_col_dif(unsigned char *c1,unsigned char *c2)
 {
-	size_t res,d1=labs(long(c1[0])-long(c2[0])),
-		d2=labs(long(c1[1])-long(c2[1])),d3=labs(long(c1[2])-long(c2[2]));
-	if(sum)	res = d1+d2+d3;
-	else	res = mgl_max(d1,mgl_max(d2,d3));
-	return res;
+	unsigned d1=abs(int(c1[0])-c2[0]), d2=abs(int(c1[1])-c2[1]), d3=abs(int(c1[2])-c2[2]);
+	d2 = d2>d3?d2:d3;	d2 = d2>d1?d2:d1;	return d2;
 }
 //-----------------------------------------------------------------------------
 MGL_NO_EXPORT unsigned char *mgl_create_scheme(const char *scheme,long &num)
@@ -46,12 +44,12 @@ MGL_NO_EXPORT unsigned char *mgl_create_scheme(const char *scheme,long &num)
 		{	cc[3*np]=255*col.r;	cc[3*np+1]=255*col.g;	cc[3*np+2]=255*col.b;	np++;	}
 	}
 	if(np<2)	{	num=0;	delete []cc;	return 0;	}
-	for(size_t i=0;i<np-1;i++)	nc+=mgl_col_dif(cc+3*i,cc+3*i+3,false);
+	for(size_t i=0;i<np-1;i++)	nc+=mgl_col_dif(cc+3*i,cc+3*i+3);
 	c = new unsigned char[3*nc+3];
 	size_t pos=0;
 	for(size_t i=0;i<np-1;i++)
 	{
-		size_t dd=mgl_col_dif(cc+3*i,cc+3*i+3,false);
+		size_t dd=mgl_col_dif(cc+3*i,cc+3*i+3);
 		for(size_t j=0;j<dd;j++)
 		{
 			c1 = c+3*(pos+j);	c2 = cc+3*i;
@@ -61,10 +59,8 @@ MGL_NO_EXPORT unsigned char *mgl_create_scheme(const char *scheme,long &num)
 		}
 		pos += dd;
 	}
-	memcpy(c+3*nc-3,cc+3*np-3,3);
-	delete []cc;
-	num=nc;
-	return c;
+	memcpy(c+3*nc-3,cc+3*np-3,3);	delete []cc;
+	num=nc;	return c;
 }
 //-----------------------------------------------------------------------------
 bool MGL_NO_EXPORT mgl_read_image(unsigned char **g, int &w, int &h, const char *fname)
@@ -171,26 +167,79 @@ void MGL_EXPORT mgl_data_import(HMDT d, const char *fname, const char *scheme,mr
 	unsigned char *g = 0;
 	int w=0, h=0;
 	if(!mgl_read_image(&g,w,h,fname))	return;
+#ifdef OLD_IMPORT	
+	const mglTexture c(scheme,1);
+	if(c.n<2)	return;
+	d->Create(w,h,1);
+	float *ll = new float[3*c.n-1];
+	mglColor *lc = new mglColor[c.n-1];
+	const mglColor *c0=c.c0;
+	for(long i=0;i<c.n-1;i++)
+	{
+		lc[i] = c.c0[2*i+2]-c.c0[2*i];
+		float tmp = lc[i]*lc[i];
+		ll[3*i] = tmp?1/tmp:0;
+		ll[3*i+1] = c.val[i];
+		ll[3*i+2] = c.val[i+1]-c.val[i];
+	}
+#pragma omp parallel for collapse(2)
+	for(long i=0;i<h;i++)	for(long j=0;j<w;j++)
+	{
+		mglColor cc(g+4*w*(d->ny-i-1)+4*j);
+		float pos=NAN, mval=256;
+		for(long k=0;k<c.n-1;k++)
+		{
+			mglColor tc(cc-c0[2*k]);
+			float u = (tc*lc[k])*ll[3*k];	tc -= lc[k]*u;
+			float v = tc*tc, u0=ll[3*k+1], du=ll[3*k+2];
+			if(v==0)
+			{
+				if(u>=0 && u<=1)	{	pos=u*du+u0;mval=0;	break;	}
+//				else if(u>-v && u<0){	pos=u0;	mval=0;	break;	}
+//				else if(u<1+v)	{	pos=du+u0;	mval=0;	break;	}
+			}
+			else if(v<mval)
+			{
+				if(u>=0 && u<=1)	{	pos=u*du+u0;	mval=v;	}
+//				else if(u>-v && u<0){	pos=u0;	mval=v;	}
+//				else if(u<1+v)	{	pos=du+u0;	mval=v;	}
+			}
+		}
+		long K=c.n-2;
+		float uF = (mglColor(cc-c0[0])*lc[0])*ll[0];
+		float uL = (mglColor(cc-c0[2*K])*lc[K])*ll[3*K];
+		if(mgl_isnan(pos) && uF<0)	pos = 0;
+		if(mgl_isnan(pos) && uL>1)	pos = 1;
+		d->a[j+d->nx*i] = v1 + pos*(v2-v1);
+	}
+printf("\n");
+	delete []g;	delete []ll;	delete []lc;
+#else
 	long num=0;
 	unsigned char *c = mgl_create_scheme(scheme,num);
-	if(num>1)
+	if(num>=2)
 	{
 		d->Create(w,h,1);
 #pragma omp parallel for collapse(2)
 		for(long i=0;i<h;i++)	for(long j=0;j<w;j++)
 		{
-			size_t pos=0,mval=256;
+			unsigned pos=0,mval=256*256;
+			const unsigned char *c2=g+4*w*(d->ny-i-1)+4*j;
 			for(long k=0;k<num;k++)
 			{
-				size_t val = mgl_col_dif(c+3*k,g+4*w*(d->ny-i-1)+4*j,true);
-				if(val==0)	{	pos=k;	break;	}
+				const unsigned char *c1=c+3*k;
+				int v0=int(c1[0])-c2[0];
+				int v1=int(c1[1])-c2[1];
+				int v2=int(c1[2])-c2[2];
+				unsigned val = v0*v0+v1*v1+v2*v2;
+				if(val==0)		{	pos=k;	break;	}
 				if(val<mval)	{	pos=k;	mval=val;	}
 			}
-			d->a[j+d->nx*i] = v1 + pos*(v2-v1)/num;
+			d->a[j+d->nx*i] = v1 + pos*(v2-v1)/(num-1);
 		}
 	}
-	delete []g;
-	delete []c;
+	delete []c;	delete []g;
+#endif
 }
 //-----------------------------------------------------------------------------
 int MGL_NO_EXPORT mgl_png_save(const char *fname, int w, int h, unsigned char **p);
@@ -198,7 +247,7 @@ int MGL_NO_EXPORT mgl_bmp_save(const char *fname, int w, int h, unsigned char **
 int MGL_NO_EXPORT mgl_tga_save(const char *fname, int w, int h, unsigned char **p);
 int MGL_NO_EXPORT mgl_jpeg_save(const char *fname, int w, int h, unsigned char **p);
 int MGL_NO_EXPORT mgl_bps_save(const char *fname, int w, int h, unsigned char **p);
-void MGL_EXPORT mgl_data_export(HCDT dd, const char *fname, const char *scheme,mreal v1,mreal v2,long ns)
+void MGL_EXPORT mgl_data_export(HCDT dd, const char *fname, const char *scheme, double v1, double v2, long ns)
 {
 	long nx=dd->GetNx(), ny=dd->GetNy(), nz=dd->GetNz();
 	if(v1>v2)	return;

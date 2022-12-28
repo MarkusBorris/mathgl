@@ -11,6 +11,7 @@ MathGL имеет встроенный скриптовый язык MGL для 
 @menu
 * MGL definition::
 * Program flow commands::
+* Special comments::
 * LaTeX package::
 @ifclear UDAV
 * mglParse class::
@@ -49,7 +50,7 @@ MathGL имеет встроенный скриптовый язык MGL для 
 произвольные комбинации столбцов данных (например, @code{a('n*w^2/exp(t)')}), если столбцы данных были именованы командой @ref{idset} или в файле данных (в строке начинающейся с @code{##}).
 
 @item
-произвольное выражение из существующих переменных и констант. Например, @samp{sqrt(dat(:,5)+1)} даст временный массив данных с элементами равными @code{tmp[i,j] = sqrt(dat[i,5,j]+1)}.
+произвольное выражение из существующих переменных и констант. Например, @samp{sqrt(dat(:,5)+1)} даст временный массив данных с элементами равными @code{tmp[i,j] = sqrt(dat[i,5,j]+1)}. При этом символ @samp{`} возвращает транспонированный массив: @samp{`sqrt(dat(:,5)+1)} и @samp{sqrt(`dat(:,5)+1)} оба дадут временный массив данных с элементами равными @code{tmp[i,j] = sqrt(dat[j,5,i]+1)}.
 
 @item
 массивы с элементами заданными в квадратных скобках [], разделенные @samp{,}. При этом внутри выражения не должно быть пробелов! Например, @samp{[1,2,3]} даст временный массив из 3 элементов @{1, 2, 3@}; @samp{[[11,12],[21,22]]} даст матрицу 2*2 и т.д. Элементами такой конструкции могут быть и массивы если их размерности одинаковые, например @samp{[v1,v2,...,vn]}.
@@ -73,13 +74,9 @@ variant 1
 fplot 'x^3' 'b'?'r|'
 @end verbatim
 
-
-
-@c TODO Translate it!
-
 @c ------------------------------------------------------------------
 @external{}
-@node Program flow commands, LaTeX package, MGL definition, MGL scripts
+@node Program flow commands, Special comments, MGL definition, MGL scripts
 @section Управление ходом выполнения
 @nav{}
 
@@ -148,12 +145,15 @@ fplot 'x^3' 'b'?'r|'
 
 
 @cindex if
-@anchor{if}
-@deftypefn {Команда MGL} {} if dat 'cond'
-Начинает блок команд, выполняемый если каждый элемент @var{dat} удовлетворяет условию @var{cond}.
+@anchor{if} @anchor{then}
+@deftypefn {Команда MGL} {} if @code{val} @strong{then} @code{CMD}
+Выполняет команду @code{CMD} только если @code{val} не ноль.
 @end deftypefn
 @deftypefn {Команда MGL} {} if @code{val}
 Начинает блок команд, выполняемый если @code{val} не ноль.
+@end deftypefn
+@deftypefn {Команда MGL} {} if dat 'cond'
+Начинает блок команд, выполняемый если каждый элемент @var{dat} удовлетворяет условию @var{cond}.
 @end deftypefn
 @cindex elseif
 @anchor{elseif}
@@ -188,6 +188,20 @@ fplot 'x^3' 'b'?'r|'
 Заканчивает блок цикла @code{for}.
 @end deftypefn
 
+@cindex do
+@anchor{do}
+@deftypefn {Команда MGL} {} do
+Начинает бесконечный цикл.
+@end deftypefn
+@cindex while
+@anchor{while}
+@deftypefn {Команда MGL} {} while @code{val}
+Переходит к следующей итерации цикла если @var{val} не ноль, в противном случае заканчивает цикл.
+@end deftypefn
+@deftypefn {Команда MGL} {} while dat 'cond'
+Переходит к следующей итерации цикла если @var{dat} удовлетворяет условию @var{cond}, в противном случае заканчивает цикл.
+@end deftypefn
+
 @cindex once
 @anchor{once}
 @deftypefn {Команда MGL} {} once @code{val}
@@ -199,14 +213,11 @@ fplot 'x^3' 'b'?'r|'
 Останавливает выполнение скрипта.
 @end deftypefn
 
-
 @cindex variant
 @anchor{variant}
 @deftypefn {Команда MGL} {} variant @code{val}
 Задает вариант аргумента(ов), разделенных символом @samp{?}, для всех последующих комманд.
 @end deftypefn
-
-
 
 @cindex rkstep
 @anchor{rkstep}
@@ -219,11 +230,63 @@ fplot 'x^3' 'b'?'r|'
 
 @c ------------------------------------------------------------------
 @external{}
+@node Special comments, LaTeX package, Program flow commands, MGL scripts
+@section Специальные комментарии
+@nav{}
+
+There are number of special comments for MGL script, which set some global behavior (like, animation, dialog for parameters and so on). All these special comments starts with double sign @code{##}. Let consider them.
+
+@table @samp
+@item @strong{##c} @code{v1 v2 [dv=1]}
+Sets the parameter for animation loop relative to variable @code{$0}. Here @var{v1} and @var{v2} are initial and final values, @var{dv} is the increment.
+
+@item @strong{##a} val
+Adds the parameter @var{val} to the list of animation relative to variable @code{$0}. You can use it several times (one parameter per line) or combine it with animation loop @strong{##c}.
+
+@item @strong{##d} $I kind|label|par1|par2|...
+Creates custom dialog for changing plot properties. Each line adds one widget to the dialog. Here @var{$I} is id ($0,$1...$9,$a,$b...$z), @var{label} is the label of widget, @var{kind} is the kind of the widget:
+@itemize @bullet
+@item
+	'e' for editor or input line (parameter is initial value) , 
+@item
+	'v' for spinner or counter (parameters are "ini|min|max|step|big_step"), 
+@item
+	's' for slider (parameters are "ini|min|max|step"), 
+@item
+	'b' for check box (parameter is "ini"; also understand "on"=1), 
+@item
+	'c' for choice (parameters are possible choices).
+@end itemize
+Now, it work in FLTK-based @code{mgllab} and @code{mglview} only.
+
 @ifclear UDAV
-@node LaTeX package, mglParse class, Program flow commands, MGL scripts
+You can make custom dialog in C/C++ code too by using one of following functions.
+
+@deftypefn {Method on @code{mglWnd}} @code{void} MakeDialog (@code{const char *}ids, @code{char const * const *}args, @code{const char *}title)
+@deftypefnx{Method on @code{mglWnd}} @code{void} MakeDialog (@code{const std::string &}ids, @code{const std::vector<std::string> &}args, @code{const char *}title)
+@deftypefnx {C function} @code{void} mgl_wnd_make_dialog (@code{HMGL} gr, @code{const char *}ids, @code{char const * const *}args, @code{const char *}title)
+Makes custom dialog for parameters ids of element properties defined by args.
+@end deftypefn
+
+At this you need to provide callback function for setting up properties. You can do it by overloading @code{Param()} function of @code{mglDraw} class or set it manually.
+
+@deftypefn {Method on @code{mglDraw}} @code{void} Param (@code{char} id, @code{const char *} val)
+@deftypefnx{Method on @code{mglWnd}} @code{void} SetPropFunc (@code{void (*}prop@code{)(char id, const char *val, void *p)}, @code{void *}par=@code{NULL})
+@deftypefnx {C function} @code{void} mgl_wnd_set_prop (@code{void (*}prop@code{)(char id, const char *val, void *p)}, @code{void *}par)
+Set callback function for properties setup.
+@end deftypefn
+
+@end ifclear
+
+@end table
+
+@c ------------------------------------------------------------------
+@external{}
+@ifclear UDAV
+@node LaTeX package, mglParse class, Special comments, MGL scripts
 @end ifclear
 @ifset UDAV
-@node LaTeX package, , Program flow commands, MGL scripts
+@node LaTeX package, , Special comments, MGL scripts
 @end ifset
 @section LaTeX package
 @nav{}
@@ -232,7 +295,7 @@ There is LaTeX package @code{mgltex} (was made by Diego Sejas Viscarra) which al
 
 For using this package you need to specify @code{--shell-escape} option for @emph{latex/pdflatex} or manually run @emph{mglconv} tool with produced MGL scripts for generation of images. Don't forgot to run @emph{latex/pdflatex} second time to insert generated images into the output document. Also you need to run @emph{pdflatex} third time to update converted from EPS images if you are using vector EPS output (default).
 
-The package may have following options: @code{draft}, @code{final} --- the same as in the @emph{graphicx} package; @code{on}, @code{off} --- to activate/deactivate the creation of scripts and graphics; @code{comments}, @code{nocomments} --- to make visible/invisible commentaries contained inside @code{mglcomment} environments; @code{jpg}, @code{jpeg}, @code{png} --- to export graphics as JPEG/PNG images; @code{eps}, @code{epsz} --- to export to uncompressed/compressed EPS format as primitives; @code{bps}, @code{bpsz} --- to export to uncompressed/compressed EPS format as bitmap (doesn't work with @emph{pdflatex}); @code{pdf} --- to export to 3D PDF; @code{tex} --- to export to @emph{LaTeX/tikz} document.
+The package may have following options: @code{draft}, @code{final} --- the same as in the @emph{graphicx} package; @code{on}, @code{off} --- to activate/deactivate the creation of scripts and graphics; @code{comments}, @code{nocomments} --- to make visible/invisible comments contained inside @code{mglcomment} environments; @code{jpg}, @code{jpeg}, @code{png} --- to export graphics as JPEG/PNG images; @code{eps}, @code{epsz} --- to export to uncompressed/compressed EPS format as primitives; @code{bps}, @code{bpsz} --- to export to uncompressed/compressed EPS format as bitmap (doesn't work with @emph{pdflatex}); @code{pdf} --- to export to 3D PDF; @code{tex} --- to export to @emph{LaTeX/tikz} document.
 
 The package defines the following environments:
 @table @samp
@@ -283,7 +346,7 @@ An example of usage of @samp{mgl} environment would be:
 @item mglfunc
 	Is used to define MGL functions. It takes one mandatory argument, which is the name of the function, plus one additional argument, which specifies the number of arguments of the function. The environment needs to contain only the body of the function, since the first and last lines are appended automatically, and the resulting code is written at the end of the general script, after the @ref{stop} command, which is also written automatically. The warning is produced if 2 or more function with the same name is defined.
 @item mglcomment
-	Is used to contain multiline commentaries. This commentaries will be visible/invisible in the output document, depending on the use of the package options @code{comments} and @code{nocomments} (see above), or the @code{\mglcomments} and @code{\mglnocomments} commands (see bellow).
+	Is used to contain multiline comments. This comments will be visible/invisible in the output document, depending on the use of the package options @code{comments} and @code{nocomments} (see above), or the @code{\mglcomments} and @code{\mglnocomments} commands (see bellow).
 @item mglsetup
 	If many scripts with the same code are to be written, the repetitive code can be written inside this environment only once, then this code will be used automatically every time the @samp{\mglplot} command is used (see below). It takes one optional argument, which is a name to be associated to the corresponding contents of the environment; this name can be passed to the @samp{\mglplot} command to use the corresponding block of code automatically (see below).
 @end table

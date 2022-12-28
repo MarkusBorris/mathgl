@@ -463,7 +463,7 @@ There are samples for @ref{1D plotting, 1D arrays}, @ref{2D plotting, 2D arrays}
 
 MGL script language is rather simple. Each string is a command. First word of string is the name of command. Other words are command arguments. Command may have up to 1000 arguments (at least for now). Words are separated from each other by space or tabulation symbol. The upper or lower case of words is important, i.e. variables @var{a} and @var{A} are different variables. Symbol @samp{#} starts the comment (all characters after # will be ignored). The exception is situation when @samp{#} is a part of some string. Also options can be specified after symbol @samp{;}. Symbol @samp{:} starts new command (like new line character) if it is not placed inside a string or inside brackets.
 
-If string contain references to external parameters (substrings @samp{$0}, @samp{$1} ... @samp{$9}) or definitions (substrings @samp{$a}, @samp{$b} ... @samp{$z}) then before execution the values of parameter/definition will be substituted instead of reference. It allows to use the same MGL script for different parameters (file names, paths, condition and so on).
+If string contain references to external parameters (substrings @samp{$0}, @samp{$1} ... @samp{$9}) or definitions (substrings @samp{$a}, @samp{$b} ... @samp{$z}) then before execution the values of parameter/definition will be substituted instead of reference. It allows one to use the same MGL script for different parameters (file names, paths, condition and so on).
 
 Argument can be a string, a variable (data arrays) or a number (scalars).
 @itemize @bullet

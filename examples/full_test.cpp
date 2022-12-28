@@ -21,12 +21,20 @@
 #include <locale.h>
 #include <time.h>
 #include <getopt.h>
+#ifdef WIN32
+#include <io.h>
+#include <direct.h>
+#else
 #include <unistd.h>
+#endif
 
+#include "mgl2/base.h"
 #include "mgl2/mgl.h"
 #include "mgl2/font.h"
 #include "mgl2/eval.h"
+#include "mgl2/evalc.h"
 //-----------------------------------------------------------------------------
+void smgl_fexport(mglGraph *gr);	// test file export
 void MGL_EXPORT mgl_create_cpp_font(HMGL gr, const wchar_t *how);
 long MGL_EXPORT mgl_check_tex_table();
 //-----------------------------------------------------------------------------
@@ -35,6 +43,7 @@ struct mglSample	/// Structure for list of samples
 	const char *name;
 	void (*func)(mglGraph*);
 	const char *mgl;
+	const char *info;
 };
 extern mglSample samp[];
 extern const char *mmgl_dat_prepare;
@@ -52,6 +61,7 @@ int width  = 800;
 int height = 600;
 int big  = 0;
 int srnd = 0;
+int fastcut = 0;
 int use_mgl = 0;
 int verbose = 0;
 int quality  = MGL_DRAW_NORM;
@@ -66,24 +76,105 @@ void save(mglGraph *gr,const char *name,const char *suf);
 void test(mglGraph *gr)
 {
 	mglParse par;
-	par.Execute(gr,"text 0 -0.2 'abcde'\ntext 0 0 'abcde'[2]\n"
-	"text 0 0.2 'abcde'+2\ntext 0 0.4 'abcde',2\ntext 0 0.6 'abcde',2,'k'"
-	"text 0 0.8 'abcde',2,'k'+1\ntext 0 1 'abcde',2,'k'[5]\ntext 0 1 'abcde''k'[5]");
+	par.Execute(gr,"plot [0,-1,nan,0.1,0.5,1.1] 'o'");	//fplot 'x'");	//"box:fplot '2*sin(pi*x)' 'ko'");
+// 	par.Execute(gr,"colorbar;size -2;crange 0 1;value 90");
+// 	par.Execute(gr,"fplot 'x';legend 'рус':legend");
+//	par.Execute(gr,"fsurf 'x*y':rasterize:clf:fplot 'sin(x)' '2q':axis");
+//	par.Execute(gr,"xrange 0 1:new x 10 '3*x':echo x\nnew a 10 'value([0,1,-1],3*x)':echo a\nnew b 10 'spline([0,1,-1],3*x)':echo b");
+//	par.Execute(gr,"new a 1 'sum(_i^2,5)':echo a:new b 1 'prod(1+_i,5)':echo b\n"
+//	"new c 1 'dsum(_i,5)':echo c:new d 1 'sum(sum(_j+_i^2,5),5)':echo d");
+//	par.Execute(gr,"define n 30\nnew a n n n 'x^2+y^2'\nnew b n n n 'z^4+2*x^4-2*y^4'\nrotate 40 60:box:axis\n"
+//		"dcont [0.5,0.5] a b '2k'\nlight on:alpha on\nsurf3 a 0.5 'r':surf3 b 0.5 'g'");
+//	par.Execute(gr,"new f 100 'x^3':save f 'test.dat':axis:box:fplot ':test.dat:-1:1'");
+//	par.Execute(gr,"text 0 0 'ab' '@'");
+//	par.Execute(gr,"new a 3 3 'x*y'\nsubplot 2 1 0 '':dens a:dens a 'k+/'\n"
+//	"subplot 2 1 1 '':mask '+' 'ff00182424f800' 30:dens a '3+'");
+	gr->WritePNG("1.png");
 	return;
-
-	gr->SubPlot(2,2,0);	gr->Axis();
-	gr->SubPlot(2,2,1);	gr->Rotate(40,60);	gr->Axis();
-	gr->SetRotatedText(false);	gr->SubPlot(2,2,2);	gr->Axis();
-	gr->SubPlot(2,2,3);	gr->Rotate(40,60);	gr->Axis();	return;
-	mglData a;	a.SetList(5,0.,1.,0.,1.,-1.,2.);
-	gr->Plot(a);
+	
+	dual c(0,M_PI/2), r=mgl_ipowc(c,2);
+	printf("(%g,%g)\n",r.real(),r.imag());
 	return;
-	par.Execute(gr,"call 'test' -1\n func 'test' 1\nline $1 0 1 1 'b'\nreturn\n");
+	
+	mglData dat;	dat.Import("Equirectangular-projection.jpg","BbGYw",-1,1);
+	dat.Save("1.dat");
+//	gr->ShearPlot(3, 0, 0.2, 0.1);	gr->Box("r");
+	return;
+//	par.Execute(gr,"call 'test' -1\n func 'test' 1\nline $1 0 1 1 'b'\nreturn\n");
 //	par.Execute(gr,"load '/home/balakin/mathgl-code/mathgl-2x/build/examples/libmgl_module.so':baxis\n");
 //	par.Execute(gr,"subplot 1 1 0:#rotate 40 60\nperspective 1.22:box:axis\n");
-	return;
+//	return;
 }
 //-----------------------------------------------------------------------------
+void mgl_generate_texi()
+{
+	FILE *fp = fopen("samples.texi","w");
+	FILE *fq = fopen("samples_list.texi","w");
+	fprintf(fp,"@c ------------------------------------------------------------------\n"
+		"@chapter All samples\n@nav{}\n\n"
+		"This chapter contain alphabetical list of MGL and C++ samples for most of MathGL graphics and features.\n\n@menu\n* initialization sample::\n");
+	for(const mglSample *s = samp;s->name && s->name[0];s++)
+		fprintf(fp,"* %s sample::\n",s->name);
+	fprintf(fp,"@end menu\n@external{}\n");
+	fprintf(fp,"@c ------------------------------------------------------------------\n"
+		"@node initialization sample, %s sample, , All samples\n@section Functions for initialization\n@nav{}\n", samp[0].name);
+	fprintf(fp,"\nThis section contain functions for input data for most of further samples.\n\n@strong{MGL code:}\n@verbatim\n%s\n@end verbatim\n", mmgl_dat_prepare);
+	fprintf(fp,"\n@ifclear UDAV\n@strong{C++ code:}\n@verbatim\n");
+	
+	char buf[512], name[64];
+	FILE *fs = fopen("wnd_samples.cpp","r");
+	while(!feof(fs))
+	{
+		if(!fgets(buf,512,fs) || strstr(buf,"void mgls_prepare1d"))	break;
+	}
+	while(!feof(fs))
+	{	fprintf(fp,"%s",buf);	if(!fgets(buf,512,fs))	break;	}
+	fprintf(fp,"\n@end verbatim\n@end ifclear\n\n@external{}\n");
+	fclose(fs);
+
+	const char *prev = "initialization";
+	fs = fopen("samples.cpp","r");
+	for(size_t i=0;samp[i].name && samp[i].name[0];i++)
+	{
+		fprintf(fq, "@sfig{%s, %s sample}\n", samp[i].name, samp[i].name);
+		if(samp[i+1].name && samp[i+1].name[0])
+			fprintf(fp,"@c ------------------------------------------------------------------\n"
+				"@node %s sample, %s sample, %s sample, All samples\n@section Sample @samp{%s}\n@nav{}\n",
+				samp[i].name, samp[i+1].name, prev, samp[i].name);
+		else
+			fprintf(fp,"@c ------------------------------------------------------------------\n"
+				"@node %s sample, , %s sample, All samples\n@section Sample '%s'\n@nav{}\n",
+				samp[i].name, samp[i-1].name, samp[i].name);
+		prev = samp[i].name;
+		fprintf(fp,"\n%s\n\n@strong{MGL code:}\n@verbatim\n%s\n@end verbatim\n", samp[i].info, samp[i].mgl);
+		fprintf(fp,"\n@ifclear UDAV\n@strong{C++ code:}\n@verbatim\n");
+
+		fseek(fs,0,SEEK_SET);
+		snprintf(name, 64, "void smgl_%s", samp[i].name);
+		while(!feof(fs))
+		{	if(!fgets(buf,512,fs) || strstr(buf,name))	break;	}
+		while(!feof(fs))
+		{
+			fprintf(fp,"%s",buf);
+			if(!fgets(buf,512,fs) || *buf=='}')	break;
+		}
+		fprintf(fp,"}\n@end verbatim\n@end ifclear\n@pfig{%s, Sample @samp{%s}}\n@external{}\n", samp[i].name, samp[i].name);
+	}
+	fclose(fs);	fclose(fp);	fclose(fq);
+}
+
+void mgl_generate_slides()
+{
+	FILE *fp = fopen("samples.tex","w");
+	FILE *fs = fopen("samples.cpp","r");
+	for(size_t i=0;samp[i].name && samp[i].name[0];i++)
+	{
+		fprintf(fp,"\n\\begin{frame}[fragile]{Пример \\href{http://mathgl.sourceforge.net/doc_en/%s-sample.html}{\\texttt{%s}}}\n%s\n", samp[i].name, samp[i].name, samp[i].info);
+		fprintf(fp,"\\begin{center}\n\\includegraphics[width=0.7\\linewidth]{png/%s}\n\\end{center}\n\\end{frame}\n", samp[i].name);
+	}
+	fclose(fp);	fclose(fs);
+}
+
 static struct option longopts[] =
 {
 	{ "big",	no_argument,	&big,		1 },
@@ -95,6 +186,7 @@ static struct option longopts[] =
 	{ "list",	no_argument,	NULL,		'l' },
 	{ "mgl",	no_argument,	&use_mgl,	1 },
 	{ "srnd",	no_argument,	&srnd,		1 },
+	{ "fast",	no_argument,	&fastcut,	1 },
 
 	{ "png",	no_argument,	&type,		0 },
 	{ "eps",	no_argument,	&type,		1 },
@@ -120,6 +212,7 @@ static struct option longopts[] =
 	{ "time",	no_argument,	&dotest,	3 },
 	{ "fexport",no_argument,	&dotest,	4 },
 	{ "textbl",	no_argument,	&dotest,	5 },
+	{ "texi",	no_argument,	&dotest,	6 },
 
 	{ "thread",	required_argument,	NULL,	't' },
 	{ "verbose",no_argument,	&verbose,	1 },
@@ -159,6 +252,7 @@ void usage()
 		"--mgl		- use MGL scripts for samples\n"
 		"--test		- run in test mode\n"
 		"--time		- measure execution time for all samples\n"
+		"--texi		- make TeXi file with all samples\n"
 		"--font		- write current font as C++ file\n"
 		"--quality=val	- use specified quality for plot(s)\n"
 		"--fexport	- test most of output formats\n"
@@ -181,7 +275,7 @@ void save(mglGraph *gr,const char *name,const char *suf="")
 		case 3:	// PNG
 			snprintf(buf,128,"%s%s.png",name,suf);
 			gr->WritePNG(buf,0,true);	break;
-		case 4:	// JPEG
+		case 4:	// JPEG/* 		r1 = 1./(x*x+y*y+z*z+0.01);	r2=exp(-0.01/r1/r1)*r1;
 			snprintf(buf,128,"%s%s.jpg",name,suf);
 			gr->WriteJPEG(buf);	break;
 		case 5:	// PRC
@@ -239,163 +333,6 @@ void save(mglGraph *gr,const char *name,const char *suf="")
 	}
 }
 //-----------------------------------------------------------------------------
-void smgl_fexport(mglGraph *gr)	// test file export
-{
-	gr->SubPlot(3,2,0);
-	double d,x1,x2,x0,y=0.95;
-	d=0.3, x0=0.2, x1=0.5, x2=0.6;
-	gr->Line(mglPoint(x0,1-0*d),mglPoint(x1,1-0*d),"k-");	gr->Puts(mglPoint(x2,y-0*d),"Solid '-'",":rL");
-	gr->Line(mglPoint(x0,1-1*d),mglPoint(x1,1-1*d),"k|");	gr->Puts(mglPoint(x2,y-1*d),"Long Dash '|'",":rL");
-	gr->Line(mglPoint(x0,1-2*d),mglPoint(x1,1-2*d),"k;");	gr->Puts(mglPoint(x2,y-2*d),"Dash ';'",":rL");
-	gr->Line(mglPoint(x0,1-3*d),mglPoint(x1,1-3*d),"k=");	gr->Puts(mglPoint(x2,y-3*d),"Small dash '='",":rL");
-	gr->Line(mglPoint(x0,1-4*d),mglPoint(x1,1-4*d),"kj");	gr->Puts(mglPoint(x2,y-4*d),"Dash-dot 'j'",":rL");
-	gr->Line(mglPoint(x0,1-5*d),mglPoint(x1,1-5*d),"ki");	gr->Puts(mglPoint(x2,y-5*d),"Small dash-dot 'i'",":rL");
-	gr->Line(mglPoint(x0,1-6*d),mglPoint(x1,1-6*d),"k:");	gr->Puts(mglPoint(x2,y-6*d),"Dots ':'",":rL");
-	gr->Line(mglPoint(x0,1-7*d),mglPoint(x1,1-7*d),"k ");	gr->Puts(mglPoint(x2,y-7*d),"None ' '",":rL");
-
-	d=0.25; x1=-1; x0=-0.8;	y = -0.05;
-	gr->Mark(mglPoint(x1,5*d),"k.");	gr->Puts(mglPoint(x0,y+5*d),"'.'",":rL");
-	gr->Mark(mglPoint(x1,4*d),"k+");	gr->Puts(mglPoint(x0,y+4*d),"'+'",":rL");
-	gr->Mark(mglPoint(x1,3*d),"kx");	gr->Puts(mglPoint(x0,y+3*d),"'x'",":rL");
-	gr->Mark(mglPoint(x1,2*d),"k*");	gr->Puts(mglPoint(x0,y+2*d),"'*'",":rL");
-	gr->Mark(mglPoint(x1,d),"ks");		gr->Puts(mglPoint(x0,y+d),"'s'",":rL");
-	gr->Mark(mglPoint(x1,0),"kd");		gr->Puts(mglPoint(x0,y),"'d'",":rL");
-	gr->Mark(mglPoint(x1,-d,0),"ko");	gr->Puts(mglPoint(x0,y-d),"'o'",":rL");
-	gr->Mark(mglPoint(x1,-2*d,0),"k^");	gr->Puts(mglPoint(x0,y-2*d),"'\\^'",":rL");
-	gr->Mark(mglPoint(x1,-3*d,0),"kv");	gr->Puts(mglPoint(x0,y-3*d),"'v'",":rL");
-	gr->Mark(mglPoint(x1,-4*d,0),"k<");	gr->Puts(mglPoint(x0,y-4*d),"'<'",":rL");
-	gr->Mark(mglPoint(x1,-5*d,0),"k>");	gr->Puts(mglPoint(x0,y-5*d),"'>'",":rL");
-
-	d=0.25; x1=-0.5; x0=-0.3;	y = -0.05;
-	gr->Mark(mglPoint(x1,5*d),"k#.");	gr->Puts(mglPoint(x0,y+5*d),"'\\#.'",":rL");
-	gr->Mark(mglPoint(x1,4*d),"k#+");	gr->Puts(mglPoint(x0,y+4*d),"'\\#+'",":rL");
-	gr->Mark(mglPoint(x1,3*d),"k#x");	gr->Puts(mglPoint(x0,y+3*d),"'\\#x'",":rL");
-	gr->Mark(mglPoint(x1,2*d),"k#*");	gr->Puts(mglPoint(x0,y+2*d),"'\\#*'",":rL");
-	gr->Mark(mglPoint(x1,d),"k#s");		gr->Puts(mglPoint(x0,y+d),"'\\#s'",":rL");
-	gr->Mark(mglPoint(x1,0),"k#d");		gr->Puts(mglPoint(x0,y),"'\\#d'",":rL");
-	gr->Mark(mglPoint(x1,-d,0),"k#o");	gr->Puts(mglPoint(x0,y-d),"'\\#o'",":rL");
-	gr->Mark(mglPoint(x1,-2*d,0),"k#^");	gr->Puts(mglPoint(x0,y-2*d),"'\\#\\^'",":rL");
-	gr->Mark(mglPoint(x1,-3*d,0),"k#v");	gr->Puts(mglPoint(x0,y-3*d),"'\\#v'",":rL");
-	gr->Mark(mglPoint(x1,-4*d,0),"k#<");	gr->Puts(mglPoint(x0,y-4*d),"'\\#<'",":rL");
-	gr->Mark(mglPoint(x1,-5*d,0),"k#>");	gr->Puts(mglPoint(x0,y-5*d),"'\\#>'",":rL");
-
-	gr->SubPlot(3,2,1);
-	double a=0.1,b=0.4,c=0.5;
-	gr->Line(mglPoint(a,1),mglPoint(b,1),"k-A");		gr->Puts(mglPoint(c,1),"Style 'A' or 'A\\_'",":rL");
-	gr->Line(mglPoint(a,0.8),mglPoint(b,0.8),"k-V");	gr->Puts(mglPoint(c,0.8),"Style 'V' or 'V\\_'",":rL");
-	gr->Line(mglPoint(a,0.6),mglPoint(b,0.6),"k-K");	gr->Puts(mglPoint(c,0.6),"Style 'K' or 'K\\_'",":rL");
-	gr->Line(mglPoint(a,0.4),mglPoint(b,0.4),"k-I");	gr->Puts(mglPoint(c,0.4),"Style 'I' or 'I\\_'",":rL");
-	gr->Line(mglPoint(a,0.2),mglPoint(b,0.2),"k-D");	gr->Puts(mglPoint(c,0.2),"Style 'D' or 'D\\_'",":rL");
-	gr->Line(mglPoint(a,0),mglPoint(b,0),"k-S");		gr->Puts(mglPoint(c,0),"Style 'S' or 'S\\_'",":rL");
-	gr->Line(mglPoint(a,-0.2),mglPoint(b,-0.2),"k-O");	gr->Puts(mglPoint(c,-0.2),"Style 'O' or 'O\\_'",":rL");
-	gr->Line(mglPoint(a,-0.4),mglPoint(b,-0.4),"k-T");	gr->Puts(mglPoint(c,-0.4),"Style 'T' or 'T\\_'",":rL");
-	gr->Line(mglPoint(a,-0.6),mglPoint(b,-0.6),"k-_");	gr->Puts(mglPoint(c,-0.6),"Style '\\_' or none",":rL");
-	gr->Line(mglPoint(a,-0.8),mglPoint(b,-0.8),"k-AS");	gr->Puts(mglPoint(c,-0.8),"Style 'AS'",":rL");
-	gr->Line(mglPoint(a,-1),mglPoint(b,-1),"k-_A");		gr->Puts(mglPoint(c,-1),"Style '\\_A'",":rL");
-
-	a=-1;	b=-0.7;	c=-0.6;
-	gr->Line(mglPoint(a,1),mglPoint(b,1),"kAA");		gr->Puts(mglPoint(c,1),"Style 'AA'",":rL");
-	gr->Line(mglPoint(a,0.8),mglPoint(b,0.8),"kVV");	gr->Puts(mglPoint(c,0.8),"Style 'VV'",":rL");
-	gr->Line(mglPoint(a,0.6),mglPoint(b,0.6),"kKK");	gr->Puts(mglPoint(c,0.6),"Style 'KK'",":rL");
-	gr->Line(mglPoint(a,0.4),mglPoint(b,0.4),"kII");	gr->Puts(mglPoint(c,0.4),"Style 'II'",":rL");
-	gr->Line(mglPoint(a,0.2),mglPoint(b,0.2),"kDD");	gr->Puts(mglPoint(c,0.2),"Style 'DD'",":rL");
-	gr->Line(mglPoint(a,0),mglPoint(b,0),"kSS");		gr->Puts(mglPoint(c,0),"Style 'SS'",":rL");
-	gr->Line(mglPoint(a,-0.2),mglPoint(b,-0.2),"kOO");	gr->Puts(mglPoint(c,-0.2),"Style 'OO'",":rL");
-	gr->Line(mglPoint(a,-0.4),mglPoint(b,-0.4),"kTT");	gr->Puts(mglPoint(c,-0.4),"Style 'TT'",":rL");
-	gr->Line(mglPoint(a,-0.6),mglPoint(b,-0.6),"k-__");	gr->Puts(mglPoint(c,-0.6),"Style '\\_\\_'",":rL");
-	gr->Line(mglPoint(a,-0.8),mglPoint(b,-0.8),"k-VA");	gr->Puts(mglPoint(c,-0.8),"Style 'VA'",":rL");
-	gr->Line(mglPoint(a,-1),mglPoint(b,-1),"k-AV");		gr->Puts(mglPoint(c,-1),"Style 'AV'",":rL");
-
-	gr->SubPlot(3,2,2);
-	//#LENUQ
-	gr->FaceZ(mglPoint(-1,	-1), 0.4, 0.3, "L#");	gr->Puts(mglPoint(-0.8,-0.9), "L", "w:C", -1.4);
-	gr->FaceZ(mglPoint(-0.6,-1), 0.4, 0.3, "E#");	gr->Puts(mglPoint(-0.4,-0.9), "E", "w:C", -1.4);
-	gr->FaceZ(mglPoint(-0.2,-1), 0.4, 0.3, "N#");	gr->Puts(mglPoint(0,  -0.9), "N", "w:C", -1.4);
-	gr->FaceZ(mglPoint(0.2,	-1), 0.4, 0.3, "U#");	gr->Puts(mglPoint(0.4,-0.9), "U", "w:C", -1.4);
-	gr->FaceZ(mglPoint(0.6,	-1), 0.4, 0.3, "Q#");	gr->Puts(mglPoint(0.8,-0.9), "Q", "w:C", -1.4);
-	//#lenuq
-	gr->FaceZ(mglPoint(-1,	-0.7), 0.4, 0.3, "l#");	gr->Puts(mglPoint(-0.8,-0.6), "l", "k:C", -1.4);
-	gr->FaceZ(mglPoint(-0.6,-0.7), 0.4, 0.3, "e#");	gr->Puts(mglPoint(-0.4,-0.6), "e", "k:C", -1.4);
-	gr->FaceZ(mglPoint(-0.2,-0.7), 0.4, 0.3, "n#");	gr->Puts(mglPoint(0,  -0.6), "n", "k:C", -1.4);
-	gr->FaceZ(mglPoint(0.2,	-0.7), 0.4, 0.3, "u#");	gr->Puts(mglPoint(0.4,-0.6), "u", "k:C", -1.4);
-	gr->FaceZ(mglPoint(0.6,	-0.7), 0.4, 0.3, "q#");	gr->Puts(mglPoint(0.8,-0.6), "q", "k:C", -1.4);
-	//#CMYkP
-	gr->FaceZ(mglPoint(-1,	-0.4), 0.4, 0.3, "C#");	gr->Puts(mglPoint(-0.8,-0.3), "C", "w:C", -1.4);
-	gr->FaceZ(mglPoint(-0.6,-0.4), 0.4, 0.3, "M#");	gr->Puts(mglPoint(-0.4,-0.3), "M", "w:C", -1.4);
-	gr->FaceZ(mglPoint(-0.2,-0.4), 0.4, 0.3, "Y#");	gr->Puts(mglPoint(0,  -0.3), "Y", "w:C", -1.4);
-	gr->FaceZ(mglPoint(0.2,	-0.4), 0.4, 0.3, "k#");	gr->Puts(mglPoint(0.4,-0.3), "k", "w:C", -1.4);
-	gr->FaceZ(mglPoint(0.6,	-0.4), 0.4, 0.3, "P#");	gr->Puts(mglPoint(0.8,-0.3), "P", "w:C", -1.4);
-	//#cmywp
-	gr->FaceZ(mglPoint(-1,	-0.1), 0.4, 0.3, "c#");	gr->Puts(mglPoint(-0.8, 0), "c", "k:C", -1.4);
-	gr->FaceZ(mglPoint(-0.6,-0.1), 0.4, 0.3, "m#");	gr->Puts(mglPoint(-0.4, 0), "m", "k:C", -1.4);
-	gr->FaceZ(mglPoint(-0.2,-0.1), 0.4, 0.3, "y#");	gr->Puts(mglPoint(0,   0), "y", "k:C", -1.4);
-	gr->FaceZ(mglPoint(0.2,	-0.1), 0.4, 0.3, "w#");	gr->Puts(mglPoint(0.4, 0), "w", "k:C", -1.4);
-	gr->FaceZ(mglPoint(0.6,	-0.1), 0.4, 0.3, "p#");	gr->Puts(mglPoint(0.8, 0), "p", "k:C", -1.4);
-	//#BGRHW
-	gr->FaceZ(mglPoint(-1,	0.2), 0.4, 0.3, "B#");	gr->Puts(mglPoint(-0.8, 0.3), "B", "w:C", -1.4);
-	gr->FaceZ(mglPoint(-0.6,0.2), 0.4, 0.3, "G#");	gr->Puts(mglPoint(-0.4, 0.3), "G", "w:C", -1.4);
-	gr->FaceZ(mglPoint(-0.2,0.2), 0.4, 0.3, "R#");	gr->Puts(mglPoint(0,   0.3), "R", "w:C", -1.4);
-	gr->FaceZ(mglPoint(0.2,	0.2), 0.4, 0.3, "H#");	gr->Puts(mglPoint(0.4, 0.3), "H", "w:C", -1.4);
-	gr->FaceZ(mglPoint(0.6,	0.2), 0.4, 0.3, "W#");	gr->Puts(mglPoint(0.8, 0.3), "W", "w:C", -1.4);
-	//#bgrhw
-	gr->FaceZ(mglPoint(-1,	0.5), 0.4, 0.3, "b#");	gr->Puts(mglPoint(-0.8, 0.6), "b", "k:C", -1.4);
-	gr->FaceZ(mglPoint(-0.6,0.5), 0.4, 0.3, "g#");	gr->Puts(mglPoint(-0.4, 0.6), "g", "k:C", -1.4);
-	gr->FaceZ(mglPoint(-0.2,0.5), 0.4, 0.3, "r#");	gr->Puts(mglPoint(0,   0.6), "r", "k:C", -1.4);
-	gr->FaceZ(mglPoint(0.2,	0.5), 0.4, 0.3, "h#");	gr->Puts(mglPoint(0.4, 0.6), "h", "k:C", -1.4);
-	gr->FaceZ(mglPoint(0.6,	0.5), 0.4, 0.3, "w#");	gr->Puts(mglPoint(0.8, 0.6), "w", "k:C", -1.4);
-	//#brighted
-	gr->FaceZ(mglPoint(-1,	0.8), 0.4, 0.3, "{r1}#");	gr->Puts(mglPoint(-0.8, 0.9), "\\{r1\\}", "w:C", -1.4);
-	gr->FaceZ(mglPoint(-0.6,0.8), 0.4, 0.3, "{r3}#");	gr->Puts(mglPoint(-0.4, 0.9), "\\{r3\\}", "w:C", -1.4);
-	gr->FaceZ(mglPoint(-0.2,0.8), 0.4, 0.3, "{r5}#");	gr->Puts(mglPoint(0,   0.9), "\\{r5\\}", "k:C", -1.4);
-	gr->FaceZ(mglPoint(0.2,	0.8), 0.4, 0.3, "{r7}#");	gr->Puts(mglPoint(0.4, 0.9), "\\{r7\\}", "k:C", -1.4);
-	gr->FaceZ(mglPoint(0.6,	0.8), 0.4, 0.3, "{r9}#");	gr->Puts(mglPoint(0.8, 0.9), "\\{r9\\}", "k:C", -1.4);
-	// HEX
-	gr->FaceZ(mglPoint(-1, -1.3), 1, 0.3, "{xff9966}#");	gr->Puts(mglPoint(-0.5,-1.2), "\\{xff9966\\}", "k:C", -1.4);
-	gr->FaceZ(mglPoint(0,  -1.3), 1, 0.3, "{x83CAFF}#");	gr->Puts(mglPoint( 0.5,-1.2), "\\{x83CAFF\\}", "k:C", -1.4);
-
-	gr->SubPlot(3,2,3);
-	char stl[3]="r1", txt[4]="'1'";
-	for(int i=0;i<10;i++)
-	{
-		txt[1]=stl[1]='0'+i;
-		gr->Line(mglPoint(-1,0.2*i-1),mglPoint(1,0.2*i-1),stl);
-		gr->Puts(mglPoint(1.05,0.2*i-1),txt,":L");
-	}
-
-	gr->SubPlot(3,2,4);	gr->Title("TriPlot sample");	gr->Rotate(50,60);
-	double t[] = {0,1,2, 0,1,3, 0,2,3, 1,2,3};
-	double xt[] = {-1,1,0,0}, yt[] = {-1,-1,1,0}, zt[] = {-1,-1,-1,1};
-	mglData tt(4,3,t), uu(4,xt), vv(4,yt), ww(4,zt);
-	gr->TriPlot(tt,uu,vv,ww,"b");
-	gr->TriPlot(tt,uu,vv,ww,"k#");
-
-	gr->SubPlot(3,2,5);
-	mglData r(4);	r.Fill(1,4);
-	gr->SetRanges(1,4,1,4);	gr->Axis();
-	gr->Mark(r,r,"s");
-	gr->Plot(r,"b");
-
-	gr->WriteJPEG("fexport.jpg");
-//	gr->WritePNG("fexport.png");
-	gr->WriteBMP("fexport.bmp");
-	gr->WriteTGA("fexport.tga");
-	gr->WriteEPS("fexport.eps");
-	gr->WriteSVG("fexport.svg");
-	gr->WriteGIF("fexport.gif");
-
-	gr->WriteXYZ("fexport.xyz");
-	gr->WriteSTL("fexport.stl");
-	gr->WriteOFF("fexport.off");
-	gr->WriteTEX("fexport.tex");
-	gr->WriteOBJ("fexport.obj");
-	gr->WritePRC("fexport.prc");
-	gr->WriteJSON("fexport.json");
-
-	gr->ExportMGLD("fexport.mgld");
-	gr->Clf();
-	gr->ImportMGLD("fexport.mgld");
-}
-//-----------------------------------------------------------------------------
 int main(int argc,char **argv)
 {
 // const char *f = strrchr(argv[0],'/');
@@ -430,7 +367,7 @@ int main(int argc,char **argv)
 			default:	usage();	return 0;
 		}
 
-	if(dotest==1)	printf("Global (before):%s\n",mglGlobalMess.c_str());
+	if(dotest==1)	printf("Global (before):%s\n",mgl_get_global_warn());
 	gr = new mglGraph;
 	if(	type==11|| type==12|| type==5 || type==9)	width=height;
 	switch(big)
@@ -454,7 +391,7 @@ int main(int argc,char **argv)
 		gr->WriteSVG("test.svg");
 		gr->WriteEPS("test.eps");
 		printf("Messages:%s\n",gr->Message());
-		printf("Global:%s\n",mglGlobalMess.c_str());
+		printf("Global:%s\n",mgl_get_global_warn());
 		delete gr;	return 0;
 	}
 	else if(dotest==2)	// NOTE mgl_gen_fnt[###][6] have to be updated if new glyphs will be added to built-in font
@@ -462,17 +399,29 @@ int main(int argc,char **argv)
 		delete gr;	return 0;	}
 	else if(dotest==3)
 	{
+		gr->SetFastCut(fastcut);
 		int qual[7]={0,1,2,4,5,6,8};
 		size_t ll=strlen(mmgl_dat_prepare)+1;
 		mglParse par;
 		par.AllowSetSize(true);
 		FILE *fp = fopen(big?"time_big.texi":"time.texi","w");
+		FILE *fi = fopen("/proc/cpuinfo","r");
+		if(fi)
+		{
+			char buf[128];
+			while(!feof(fi))
+			{	if(!fgets(buf,128,fi))	break;
+				if(!strstr(buf,"model name"))
+				{	fprintf(fp,"@c %s\n",buf);	break;	}	}
+			fclose(fi);
+		}
 		fprintf(fp,"@multitable @columnfractions .16 .12 .12 .12 .12 .12 .12 .12\n");
 		fprintf(fp,"@headitem Name");
 		for(int i=0;i<7;i++)	fprintf(fp," @tab q=%d",qual[i]);
 		clock_t beg,end;
 		while(s->name[0])	// all samples
 		{
+			if(!strcmp(s->name,"icon"))	{	s++;	continue;	}
 			char *buf = new char[strlen(s->mgl)+ll];
 			strcpy(buf,s->mgl);	strcat(buf,mmgl_dat_prepare);
 			fprintf(fp,"\n@item %s",s->name);
@@ -487,7 +436,7 @@ int main(int argc,char **argv)
 				else 	par.Execute(gr,buf);
 				gr->Finish();
 				end = clock();
-				fprintf(fp," @tab %.3g",double(end-beg)/CLOCKS_PER_SEC);
+				fprintf(fp," @tab %.2g",double(end-beg)/CLOCKS_PER_SEC);
 				printf("\t%d->%g",qual[i],double(end-beg)/CLOCKS_PER_SEC);
 				fflush(fp);	fflush(stdout);
 			}
@@ -502,6 +451,12 @@ int main(int argc,char **argv)
 		mgl_check_tex_table();
 		delete gr;	return 0;
 	}
+	else if(dotest==6)
+	{
+		mgl_generate_slides();
+		mgl_generate_texi();
+		delete gr;	return 0;
+	}
 
 	if(type==15 || type==16)	big=3;	// save mini version for json
 
@@ -509,8 +464,10 @@ int main(int argc,char **argv)
 	gr->VertexColor(false);	gr->Compression(false);
 	if(name[0]==0)
 	{
+		gr->SetFastCut(fastcut);
 		while(s->name[0])	// all samples
 		{
+			if(!strcmp(s->name,"icon"))	{	s++;	continue;	}
 			gr->DefaultPlotParam();	gr->Clf();
 			if(use_mgl)
 			{
@@ -532,6 +489,7 @@ int main(int argc,char **argv)
 	}
 	else	// manual sample
 	{
+		gr->SetFastCut(fastcut);
 		mglSample tst;	tst.name=name;
 		int i=0;
 		for(i=0;samp[i].name[0];i++);	// determine the number of samples

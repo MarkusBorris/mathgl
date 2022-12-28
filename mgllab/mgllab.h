@@ -2,7 +2,7 @@
  * Copyright (C) 2007-2014 Alexey Balakin <mathgl.abalakin@gmail.ru>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
+ * modify it under the terms of the GNU Lesser General Public License 
  * as published by the Free Software Foundation
  *
  * This program is distributed in the hope that it will be useful,
@@ -34,20 +34,20 @@
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Pixmap.H>
 #include <FL/Fl_Counter.H>
-#include <Fl/Fl_Scroll.H>
+#include <FL/Fl_Scroll.H>
 #include <FL/Fl_Tabs.H>
 #include <FL/Fl_Help_View.H>
-#include <Fl/Fl_Table.H>
-#include <Fl/Fl_Round_Button.H>
-#include <Fl/Fl_Float_Input.H>
-#include <Fl/Fl_Multiline_Input.H>
-#include <Fl/Fl_Multiline_Output.H>
+#include <FL/Fl_Table.H>
+#include <FL/Fl_Round_Button.H>
+#include <FL/Fl_Float_Input.H>
+#include <FL/Fl_Multiline_Input.H>
+#include <FL/Fl_Multiline_Output.H>
 //-----------------------------------------------------------------------------
 #include "mgl2/Fl_MathGL.h"
 //-----------------------------------------------------------------------------
 extern mglParse *Parse;
 extern Fl_Menu_Item colors[];
-class Fl_MGL;
+struct Fl_MGL;
 //-----------------------------------------------------------------------------
 extern Fl_Preferences pref;
 extern Fl_Text_Display::Style_Table_Entry styletable[10];
@@ -68,9 +68,10 @@ extern int scheme;		///< FLTK scheme
 extern int font_kind;	///< Editor font kind
 extern int font_size;	///< Editor font size
 extern int complete_word;	///< enable word completion
+extern int dark;		///< use dark color scheme
 //-----------------------------------------------------------------------------
 void set_scheme_lang(int s, int l);		///< Set FLTK scheme and locale
-void set_style(int fkind, int fsize);	///< Change the style of highlight
+void set_style(int fkind, int fsize, int fdark);	///< Change the style of highlight
 void style_init();		///< Initialize the style buffer
 void save_pref();		///< Apply and save preferences
 void load_pref();		///< Load preferences
@@ -119,6 +120,7 @@ struct Fl_MGL : public mglDraw
 	void Reload();			///< Function for reloading data
 	void Click();			///< Callback function on mouse click
 	int Draw(mglGraph *);	///< Drawing itself
+	void Param(char id, const char *val);	///< Function for setting parameter
 	void update();			///< Update (redraw) plot
 	void next_frame();		///< Show next frame
 	void prev_frame();		///< Show prev frame
@@ -143,6 +145,7 @@ public:
 	Fl_Counter *slice;
 	mglDataA *var;
 protected:
+	TableWindow(const TableWindow &){}	// copying is not allowed
 	Fl_Data_Table *data;
 	Fl_Menu_Bar	*menu;
 	Fl_Double_Window *w;
@@ -227,8 +230,8 @@ void data_cb(Fl_Widget *, void *v);
 int check_save(void);
 void load_file(const char *newfile, int ipos, ScriptWindow *e);
 void save_file(const char *newfile, ScriptWindow *e);
-Fl_Widget *add_editor(ScriptWindow *w);
-Fl_Widget *add_mem(ScriptWindow *w);
+Fl_Widget *add_editor(ScriptWindow *w, int txtW, int wndH);
+Fl_Widget *add_mem(ScriptWindow *w, int txtW, int wndW, int wndH);
 void set_title(Fl_Window* w);
 //-----------------------------------------------------------------------------
 // Animation
@@ -237,7 +240,7 @@ void animate_dlg_cb(Fl_Widget *, void *v);
 void fill_animate(const char *text, Fl_MGL *dr);
 void argument_set(int id, const char *val);
 //-----------------------------------------------------------------------------
-Fl_Widget *add_help(ScriptWindow *w);
+Fl_Widget *add_help(ScriptWindow *w, int txtW, int wndW, int wndH);
 void help_cb(Fl_Widget*, void*v);
 void link_cb(Fl_Widget*, void*v);
 void example_cb(Fl_Widget*, void*v);

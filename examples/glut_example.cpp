@@ -56,7 +56,7 @@ printf("i=%d, gr=%p\n",i,gr);	fflush(stdout);
 }
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL);
+	mgl_textdomain(argv?argv[0]:NULL,"");
 	static pthread_t thr;
 	pthread_create(&thr,0,calc,0);
 	pthread_detach(thr);

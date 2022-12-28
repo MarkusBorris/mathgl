@@ -75,7 +75,7 @@ AnimParam::AnimParam(QWidget *parent) : QDialog(parent)
 	connect(b, SIGNAL(clicked()),this, SLOT(putTxt()));
 	lbl = new QLabel(_("Delay (in ms)"),this);	a->addWidget(lbl);
 	delay = new QLineEdit(this);	a->addWidget(delay);
-	QString s;	s.sprintf("%d",animDelay);	delay->setText(s);
+	QString s;	s.asprintf("%d",animDelay);	delay->setText(s);
 	// export to gif/jpeg
 	a = new QHBoxLayout();		o->addLayout(a);
 //	fname = new QLineEdit(this);	a->addWidget(fname);
@@ -96,7 +96,6 @@ void AnimParam::fillRes()
 	else if(rbf->isChecked())
 	{
 		res = "";
-		QString s;
 		double x, x2=p2->text().toDouble(), dx=dp->text().toDouble();
 		for(x=p1->text().toDouble();x<x2;x+=dx)
 			res = res+QString::number(x,'g',4)+"\n";

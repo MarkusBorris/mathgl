@@ -66,6 +66,10 @@
 @deftypefn {Метод класса @code{mglGraph}} @code{HMGL} Self ()
 Возвращает указатель на используемый объект типа @code{HMGL}.
 @end deftypefn
+
+@deftypefn {Функция С} @code{HMGL} mgl_default_graph ()
+Возвращает указатель на экземпляр класса mglGraph. Этот объект используется по умолчанию при создании нового класса с целью сохранения настроек и ускорения инициализации в различных графиках.
+@end deftypefn
 @end ifclear
 
 @ifset UDAV
@@ -89,6 +93,45 @@ MGL не требует создания данного типа объекто�
 @end ifclear
 Устанавливает все настройки по умолчанию и очищает рисунок.
 @end deftypefn
+
+@anchor{setup}
+@deftypefn {Команда MGL} {} setup @code{val flag}
+@ifclear UDAV
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} SetFlagAdv (@code{int} val, @code{uint32_t} flag)
+@deftypefnx {Функция С} @code{void} mgl_set_flag (@code{HMGL} gr, @code{int} val, @code{uint32_t} flag)
+@end ifclear
+Устанавливает значение бинарного флага @var{flag} в @var{val}. Список флагов можно найти в @url{https://sourceforge.net/p/mathgl/code/HEAD/tree/mathgl-2x/include/mgl2/define.h#l267, define.h}. Текущий список флагов: 
+@verbatim
+#define MGL_ENABLE_CUT		0x00000004 	///< Определяет способ рисования точек вне диапазона осей координат
+#define MGL_ENABLE_RTEXT 	0x00000008 	///< Использовать вращение текста
+#define MGL_AUTO_FACTOR		0x00000010 	///< Разрешить автоматическое масштабирование графика
+#define MGL_ENABLE_ALPHA 	0x00000020 	///< Использовать прозрачность
+#define MGL_ENABLE_LIGHT 	0x00000040 	///< Использовать освещение
+#define MGL_TICKS_ROTATE 	0x00000080 	///< Разрешить вращение меток осей
+#define MGL_TICKS_SKIP		0x00000100 	///< Разрешить пропуск меток осей
+#define MGL_DISABLE_SCALE	0x00000200 	///< Временный флаг, запрещающий изменение размеров
+#define MGL_FINISHED 		0x00000400 	///< Флаг готовности окончательной картинки (т.е. mglCanvas::G)
+#define MGL_USE_GMTIME		0x00000800 	///< Использовать gmtime вместо localtime
+#define MGL_SHOW_POS		0x00001000 	///< Включить показ координат щелчка мыши
+#define MGL_CLF_ON_UPD		0x00002000 	///< Очищать график перед Update()
+#define MGL_NOSUBTICKS		0x00004000 	///< Запретить рисование subticks для bounding box
+#define MGL_LOCAL_LIGHT		0x00008000 	///< Сохранять источники освещения в каждом inplot
+#define MGL_VECT_FRAME		0x00010000 	///< Использовать DrwDat для сохранения всех данных в кадрах
+#define MGL_REDUCEACC		0x00020000 	///< Сокращать точность вывода точек (для уменьшения размера выходных файлов)
+#define MGL_PREFERVC 		0x00040000 	///< Предпочитать цвета вершин вместо текстур если выходной формат поддерживает
+#define MGL_ONESIDED 		0x00080000 	///< Выводить только переднюю сторону поверхностей если выходной формат поддерживает
+#define MGL_NO_ORIGIN 		0x00100000 	///< Не рисовать метки в точке пересечения осей
+#define MGL_GRAY_MODE 		0x00200000 	///< Преобразовать все цвета в оттенки серого
+#define MGL_FULL_CURV 		0x00400000 	///< Запретить пропуск точек на прямолинейных участках
+#define MGL_NO_SCALE_REL 	0x00800000 	///< Запретить изменение размера текста в относительных inplots
+@end verbatim
+@end deftypefn
+
+@ifclear UDAV
+@deftypefn {Функция С} @code{void} mgl_bsize (@code{unsigned} bsize)
+Задает размер буфера под примитивы как (1<<bsize)^2. Т.е. как 10^12 для bsize=20 или 4*10^9 для bsize=16 (по умолчанию). ВАЖНО: можно устанавливать только один раз вначале, до построения графиков. Возвращает текущее значение.
+@end deftypefn
+@end ifclear
 
 @menu
 * Transparency::
@@ -404,6 +447,24 @@ MGL не требует создания данного типа объекто�
 Включает/выключает вращение меток и подписей осей координат вдоль оси.
 @end deftypefn
 
+@anchor{scaletext}
+@deftypefn {Команда MGL} {} scaletext @code{val}
+@ifclear UDAV
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} SetScaleText (@code{bool} val)
+@deftypefnx {Функция С} @code{void} mgl_set_scale_text (@code{HMGL} gr, @code{int} val)
+@end ifclear
+Включает/выключает масштабирование текста в относительных @ref{inplot}-ах (в том числе @ref{columnplot}, @ref{gridplot}, @ref{stickplot}, @ref{shearplot}).
+@end deftypefn
+
+@anchor{texparse}
+@deftypefn {Команда MGL} {} texparse @code{val}
+@ifclear UDAV
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} SetTeXparse (@code{bool} val)
+@deftypefnx {Функция С} @code{void} mgl_set_tex_parse (@code{HMGL} gr, @code{int} val)
+@end ifclear
+Включает/выключает распознавание TeX-подобных команд при печати текста.
+@end deftypefn
+
 @anchor{loadfont}
 @deftypefn {Команда MGL} {} loadfont ['name'='']
 @ifclear UDAV
@@ -500,15 +561,17 @@ MGL не требует создания данного типа объекто�
 @cindex SetMaskAngle
 
 @anchor{mask}
-@deftypefn {Команда MGL} {} mask 'id' 'hex'
-@deftypefnx {Команда MGL} {} mask 'id' hex
+@deftypefn {Команда MGL} {} mask 'id' 'hex' [angle]
+@deftypefnx {Команда MGL} {} mask 'id' hex [angle]
 @ifclear UDAV
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} SetMask (@code{char} id, @code{const char *}hex)
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} SetMask (@code{char} id, @code{uint64_t} hex)
 @deftypefnx {Функция С} @code{void} mgl_set_mask (@code{HMGL} gr, @code{const char *}hex)
 @deftypefnx {Функция С} @code{void} mgl_set_mask_val (@code{HMGL} gr, @code{uint64_t} hex)
 @end ifclear
-Задает новую матрицу @var{hex} размером 8*8 для маски с заданным @var{id}. Изменения действуют глобально для всех последующих использований данного @var{id}. Значения по умолчанию (см. @ref{Color scheme}): @samp{-} -- 000000FF00000000, @samp{+} -- 080808FF08080808,	@samp{=} -- 0000FF00FF000000,	@samp{;} -- 0000007700000000, @samp{o} -- 0000182424180000,	@samp{O} -- 0000183C3C180000,	@samp{s} -- 00003C24243C0000,	@samp{S} -- 00003C3C3C3C0000, @samp{~} -- 0000060990600000,	@samp{<} -- 0060584658600000,	@samp{>} -- 00061A621A060000,	@samp{j} -- 0000005F00000000, @samp{d} -- 0008142214080000,	@samp{D} -- 00081C3E1C080000,	@samp{*} -- 8142241818244281,	@samp{^} -- 0000001824420000.
+Задает новую матрицу @var{hex} размером 8*8 для маски с заданным @var{id}. Изменения действуют глобально для всех последующих использований данного @var{id}. Значения по умолчанию (см. @ref{Color scheme}): @samp{-} -- 000000FF00000000, @samp{+} -- 080808FF08080808,	@samp{=} -- 0000FF00FF000000,	@samp{;} -- 0000007700000000, @samp{o} -- 0000182424180000,	@samp{O} -- 0000183C3C180000,	@samp{s} -- 00003C24243C0000,	@samp{S} -- 00003C3C3C3C0000, @samp{~} -- 0000060990600000,	@samp{<} -- 0060584658600000,	@samp{>} -- 00061A621A060000,	@samp{j} -- 0000005F00000000, @samp{d} -- 0008142214080000,	@samp{D} -- 00081C3E1C080000,	@samp{*} -- 8142241818244281,	@samp{^} -- 0000001824420000. Параметр @var{angle} позволяет сразу задать и угол поворота маски. ВАЖНО: при экспорте в EPS угол поворота будет приведен к ближайшему кратному 45 градусам.
+
+Задает новую матрицу @var{hex} размером 8*8 для маски с заданным @var{id}. Изменения действуют глобально для всех последующих использований данного @var{id}. Значения по умолчанию (см. @ref{Color scheme}): @samp{-} -- линии (@code{0x000000FF00000000}), @samp{+} -- клетки (@code{080808FF08080808}),	@samp{=} -- двойные линии (@code{0000FF00FF000000}),	@samp{;} -- пунктир (@code{0x0000000F00000000}), @samp{o} -- окружкости (@code{0000182424180000}),	@samp{O} -- круги (@code{0000183C3C180000}),	@samp{s} -- квадраты (@code{00003C24243C0000}),	@samp{S} -- закрашенные квадраты (@code{00003C3C3C3C0000}), @samp{~} -- волны (@code{0000060990600000}),	@samp{<} -- треугольники влево (@code{0060584658600000}),	@samp{>} -- треугольники вправо (@code{00061A621A060000}),	@samp{j} пунктир с точками (@code{0000002700000000}), @samp{d} плюсы (@code{0x0008083E08080000}),	@samp{D} -- стежки (@code{0x0139010010931000}),	@samp{*} -- точки (@code{0x0000001818000000}),	@samp{^} -- кирпичи (@code{0x101010FF010101FF}). Параметр @var{angle} позволяет сразу задать и угол поворота маски. ВАЖНО: при экспорте в EPS угол поворота будет приведен к ближайшему кратному 45 градусам.
 @end deftypefn
 
 @deftypefn {Команда MGL} {} mask angle
@@ -516,7 +579,7 @@ MGL не требует создания данного типа объекто�
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} SetMaskAngle (@code{int} angle)
 @deftypefnx {Функция С} @code{void} mgl_set_mask_angle (@code{HMGL} gr, @code{int} angle)
 @end ifclear
-Задает угол поворота маски в градусах. Отмечу, что символы @samp{\}, @samp{/}, @samp{I} в цветовой схеме задают угол поворота в 45, -45 и 90 градусов соответственно.
+Задает угол поворота маски в градусах. Отмечу, что символы @samp{\}, @samp{/}, @samp{I} в цветовой схеме задают угол поворота в 45, -45 и 90 градусов соответственно. ВАЖНО: при экспорте в EPS угол поворота будет приведен к ближайшему кратному 45 градусам.
 @end deftypefn
 
 @c ==================================================================
@@ -609,6 +672,11 @@ Setsize: размер(ы) равны нулю или отрицательны
 @deftypefn {Метод класса @code{mglGraph}} @code{const char *} GlobalWarn () static
 @deftypefnx {Функция С} @code{const char *} mgl_get_global_warn ()
 Возвращает предупреждения, не привязанные к конкретному объекту рисования.
+@end deftypefn
+
+@deftypefn {Метод класса @code{mglGraph}} @code{void} ClearGlobalWarn () static
+@deftypefnx {Функция С} @code{void} mgl_clear_global_warn ()
+Удаляет общие предупреждения.
 @end deftypefn
 
 
@@ -753,6 +821,14 @@ Setsize: размер(ы) равны нулю или отрицательны
 Дополнительно расширяет диапазон осей координат, задаваемый функциями @code{SetRange} или @code{SetRanges}, в соответствии с формулами @math{min += (max-min)*p1} и @math{max += (max-min)*p1} (или @math{min *= (max/min)^p1} и @math{max *= (max/min)^p1} для "логарифмических" диапазонов, когда @math{inf>max/min>100} или @math{0<max/min<0.01}). Начальные значения [0, 1]. Внимание! эти настройки не могут быть переписаны никакими другими функциями, включая  @code{DefaultPlotParam()}.
 @end deftypefn
 
+@anchor{fastcut}
+@deftypefn {Команда MGL} {} fastcut @code{val}
+@ifclear UDAV
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} SetFastCut (@code{bool} val=@code{true})
+@end ifclear
+Разрешает/запрещает аккуратное и более медленное обрезание примитивов на границах осей координат. В C/Fortran следует использовать @code{mgl_set_flag(gr,val, MGL_FAST_PRIM);}. Включено автоматически для @ref{ternary} системы координат.
+@end deftypefn
+
 
 @c ------------------------------------------------------------------
 @external{}
@@ -871,7 +947,10 @@ Ternary -- специальный тип графика для 3 зависим�
 @deftypefn {Команда MGL} {} xtick @code{val [sub=0 org=nan 'fact'='']}
 @deftypefnx {Команда MGL} {} ytick @code{val [sub=0 org=nan 'fact'='']}
 @deftypefnx {Команда MGL} {} ztick @code{val [sub=0 org=nan 'fact'='']}
-@deftypefnx {Команда MGL} {} ctick @code{val [sub=0 org=nan 'fact'='']}
+@deftypefnx {Команда MGL} {} xtick @code{val sub ['fact'='']}
+@deftypefnx {Команда MGL} {} ytick @code{val sub ['fact'='']}
+@deftypefnx {Команда MGL} {} ztick @code{val sub ['fact'='']}
+@deftypefnx {Команда MGL} {} ctick @code{val ['fact'='']}
 @ifclear UDAV
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} SetTicks (@code{char} dir, @code{mreal} d=@code{0}, @code{int} ns=@code{0}, @code{mreal} org=@code{NAN}, @code{const char *}fact=@code{""})
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} SetTicks (@code{char} dir, @code{mreal} d=@code{0}, @code{int} ns=@code{0}, @code{mreal} org=@code{NAN}, @code{const wchar_t *}fact)
@@ -885,9 +964,11 @@ Ternary -- специальный тип графика для 3 зависим�
 @deftypefn {Команда MGL} {} xtick @code{val1} 'lbl1' [@code{val2} 'lbl2' ...]
 @deftypefnx {Команда MGL} {} ytick @code{val1} 'lbl1' [@code{val2} 'lbl2' ...]
 @deftypefnx {Команда MGL} {} ztick @code{val1} 'lbl1' [@code{val2} 'lbl2' ...]
+@deftypefnx {Команда MGL} {} ctick @code{val1} 'lbl1' [@code{val2} 'lbl2' ...]
 @deftypefnx {Команда MGL} {} xtick vdat 'lbls' [@code{add=off}]
 @deftypefnx {Команда MGL} {} ytick vdat 'lbls' [@code{add=off}]
 @deftypefnx {Команда MGL} {} ztick vdat 'lbls' [@code{add=off}]
+@deftypefnx {Команда MGL} {} ctick vdat 'lbls' [@code{add=off}]
 @ifclear UDAV
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} SetTicksVal (@code{char} dir, @code{const char *}lbl, @code{bool} add=@code{false})
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} SetTicksVal (@code{char} dir, @code{const wchar_t *}lbl, @code{bool} add=@code{false})
@@ -1122,6 +1203,7 @@ Ternary -- специальный тип графика для 3 зависим�
 @deftypefnx {Функция С} @code{void} mgl_titlew (@code{HMGL} gr, @code{const wchar_t *}txt, @code{const char *}stl, @code{mreal} size)
 @end ifclear
 Выводит заголовок @var{title} для текущего "подграфика" шрифтом @var{stl} с размером @var{size}. Если строка @var{stl} содержит @samp{#}, то рисуется обрамляющий прямоугольник. Функция сбрасывает матрицу трансформации (повороты и сжатие графика) и должна вызываться сразу после создания "подграфика".
+Следует отметить, что каждый последующий вызов команды резервирует дополнительное место. Поэтому следует вручную вызвать @ref{subplot} после @ref{rasterize} если требуется совместить растровые и векторные куски графика.
 @end deftypefn
 
 @anchor{rotate}
@@ -1557,7 +1639,7 @@ gr.GetBGRN(bits, len(bits));
 
 @deftypefn {Метод класса @code{mglGraph}} @code{int} GetObjId (@code{int} xs, @code{int} ys)
 @deftypefnx {Функция С} @code{int} mgl_get_obj_id (@code{HMGL} gr, @code{int} xs, @code{int} ys)
-Возвращает числовой идентификатор верхнего объекта в точке @{xs, ys@} рисунка.
+Возвращает числовой идентификатор верхнего объекта в точке @{xs, ys@} рисунка. Следует отметить, что все графики из одной строки MGL скрипта имеют одинаковый идентификатор.
 @end deftypefn
 
 @deftypefn {Метод класса @code{mglGraph}} @code{int} GetSplId (@code{int} xs, @code{int} ys)
@@ -1641,6 +1723,7 @@ These functions change background image.
 @deftypefnx {Функция С} @code{void} mgl_clf_str (@code{HMGL} gr, @code{const char *} col)
 @deftypefnx {Функция С} @code{void} mgl_clf_chr (@code{HMGL} gr, @code{char} col)
 @deftypefnx {Функция С} @code{void} mgl_clf_rgb (@code{HMGL} gr, @code{mreal} r, @code{mreal} g, @code{mreal} b)
+@deftypefnx {Функция С} @code{void} mgl_clf_rgba (@code{HMGL} gr, @code{mreal} r, @code{mreal} g, @code{mreal} b, @code{mreal} a)
 @end ifclear
 Очищает рисунок и заполняет фон заданным цветом.
 @end deftypefn
@@ -1651,18 +1734,28 @@ These functions change background image.
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Rasterize ()
 @deftypefnx {Функция С} @code{void} mgl_rasterize (@code{HMGL} gr)
 @end ifclear
-Завершает рисование графика и помещает результат в качестве фона. После этого, очищает список примитивов (как @ref{clf}). Функция полезна для сохранения части графика (например, поверхностей или векторных полей) в растровом виде, а другой части (кривых, осей и пр.) в векторном.
+Завершает рисование графика и помещает результат в качестве фона. После этого, очищает список примитивов (как @ref{clf}). Функция полезна для сохранения части графика (например, поверхностей или векторных полей) в растровом виде, а другой части (кривых, осей и пр.) в векторном. Часто требуется вызвать команду @ref{subplot} после @ref{rasterize} во избежание выделения дополнительного места или вращения графика.
 @end deftypefn
 
 @anchor{background}
 @deftypefn {Команда MGL} {} background 'fname' [@code{alpha=1}]
+@deftypefnx {Команда MGL} {} background 'fname' 'how' [@code{alpha=1}]
 @ifclear UDAV
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} LoadBackground (@code{const char *} fname, @code{double} alpha=@code{1})
 @deftypefnx {Функция С} @code{void} mgl_load_background (@code{HMGL} gr, @code{const char *} fname, @code{double} alpha)
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} LoadBackground (@code{const char *} fname, @code{const char *} how, @code{double} alpha=@code{1})
+@deftypefnx {Функция С} @code{void} mgl_load_background_ext (@code{HMGL} gr, @code{const char *} fname, @code{const char *} how, @code{double} alpha)
 @end ifclear
-Загружает PNG или JPEG файл @var{fname} в качестве фона для графика. Параметр @var{alpha} задает прозрачность фона вручную.
+Загружает PNG или JPEG файл @var{fname} в качестве фона для графика. Параметр @var{alpha} задает прозрачность фона вручную. Параметр @var{how} может содержать: @samp{a} для заполнения текущего @ref{subplot}, @samp{s} для растягивания на всю область, @samp{c} для центрирования, @samp{m} для заполнения мозаикой.
 @end deftypefn
 
+@deftypefn {Команда MGL} {} background [@code{r g b}]
+@ifclear UDAV
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} FillBackground (@code{const mglColor &}rgb)
+@deftypefnx {Функция С} @code{void} mgl_fill_background (@code{HMGL} gr, @code{double} r, @code{double} g, @code{double} b, @code{double} a)
+@end ifclear
+Заполняет фон указанным цветом. Значения должны быть в диапазоне от 0 до 1.
+@end deftypefn
 
 @c ##################################################################
 @external{}
@@ -1736,13 +1829,13 @@ These functions change background image.
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Face (@code{mglPoint} p1, @code{mglPoint} p2, @code{mglPoint} p3, @code{mglPoint} p4, @code{const char *}stl=@code{"w"})
 @deftypefnx {Функция С} @code{void} mgl_face (@code{HMGL} gr, @code{mreal} x1, @code{mreal} y1, @code{mreal} z1, @code{mreal} x2, @code{mreal} y2, @code{mreal} z2, @code{mreal} x3, @code{mreal} y3, @code{mreal} z3, @code{mreal} x4, @code{mreal} y4, @code{mreal} z4, @code{const char *}stl)
 @end ifclear
-Рисует заполненный четырехугольник (грань) с углами в точках @var{p1}, @var{p2}, @var{p3}, @var{p4} и цветом(-ами) @var{stl}. При этом цвет может быть один для всей грани, или различным если указаны все 4 цвета. Грань будет нарисована даже если часть ее лежит вне диапазона осей координат.
+Рисует заполненный четырехугольник (грань) с углами в точках @var{p1}, @var{p2}, @var{p3}, @var{p4} и цветом(-ами) @var{stl}. При этом цвет может быть один для всей грани, или различным если указаны все 4 цвета. Грань будет нарисована даже если часть ее лежит вне диапазона осей координат. Параметр @var{stl} может также содержать параметры маски (см. @ref{Color scheme}).
 @end deftypefn
 
 @anchor{rect}
 @deftypefn {Команда MGL} {} rect @code{x1 y1 x2 y2} ['stl'='']
 @deftypefnx {Команда MGL} {} rect @code{x1 y1 z1 x2 y2 z2} ['stl'='']
-Рисует закрашенный прямоугольник (грань) с вершинами @{@var{x1}, @var{y1}, @var{z1}@} и @{@var{x2}, @var{y2}, @var{z2}@} цветом @var{stl}. При этом цвет может быть один для всей грани, или различным для разных вершин если указаны все 4 цвета. Грань будет нарисована даже если часть ее лежит вне диапазона осей координат.
+Рисует закрашенный прямоугольник (грань) с вершинами @{@var{x1}, @var{y1}, @var{z1}@} и @{@var{x2}, @var{y2}, @var{z2}@} цветом @var{stl}. При этом цвет может быть один для всей грани, или различным для разных вершин если указаны все 4 цвета. Грань будет нарисована даже если часть ее лежит вне диапазона осей координат. Параметр @var{stl} может также содержать параметры маски (см. @ref{Color scheme}).
 @end deftypefn
 
 @anchor{facex}
@@ -1759,7 +1852,7 @@ These functions change background image.
 @deftypefnx {Функция С} @code{void} mgl_facey (@code{HMGL} gr, @code{mreal} x0, @code{mreal} y0, @code{mreal} z0, @code{mreal} wx, @code{mreal} wz, @code{const char *}stl, @code{mreal} d1, @code{mreal} d2)
 @deftypefnx {Функция С} @code{void} mgl_facez (@code{HMGL} gr, @code{mreal} x0, @code{mreal} y0, @code{mreal} z0, @code{mreal} wx, @code{mreal} wy, @code{const char *}stl, @code{mreal} d1, @code{mreal} d2)
 @end ifclear
-Рисует закрашенный прямоугольник (грань) перпендикулярно оси [x,y,z] в точке @{@var{x0}, @var{y0}, @var{z0}@} цветом @var{stl} и шириной @var{wx}, @var{wy}, @var{wz} вдоль соответствующего направления. При этом цвет может быть один для всей грани, или различным для разных вершин если указаны все 4 цвета. Параметры @var{d1}!=0, @var{d2}!=0 задают дополнительный сдвиг последней точки (т.е. рисуют четырехугольник). Грань будет нарисована даже если часть ее лежит вне диапазона осей координат.
+Рисует закрашенный прямоугольник (грань) перпендикулярно оси [x,y,z] в точке @{@var{x0}, @var{y0}, @var{z0}@} цветом @var{stl} и шириной @var{wx}, @var{wy}, @var{wz} вдоль соответствующего направления. При этом цвет может быть один для всей грани, или различным для разных вершин если указаны все 4 цвета. Параметр @var{stl} может также содержать параметры маски (см. @ref{Color scheme}). Параметры @var{d1}!=0, @var{d2}!=0 задают дополнительный сдвиг последней точки (т.е. рисуют четырехугольник). Грань будет нарисована даже если часть ее лежит вне диапазона осей координат.
 @end deftypefn
 
 @anchor{sphere}
@@ -1808,7 +1901,7 @@ These functions change background image.
 @ifclear UDAV
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Circle (@code{mglPoint} p, @code{mreal} r, @code{const char *}stl=@code{"r"})
 @end ifclear
-Рисует круг радиуса @var{r} с центром в точке @var{p}=@{@var{x0}, @var{y0}, @var{z0}@} цветом @var{stl}. Если @var{col} содержит: @samp{#} то рисуется только граница, @samp{@@} то рисуется граница (вторым цветом из @var{col} или черными).
+Рисует круг радиуса @var{r} с центром в точке @var{p}=@{@var{x0}, @var{y0}, @var{z0}@} цветом @var{stl}. Если @var{col} содержит: @samp{#} то рисуется только граница, @samp{@@} то рисуется граница (вторым цветом из @var{col} или черными). Параметр @var{col} может также содержать параметры маски (см. @ref{Color scheme}).
 @end deftypefn
 
 @anchor{ellipse}
@@ -1818,7 +1911,7 @@ These functions change background image.
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Ellipse (@code{mglPoint} p1, @code{mglPoint} p2, @code{mreal} r, @code{const char *}col=@code{"r"})
 @deftypefnx {Функция С} @code{void} mgl_ellipse (@code{HMGL} gr, @code{mreal} x1, @code{mreal} y1, @code{mreal} z1, @code{mreal} x2, @code{mreal} y2, @code{mreal} z2, @code{mreal} r, @code{const char *}col)
 @end ifclear
-Рисует эллипс радиуса @var{r} с фокусами в точках @var{p1}, @var{p2} цветом @var{stl}. Если @var{col} содержит: @samp{#} то рисуется только граница, @samp{@@} то рисуется граница (вторым цветом из @var{col} или черными).
+Рисует эллипс радиуса @var{r} с фокусами в точках @var{p1}, @var{p2} цветом @var{stl}. Если @var{col} содержит: @samp{#} то рисуется только граница, @samp{@@} то рисуется граница (вторым цветом из @var{col} или черными). Параметр @var{col} может также содержать параметры маски (см. @ref{Color scheme}).
 @end deftypefn
 
 @anchor{rhomb}
@@ -1828,7 +1921,7 @@ These functions change background image.
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Rhomb (@code{mglPoint} p1, @code{mglPoint} p2, @code{mreal} r, @code{const char *}col=@code{"r"})
 @deftypefnx {Функция С} @code{void} mgl_rhomb (@code{HMGL} gr, @code{mreal} x1, @code{mreal} y1, @code{mreal} z1, @code{mreal} x2, @code{mreal} y2, @code{mreal} z2, @code{mreal} r, @code{const char *}col)
 @end ifclear
-Рисует ромб ширины @var{r} с вершинами в точках @var{p1}, @var{p2} цветом @var{stl}. Если @var{col} содержит: @samp{#} то рисуется только граница, @samp{@@} то рисуется граница (вторым цветом из @var{col} или черными). Если @var{col} содержит 3 цвета, то используется градиентная заливка.
+Рисует ромб ширины @var{r} с вершинами в точках @var{p1}, @var{p2} цветом @var{stl}. Если @var{col} содержит: @samp{#} то рисуется только граница, @samp{@@} то рисуется граница (вторым цветом из @var{col} или черными). Если @var{col} содержит 3 цвета, то используется градиентная заливка. Параметр @var{col} может также содержать параметры маски (см. @ref{Color scheme}).
 @end deftypefn
 
 @anchor{arc}
@@ -1851,7 +1944,7 @@ These functions change background image.
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Polygon (@code{mglPoint} p0, @code{mglPoint} p1, @code{int} num, @code{const char *}col=@code{"r"})
 @deftypefnx {Функция С} @code{void} mgl_polygon (@code{HMGL} gr, @code{mreal} x0, @code{mreal} y0, @code{mreal} z0, @code{mreal} x1, @code{mreal} y1, @code{mreal} z1, @code{int} num, @code{const char *}col)
 @end ifclear
-Рисует правильный @var{num}-угольник с центром в @var{p0} с первой вершиной в @var{p1} цветом @var{col}. Если @var{col} содержит: @samp{#} то рисуется только граница, @samp{@@} то рисуется граница (вторым цветом из @var{col} или черными).
+Рисует правильный @var{num}-угольник с центром в @var{p0} с первой вершиной в @var{p1} цветом @var{col}. Если @var{col} содержит: @samp{#} то рисуется только граница, @samp{@@} то рисуется граница (вторым цветом из @var{col} или черными). Параметр @var{col} может также содержать параметры маски (см. @ref{Color scheme}).
 @c Если @var{col} содержит 3 цвета, то используется градиентная заливка.
 @end deftypefn
 
@@ -1865,8 +1958,6 @@ These functions change background image.
 @end ifclear
 Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command options}. Bitmap can be loaded from file or specified as RGBA values for pixels. Parameter @var{smooth} set to draw bitmap without or with color interpolation.
 @end deftypefn
-
-
 
 @anchor{symbol}
 @deftypefn {Команда MGL} {} symbol @code{x y} 'id' ['fnt'='' @code{size=-1}]
@@ -2011,8 +2102,8 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @anchor{colorbar}
 @deftypefn {Команда MGL} {} colorbar ['sch'='']
 @ifclear UDAV
-@deftypefnx {Метод класса @code{mglGraph}} @code{void} Colorbar (@code{const char *}sch=@code{""})
-@deftypefnx {Функция С} @code{void} mgl_colorbar (@code{HMGL} gr, @code{const char *}sch)
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} Colorbar (@code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Функция С} @code{void} mgl_colorbar (@code{HMGL} gr, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
 Рисует полосу соответствия цвета и числовых значений (colorbar) для цветовой схемы @var{sch} (используется текущая для @code{sch=""}) с краю от графика. Строка @var{sch} также может содержать:
 @itemize
@@ -2034,26 +2125,26 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 
 @deftypefn {Команда MGL} {} colorbar vdat ['sch'='']
 @ifclear UDAV
-@deftypefnx {Метод класса @code{mglGraph}} @code{void} Colorbar (@code{const mglDataA &}v, @code{const char *}sch=@code{""})
-@deftypefnx {Функция С} @code{void} mgl_colorbar_val (@code{HMGL} gr, @code{HCDT} v, @code{const char *}sch)
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} Colorbar (@code{const mglDataA &}v, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Функция С} @code{void} mgl_colorbar_val (@code{HMGL} gr, @code{HCDT} v, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Аналогично предыдущему, но для цветовой схемы без сглаживания с заданными значениями @var{v}. @sref{ContD sample}
+Аналогично предыдущему, но для цветовой схемы без сглаживания с заданными значениями @var{v}. @sref{contd sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} colorbar 'sch' @code{x y [w=1 h=1]}
 @ifclear UDAV
-@deftypefnx {Метод класса @code{mglGraph}} @code{void} Colorbar (@code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w=@code{1}, @code{mreal} h=@code{1})
-@deftypefnx {Функция С} @code{void} mgl_colorbar_ext (@code{HMGL} gr, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w, @code{mreal} h)
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} Colorbar (@code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w=@code{1}, @code{mreal} h=@code{1}, @code{const char *}opt=@code{""})
+@deftypefnx {Функция С} @code{void} mgl_colorbar_ext (@code{HMGL} gr, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w, @code{mreal} h, @code{const char *}opt)
 @end ifclear
 Аналогично первому, но в произвольном месте графика @{@var{x}, @var{y}@} (полагаются в диапазоне [0,1]). Параметры @var{w}, @var{h} задают относительную ширину и высоту colorbar.
 @end deftypefn
 
 @deftypefn {Команда MGL} {} colorbar vdat 'sch' @code{x y [w=1 h=1]}
 @ifclear UDAV
-@deftypefnx {Метод класса @code{mglGraph}} @code{void} Colorbar (@code{const mglDataA &}v, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w=@code{1}, @code{mreal} h=@code{1})
-@deftypefnx {Функция С} @code{void} mgl_colorbar_val_ext (@code{HMGL} gr, @code{HCDT} v, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w, @code{mreal} h)
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} Colorbar (@code{const mglDataA &}v, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w=@code{1}, @code{mreal} h=@code{1}, @code{const char *}opt=@code{""})
+@deftypefnx {Функция С} @code{void} mgl_colorbar_val_ext (@code{HMGL} gr, @code{HCDT} v, @code{const char *}sch, @code{mreal} x, @code{mreal} y, @code{mreal} w, @code{mreal} h, @code{const char *}opt)
 @end ifclear
-Аналогично предыдущему, но для цветовой схемы @var{sch} без сглаживания с заданными значениями @var{v}. @sref{ContD sample}
+Аналогично предыдущему, но для цветовой схемы @var{sch} без сглаживания с заданными значениями @var{v}. @sref{contd sample}
 @end deftypefn
 
 @anchor{grid}
@@ -2079,17 +2170,19 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @anchor{ylabel}
 @anchor{zlabel}
 @anchor{tlabel}
+@anchor{clabel}
 @deftypefn {Команда MGL} {} xlabel 'text' [@code{pos=1}]
 @deftypefnx {Команда MGL} {} ylabel 'text' [@code{pos=1}]
 @deftypefnx {Команда MGL} {} zlabel 'text' [@code{pos=1}]
 @deftypefnx {Команда MGL} {} tlabel 'text' [@code{pos=1}]
+@deftypefnx {Команда MGL} {} clabel 'text' [@code{pos=1}]
 @ifclear UDAV
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Label (@code{char} dir, @code{const char *}text, @code{mreal} pos=@code{1}, @code{const char *}opt=@code{""})
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Label (@code{char} dir, @code{const wchar_t *}text, @code{mreal} pos=@code{1}, @code{const char *}opt=@code{""})
 @deftypefnx {Функция С} @code{void} mgl_label (@code{HMGL} gr, @code{char} dir, @code{const char *}text, @code{mreal} pos, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_labelw (@code{HMGL} gr, @code{char} dir, @code{const wchar_t *}text, @code{mreal} pos, @code{const char *}opt)
 @end ifclear
-Выводит подпись @var{text} для оси @var{dir}=@samp{x},@samp{y},@samp{z},@samp{t} (где @samp{t} -- ``тернарная'' ось @math{t=1-x-y}). Параметр @var{pos} задает положение подписи: при @var{pos}=0 -- по центру оси, при @var{pos}>0 -- около максимальных значений, при @var{pos}<0 -- около минимальных значений. Опция @code{value} задает дополнительный сдвиг текста. @xref{Text printing}.
+Выводит подпись @var{text} для оси @var{dir}=@samp{x},@samp{y},@samp{z},@samp{t},@samp{c}, где @samp{t} -- ``тернарная'' ось @math{t=1-x-y}; @samp{c} -- для цвета (следует вызывать после @ref{colorbar}). Параметр @var{pos} задает положение подписи: при @var{pos}=0 -- по центру оси, при @var{pos}>0 -- около максимальных значений, при @var{pos}<0 -- около минимальных значений. Опция @code{value} задает дополнительный сдвиг текста. @xref{Text printing}.
 @end deftypefn
 
 @c ##################################################################
@@ -2194,7 +2287,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 
 Эти функции строят графики для одномерных (1D) массивов. Одномерными считаются массивы, зависящие только от одного параметра (индекса) подобно кривой в параметрической форме @{x(i),y(i),z(i)@}, i=1...n. По умолчанию (если отсутствуют) значения @var{x}[i] равно распределены в диапазоне оси х, и @var{z}[i] равно минимальному значению оси z. Графики рисуются для каждой строки массива данных если он двумерный. Размер по 1-ой координате @strong{должен быть одинаков} для всех массивов @code{x.nx=y.nx=z.nx}.
 
-Строка @var{pen} задает цвет и стиль линии и маркеров (см. @ref{Line styles}). По умолчанию (@code{pen=""}) рисуется сплошная линия с текущим цветом из палитры (см. @ref{Palette and colors}). Символ @samp{!} в строке задает использование нового цвета из палитры для каждой точки данных (не для всей кривой, как по умолчанию). Строка @var{opt} задает опции графика (см. @ref{Command options}). @sref{1D samples}
+Строка @var{pen} задает цвет и стиль линии и маркеров (см. @ref{Line styles}). По умолчанию (@code{pen=""}) рисуется сплошная линия с текущим цветом из палитры (см. @ref{Palette and colors}). Символ @samp{!} в строке задает использование нового цвета из палитры для каждой точки данных (не для всей кривой, как по умолчанию). Строка @var{opt} задает опции графика (см. @ref{Command options}).
 
 @anchor{plot}
 @deftypefn {Команда MGL} {} plot ydat ['stl'='']
@@ -2208,7 +2301,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_plot_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_plot_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют ломанную линию по точкам @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Если @var{pen} содержит @samp{a}, то рисуются и сегменты между точками вне диапазона осей координат. Если @var{pen} содержит @samp{~}, то число сегментов уменьшается для квази-линейных участков. См. также @ref{area}, @ref{step}, @ref{stem}, @ref{tube}, @ref{mark}, @ref{error}, @ref{belt}, @ref{tens}, @ref{tape}, @ref{meshnum}. @sref{Plot sample}
+Функции рисуют ломанную линию по точкам @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Если @var{pen} содержит @samp{a}, то рисуются и сегменты между точками вне диапазона осей координат. Если @var{pen} содержит @samp{~}, то число сегментов уменьшается для квази-линейных участков. См. также @ref{area}, @ref{step}, @ref{stem}, @ref{tube}, @ref{mark}, @ref{error}, @ref{belt}, @ref{tens}, @ref{tape}, @ref{meshnum}. @sref{plot sample}
 @end deftypefn
 
 @anchor{radar}
@@ -2217,7 +2310,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Radar (@code{const mglDataA &}a, @code{const char *}pen=@code{""}, @code{const char *}opt=@code{""})
 @deftypefnx {Функция С} @code{void} mgl_radar (@code{HMGL} gr, @code{HCDT} a, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют radar chart, представляющий собой ломанную с вершинами на радиальных линиях (типа ломанной в полярных координатах). Параметр @code{value} в опциях @var{opt} задает дополнительный сдвиг данных (т.е. использование @var{a}+@code{value} вместо @var{a}). Если @var{pen} содержит @samp{#}, то рисуется "сетка" (радиальные линии). Если @var{pen} содержит @samp{a}, то рисуются и сегменты между точками вне диапазона осей координат. См. также @ref{plot}, @ref{meshnum}. @sref{Radar sample}
+Функции рисуют radar chart, представляющий собой ломанную с вершинами на радиальных линиях (типа ломанной в полярных координатах). Параметр @code{value} в опциях @var{opt} задает дополнительный сдвиг данных (т.е. использование @var{a}+@code{value} вместо @var{a}). Если @var{pen} содержит @samp{#}, то рисуется "сетка" (радиальные линии). Если @var{pen} содержит @samp{a}, то рисуются и сегменты между точками вне диапазона осей координат. См. также @ref{plot}, @ref{meshnum}. @sref{radar sample}
 @end deftypefn
 
 @anchor{step}
@@ -2232,7 +2325,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_step_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_step_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют ступеньки для точек массива. Если @var{x}.nx>@var{y}.nx, то массив @var{x} задает границы ступенек, а не их конец. См. также @ref{plot}, @ref{stem}, @ref{tile}, @ref{boxs}, @ref{meshnum}. @sref{Step sample}
+Функции рисуют ступеньки для точек массива. Если @var{x}.nx>@var{y}.nx, то массив @var{x} задает границы ступенек, а не их конец. См. также @ref{plot}, @ref{stem}, @ref{tile}, @ref{boxs}, @ref{meshnum}. @sref{step sample}
 @end deftypefn
 
 @anchor{tens}
@@ -2247,7 +2340,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_tens_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} c, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_tens_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют ломанную линию по точкам с цветом, определяемым массивом @var{c} (типа графика натяжений). Строка @var{pen} задает цветовую схему (см. @ref{Color scheme}) и стиль линий и/или маркеров (см. @ref{Line styles}). Если @var{pen} содержит @samp{a}, то рисуются и сегменты между точками вне диапазона осей координат. Если @var{pen} содержит @samp{~}, то число сегментов уменьшается для квази-линейных участков. См. также @ref{plot}, @ref{mesh}, @ref{fall}, @ref{meshnum}. @sref{Tens sample}
+Функции рисуют ломанную линию по точкам с цветом, определяемым массивом @var{c} (типа графика натяжений). Строка @var{pen} задает цветовую схему (см. @ref{Color scheme}) и стиль линий и/или маркеров (см. @ref{Line styles}). Если @var{pen} содержит @samp{a}, то рисуются и сегменты между точками вне диапазона осей координат. Если @var{pen} содержит @samp{~}, то число сегментов уменьшается для квази-линейных участков. См. также @ref{plot}, @ref{mesh}, @ref{fall}, @ref{meshnum}. @sref{tens sample}
 @end deftypefn
 
 @anchor{tape}
@@ -2262,7 +2355,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_tape_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_tape_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют ленты, которые вращаются вокруг кривой @{@var{x}[i], @var{y}[i], @var{z}[i]@} как её нормали. Начальная лента(ы) выбираются в плоскости x-y (для @samp{x} в @var{pen}) и/или y-z (для @samp{x} в @var{pen}). Ширина лент пропорциональна @ref{barwidth}, а также может быть изменена опцией @code{value}. См. также @ref{plot}, @ref{flow}, @ref{barwidth}. @sref{Tape sample}
+Функции рисуют ленты, которые вращаются вокруг кривой @{@var{x}[i], @var{y}[i], @var{z}[i]@} как её нормали. Начальная лента(ы) выбираются в плоскости x-y (для @samp{x} в @var{pen}) и/или y-z (для @samp{x} в @var{pen}). Параметр @var{pen} может также содержать параметры маски (см. @ref{Color scheme}). Ширина лент пропорциональна @ref{barwidth}, а также может быть изменена опцией @code{value}. См. также @ref{plot}, @ref{flow}, @ref{barwidth}. @sref{tape sample}
 @end deftypefn
 
 @anchor{area}
@@ -2277,7 +2370,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_area_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_area_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют ломанную линию между точками и закрашивает её вниз до плоскости осей координат. Градиентная заливка используется если число цветов равно удвоенному число кривых. Если @var{pen} содержит @samp{#}, то рисуется только каркас. Если @var{pen} содержит @samp{a}, то рисуются и сегменты между точками вне диапазона осей координат. См. также @ref{plot}, @ref{bars}, @ref{stem}, @ref{region}. @sref{Area sample}
+Функции рисуют ломанную линию между точками и закрашивает её вниз до плоскости осей координат. Градиентная заливка используется если число цветов равно удвоенному число кривых. Если @var{pen} содержит @samp{#}, то рисуется только каркас. Если @var{pen} содержит @samp{a}, то рисуются и сегменты между точками вне диапазона осей координат. Параметр @var{pen} может также содержать параметры маски (см. @ref{Color scheme}). См. также @ref{plot}, @ref{bars}, @ref{stem}, @ref{region}. @sref{area sample}
 @end deftypefn
 
 @anchor{region}
@@ -2294,7 +2387,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_region_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y1, @code{HCDT} y2, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_region_3d (@code{HMGL} gr, @code{HCDT} x1, @code{HCDT} y1, @code{HCDT} z1, @code{HCDT} x2, @code{HCDT} y2, @code{HCDT} z2, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции закрашивают область между 2 кривыми. Градиентная заливка используется если число цветов равно удвоенному число кривых. Если в 2d версии @var{pen} содержит @samp{i}, то закрашивается только область y1<y<y2, в противном случае будет закрашена и область y2<y<y1. Если @var{pen} содержит @samp{#}, то рисуется только каркас. Если @var{pen} содержит @samp{a}, то рисуются и сегменты между точками вне диапазона осей координат. См. также @ref{area}, @ref{bars}, @ref{stem}. @sref{Region sample}
+Функции закрашивают область между 2 кривыми. Градиентная заливка используется если число цветов равно удвоенному число кривых. Если в 2d версии @var{pen} содержит @samp{i}, то закрашивается только область y1<y<y2, в противном случае будет закрашена и область y2<y<y1. Если @var{pen} содержит @samp{#}, то рисуется только каркас. Если @var{pen} содержит @samp{a}, то рисуются и сегменты между точками вне диапазона осей координат. Параметр @var{pen} может также содержать параметры маски (см. @ref{Color scheme}). См. также @ref{area}, @ref{bars}, @ref{stem}. @sref{region sample}
 @end deftypefn
 
 @anchor{stem}
@@ -2309,7 +2402,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_stem_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_stem_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют вертикальные линии из точек до плоскости осей координат. См. также @ref{area}, @ref{bars}, @ref{plot}, @ref{mark}. @sref{Stem sample}
+Функции рисуют вертикальные линии из точек до плоскости осей координат. См. также @ref{area}, @ref{bars}, @ref{plot}, @ref{mark}. @sref{stem sample}
 @end deftypefn
 
 @anchor{bars}
@@ -2333,9 +2426,11 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @item
 @samp{F} для использования одинаковой (минимальной) ширины полосок;
 @item
-@samp{<}, @samp{^} or @samp{>} для выравнивания полосок влево, вправо или центрирования относительно их координат.
+@samp{<}, @samp{^} or @samp{>} для выравнивания полосок влево, вправо или центрирования относительно их координат;
+@item
+параметры маски (см. @ref{Color scheme}).
 @end itemize
-Можно использовать разные цвета для положительных и отрицательных значений если число указанных цветов равно удвоенному числу кривых для построения. Если @var{x}.nx>@var{y}.nx, то массив @var{x} задает границы полос, а не их центр. См. также @ref{barh}, @ref{cones}, @ref{area}, @ref{stem}, @ref{chart}, @ref{barwidth}. @sref{Bars sample}
+Можно использовать разные цвета для положительных и отрицательных значений если число указанных цветов равно удвоенному числу кривых для построения. Если @var{x}.nx>@var{y}.nx, то массив @var{x} задает границы полос, а не их центр. См. также @ref{barh}, @ref{cones}, @ref{area}, @ref{stem}, @ref{chart}, @ref{barwidth}. @sref{bars sample}
 @end deftypefn
 
 @anchor{barh}
@@ -2356,9 +2451,11 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @item
 @samp{F} для использования одинаковой (минимальной) ширины полосок;
 @item
-@samp{<}, @samp{^} or @samp{>} для выравнивания полосок влево, вправо или центрирования относительно их координат.
+@samp{<}, @samp{^} or @samp{>} для выравнивания полосок влево, вправо или центрирования относительно их координат;
+@item
+параметры маски (см. @ref{Color scheme}).
 @end itemize
-Можно использовать разные цвета для положительных и отрицательных значений если число указанных цветов равно удвоенному числу кривых для построения. Если @var{x}.nx>@var{y}.nx, то массив @var{x} задает границы полос, а не их центр. См. также @ref{bars}, @ref{barwidth}. @sref{Barh sample}
+Можно использовать разные цвета для положительных и отрицательных значений если число указанных цветов равно удвоенному числу кривых для построения. Если @var{x}.nx>@var{y}.nx, то массив @var{x} задает границы полос, а не их центр. См. также @ref{bars}, @ref{barwidth}. @sref{barh sample}
 @end deftypefn
 
 @anchor{cones}
@@ -2386,7 +2483,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @item
 @samp{<}, @samp{^} или @samp{>} для выравнивания конусов влево, вправо или по центру относительно их координат.
 @end itemize
-См. также @ref{bars}, @ref{cone}, @ref{barwidth}. @sref{Cones sample}
+См. также @ref{bars}, @ref{cone}, @ref{barwidth}. @sref{cones sample}
 @end deftypefn
 
 
@@ -2397,7 +2494,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Chart (@code{const mglDataA &}a, @code{const char *}col=@code{""}, @code{const char *}opt=@code{""})
 @deftypefnx {Функция С} @code{void} mgl_chart (@code{HMGL} gr, @code{HCDT} a, @code{const char *}col, @code{const char *}opt)
 @end ifclear
-Рисует цветные полосы (пояса) для массива данных @var{a}. Число полос равно числу строк @var{a} (равно @var{a.ny}). Цвет полос поочерёдно меняется из цветов указанных в @var{col} или в палитре (см. @ref{Palette and colors}). Пробел в цветах соответствует прозрачному "цвету", т.е. если @var{col} содержит пробел(ы), то соответствующая полоса не рисуется. Ширина полосы пропорциональна значению элемента в @var{a}. График строится только для массивов не содержащих отрицательных значений. Если строка @var{col} содержит @samp{#}, то рисуется также чёрная граница полос. График выглядит лучше в (после вращения системы координат) и/или в полярной системе координат (становится Pie chart). @sref{Chart sample}
+Рисует цветные полосы (пояса) для массива данных @var{a}. Число полос равно числу строк @var{a} (равно @var{a.ny}). Цвет полос поочерёдно меняется из цветов указанных в @var{col} или в палитре (см. @ref{Palette and colors}). Пробел в цветах соответствует прозрачному "цвету", т.е. если @var{col} содержит пробел(ы), то соответствующая полоса не рисуется. Ширина полосы пропорциональна значению элемента в @var{a}. График строится только для массивов не содержащих отрицательных значений. Если строка @var{col} содержит @samp{#}, то рисуется также чёрная граница полос. Параметр @var{col} может также содержать параметры маски (см. @ref{Color scheme}). График выглядит лучше в (после вращения системы координат) и/или в полярной системе координат (становится Pie chart). @sref{chart sample}
 @end deftypefn
 
 @anchor{boxplot}
@@ -2409,7 +2506,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_boxplot (@code{HMGL} gr, @code{HCDT} a, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_boxplot_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} a, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют boxplot (называемый также как box-and-whisker diagram или как "ящик с усами") в точках @var{x}[i] на плоскости @var{z} = @var{zVal} (по умолчанию @var{z} равно минимальному значению оси z). Это график, компактно изображающий распределение вероятностей @var{a}[i,j] (минимум, нижний квартиль (Q1), медиана (Q2), верхний квартиль (Q3) и максимум) вдоль второго (j-го) направления. Если @var{pen} содержит @samp{<}, @samp{^} или @samp{>}, то полоски будут выровнены влево, вправо или центрированы относительно их координат. См. также @ref{plot}, @ref{error}, @ref{bars}, @ref{barwidth}. @sref{BoxPlot sample}
+Функции рисуют boxplot (называемый также как box-and-whisker diagram или как "ящик с усами") в точках @var{x}[i] на плоскости @var{z} = @var{zVal} (по умолчанию @var{z} равно минимальному значению оси z). Это график, компактно изображающий распределение вероятностей @var{a}[i,j] (минимум, нижний квартиль (Q1), медиана (Q2), верхний квартиль (Q3) и максимум) вдоль второго (j-го) направления. Если @var{pen} содержит @samp{<}, @samp{^} или @samp{>}, то полоски будут выровнены влево, вправо или центрированы относительно их координат. См. также @ref{plot}, @ref{error}, @ref{bars}, @ref{barwidth}. @sref{boxplot sample}
 @end deftypefn
 
 @anchor{candle}
@@ -2428,7 +2525,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_candle_yv (@code{HMGL} gr, @code{HCDT} v1, @code{HCDT} v2, @code{HCDT} y1, @code{HCDT} y2, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_candle_xyv (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} v1, @code{HCDT} v2, @code{HCDT} y1, @code{HCDT} y2, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют candlestick chart в точках @var{x}[i]. Этот график показывает прямоугольником ("свечой") диапазон изменения величины. Прозрачная (белая) свеча соответствует росту величины @var{v1}[i]<@var{v2}[i], чёрная -- уменьшению. "Тени" показывают минимальное @var{y1} и максимальное @var{y2} значения. Если @var{v2} отсутствует, то он определяется как @var{v2}[i]=@var{v1}[i+1]. Можно использовать разные цвета для растущих и падающих дней если число указанных цветов равно удвоенному числу кривых для построения. Если @var{pen} содержит @samp{#}, то прозрачная свеча будет использована и при 2-цветной схеме. См. также @ref{plot}, @ref{bars}, @ref{ohlc}, @ref{barwidth}. @sref{Candle sample}
+Функции рисуют candlestick chart в точках @var{x}[i]. Этот график показывает прямоугольником ("свечой") диапазон изменения величины. Прозрачная (белая) свеча соответствует росту величины @var{v1}[i]<@var{v2}[i], чёрная -- уменьшению. "Тени" показывают минимальное @var{y1} и максимальное @var{y2} значения. Если @var{v2} отсутствует, то он определяется как @var{v2}[i]=@var{v1}[i+1]. Можно использовать разные цвета для растущих и падающих дней если число указанных цветов равно удвоенному числу кривых для построения. Если @var{pen} содержит @samp{#}, то прозрачная свеча будет использована и при 2-цветной схеме. Параметр @var{pen} может также содержать параметры маски (см. @ref{Color scheme}). См. также @ref{plot}, @ref{bars}, @ref{ohlc}, @ref{barwidth}. @sref{candle sample}
 @end deftypefn
 
 @anchor{ohlc}
@@ -2440,7 +2537,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_ohlc (@code{HMGL} gr, @code{HCDT} o, @code{HCDT} h, @code{HCDT} l, @code{HCDT} c, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_ohlc_x (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} o, @code{HCDT} h, @code{HCDT} l, @code{HCDT} c, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют Open-High-Low-Close диаграмму. Этот график содержит вертикальные линии между максимальным @var{h} и минимальным @var{l} значениями, и горизонтальные линии перед/после вертикальной линии для начального @var{o} и конечного @var{c} значений процесса (обычно цены). Можно использовать разные цвета для растущих и падающих дней если число указанных цветов равно удвоенному числу кривых для построения. См. также @ref{candle}, @ref{plot}, @ref{barwidth}. @sref{OHLC sample}
+Функции рисуют Open-High-Low-Close диаграмму. Этот график содержит вертикальные линии между максимальным @var{h} и минимальным @var{l} значениями, и горизонтальные линии перед/после вертикальной линии для начального @var{o} и конечного @var{c} значений процесса (обычно цены). Можно использовать разные цвета для растущих и падающих дней если число указанных цветов равно удвоенному числу кривых для построения. См. также @ref{candle}, @ref{plot}, @ref{barwidth}. @sref{ohlc sample}
 @end deftypefn
 
 
@@ -2456,7 +2553,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_error_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} ey, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_error_exy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} ex, @code{HCDT} ey, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют размер ошибки @{@var{ex}[i], @var{ey}[i]@} в точках @{@var{x}[i], @var{y}[i]@} на плоскости @var{z} = @var{zVal} (по умолчанию @var{z} равно минимальному значению оси z). Такой график полезен для отображения ошибки эксперимента, вычислений и пр. Если @var{pen} содержит @samp{@@}, то будут использованы большие полупрозрачные маркеры. См. также @ref{plot}, @ref{mark}. @sref{Error sample}
+Функции рисуют размер ошибки @{@var{ex}[i], @var{ey}[i]@} в точках @{@var{x}[i], @var{y}[i]@} на плоскости @var{z} = @var{zVal} (по умолчанию @var{z} равно минимальному значению оси z). Такой график полезен для отображения ошибки эксперимента, вычислений и пр. Если @var{pen} содержит @samp{@@}, то будут использованы большие полупрозрачные маркеры. См. также @ref{plot}, @ref{mark}. @sref{error sample}
 @end deftypefn
 
 @anchor{mark}
@@ -2471,7 +2568,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_mark_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} r, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_mark_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют маркеры размером @var{r}[i]*@ref{marksize} (см. @ref{Default sizes}) в точках @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Для рисования маркеров одинакового размера можно использовать функцию @ref{plot} с невидимой линией (со стилем содержащим @samp{ }). Для маркеров с размером как у координат можно использовать @ref{error} со стилем @samp{@@}. См. также @ref{plot}, @ref{textmark}, @ref{error}, @ref{stem}, @ref{meshnum}. @sref{Mark sample}
+Функции рисуют маркеры размером @var{r}[i]*@ref{marksize} (см. @ref{Default sizes}) в точках @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Для рисования маркеров одинакового размера можно использовать функцию @ref{plot} с невидимой линией (со стилем содержащим @samp{ }). Для маркеров с размером как у координат можно использовать @ref{error} со стилем @samp{@@}. См. также @ref{plot}, @ref{textmark}, @ref{error}, @ref{stem}, @ref{meshnum}. @sref{mark sample}
 @end deftypefn
 
 @anchor{textmark}
@@ -2497,7 +2594,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_textmark_xyzr (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{const char *}txt, @code{const char *}fnt, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_textmarkw_xyzr (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{const wchar_t *}txt, @code{const char *}fnt, @code{const char *}opt)
 @end ifclear
-Функции рисуют текст @var{txt} как маркер с размером пропорциональным @var{r}[i]*@var{marksize} в точках @{@var{x}[i], @var{y}[i], @var{z}[i]@}. См. также @ref{plot}, @ref{mark}, @ref{stem}, @ref{meshnum}. @sref{TextMark sample}
+Функции рисуют текст @var{txt} как маркер с размером пропорциональным @var{r}[i]*@var{marksize} в точках @{@var{x}[i], @var{y}[i], @var{z}[i]@}. См. также @ref{plot}, @ref{mark}, @ref{stem}, @ref{meshnum}. @sref{textmark sample}
 @end deftypefn
 
 @anchor{label}
@@ -2528,7 +2625,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @item @samp{-} для вывода обычного @samp{-};
 @item @samp{0123456789} для задания точности при выводе чисел.
 @end itemize
-См. также @ref{plot}, @ref{mark}, @ref{textmark}, @ref{table}. @sref{Label sample}
+См. также @ref{plot}, @ref{mark}, @ref{textmark}, @ref{table}. @sref{label sample}
 @end deftypefn
 
 @anchor{table}
@@ -2555,7 +2652,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @item @samp{-} для вывода обычного @samp{-};
 @item @samp{0123456789} для задания точности при выводе чисел.
 @end itemize
-Опция @code{value} задает ширину таблицы (по умолчанию 1). См. также @ref{plot}, @ref{label}. @sref{Table sample}
+Опция @code{value} задает ширину таблицы (по умолчанию 1). См. также @ref{plot}, @ref{label}. @sref{table sample}
 @end deftypefn
 
 @anchor{iris}
@@ -2571,7 +2668,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_iris (@code{HMGL} gr, @code{HCDT} dats, @code{HCDT} rngs, @code{const char *}ids, @code{const char *}stl, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_irisw (@code{HMGL} gr, @code{HCDT} dats, @code{HCDT} rngs, @code{const wchar_t *}ids, @code{const char *}stl, @code{const char *}opt)
 @end ifclear
-Рисует Ирисы Фишера для определения зависимостей данных @var{dats} друг от друга (см. @uref{http://en.wikipedia.org/wiki/Iris_flower_data_set}). Массив @var{rngs} размером 2*@var{dats}.nx задает диапазон изменения осей для каждой из колонки. Строка @var{ids} содержит имена колонок данных, разделенных символом @samp{;}. Опция @code{value} задает размер текста для имен данных. На график можно добавить новый набор данных если указать тот же размер @var{rngs} и использовать пустую строку имен @var{ids}. См. также @ref{plot}. @sref{Iris sample}
+Рисует Ирисы Фишера для определения зависимостей данных @var{dats} друг от друга (см. @uref{http://en.wikipedia.org/wiki/Iris_flower_data_set}). Массив @var{rngs} размером 2*@var{dats}.nx задает диапазон изменения осей для каждой из колонки. Строка @var{ids} содержит имена колонок данных, разделенных символом @samp{;}. Опция @code{value} задает размер текста для имен данных. На график можно добавить новый набор данных если указать тот же размер @var{rngs} и использовать пустую строку имен @var{ids}. См. также @ref{plot}. @sref{iris sample}
 @end deftypefn
 
 @anchor{tube}
@@ -2595,7 +2692,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_tube_xyzr (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{const char *}pen, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_tube_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{mreal} r, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют трубу радиуса @var{r}[i] вдоль кривой между точками @{@var{x}[i], @var{y}[i], @var{z}[i]@}. См. также @ref{plot}. @sref{Tube sample}
+Функции рисуют трубу радиуса @var{r}[i] вдоль кривой между точками @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Опция @code{value} число сегментов в поперечном сечении (по умолчанию 25). См. также @ref{plot}. @sref{tube sample}
 @end deftypefn
 
 @anchor{torus}
@@ -2604,7 +2701,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Torus (@code{const mglDataA &}r, @code{const mglDataA &}z, @code{const char *}pen=@code{""}, @code{const char *}opt=@code{""})
 @deftypefnx {Функция С} @code{void} mgl_torus (@code{HMGL} gr, @code{HCDT} r, @code{HCDT} z, @code{const char *}pen, @code{const char *}opt)
 @end ifclear
-Функции рисуют поверхность вращения кривой @{@var{r}, @var{z}@} относительно оси. Если строка @var{pen} содержит @samp{x} или @samp{z}, то ось вращения будет выбрана в указанном направлении (по умолчанию вдоль оси y). Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{plot}, @ref{axial}. @sref{Torus sample}
+Функции рисуют поверхность вращения кривой @{@var{r}, @var{z}@} относительно оси. Если строка @var{pen} содержит @samp{x} или @samp{z}, то ось вращения будет выбрана в указанном направлении (по умолчанию вдоль оси y). Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{plot}, @ref{axial}. @sref{torus sample}
 @end deftypefn
 
 
@@ -2618,7 +2715,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_lamerey_dat (@code{HMGL} gr, @code{double} x0, @code{HCDT} y, @code{const char *}stl, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_lamerey_str (@code{HMGL} gr, @code{double} x0, @code{const char *}y, @code{const char *}stl, @code{const char *}opt)
 @end ifclear
-Функции рисуют диаграмму Ламерея для точечного отображения x_new = y(x_old) начиная с точки @var{x0}. Строка @var{stl} может содержать стиль линии, символ @samp{v} для стрелок, символ @samp{~} для исключения первого сегмента. Опция @code{value} задает число сегментов для рисования (по умолчанию 20). См. также @ref{plot}, @ref{fplot}, @ref{bifurcation}, @ref{pmap}. @sref{Lamerey sample}
+Функции рисуют диаграмму Ламерея для точечного отображения x_new = y(x_old) начиная с точки @var{x0}. Строка @var{stl} может содержать стиль линии, символ @samp{v} для стрелок, символ @samp{~} для исключения первого сегмента. Опция @code{value} задает число сегментов для рисования (по умолчанию 20). См. также @ref{plot}, @ref{fplot}, @ref{bifurcation}, @ref{pmap}. @sref{lamerey sample}
 @end deftypefn
 
 @anchor{bifurcation}
@@ -2630,7 +2727,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_bifurcation_dat (@code{HMGL} gr, @code{double} dx, @code{HCDT} y, @code{const char *}stl, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_bifurcation_str (@code{HMGL} gr, @code{double} dx, @code{const char *}y, @code{const char *}stl, @code{const char *}opt)
 @end ifclear
-Функции рисуют бифуркационную диаграмму (диаграмму удвоения периода) для точечного отображения x_new = y(x_old). Параметр @var{dx} задает точность по оси x. Строка @var{stl} задает цвет. Опция @code{value} задает число учитываемых стационарных точек (по умолчанию 1024). См. также @ref{plot}, @ref{fplot}, @ref{lamerey}. @sref{Bifurcation sample}
+Функции рисуют бифуркационную диаграмму (диаграмму удвоения периода) для точечного отображения x_new = y(x_old). Параметр @var{dx} задает точность по оси x. Строка @var{stl} задает цвет. Опция @code{value} задает число учитываемых стационарных точек (по умолчанию 1024). См. также @ref{plot}, @ref{fplot}, @ref{lamerey}. @sref{bifurcation sample}
 @end deftypefn
 
 @anchor{pmap}
@@ -2645,7 +2742,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_pmap_xy (@code{HMGL} gr, @code{HCDT} x, @code{HMDT} y, @code{HCDT} s, @code{const char *}stl, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_pmap_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HMDT} y, @code{HCDT} z, @code{HCDT} s, @code{const char *}stl, @code{const char *}opt)
 @end ifclear
-Функции рисуют отображение Пуанкаре для кривой @{@var{x}, @var{y}, @var{z}@} при условии @var{s}=0. Проще говоря, рисуются точки пересечения кривой и поверхности. Строка @var{stl} задает стиль маркеров. См. также @ref{plot}, @ref{mark}, @ref{lamerey}. @sref{Pmap sample}
+Функции рисуют отображение Пуанкаре для кривой @{@var{x}, @var{y}, @var{z}@} при условии @var{s}=0. Проще говоря, рисуются точки пересечения кривой и поверхности. Строка @var{stl} задает стиль маркеров. См. также @ref{plot}, @ref{mark}, @ref{lamerey}. @sref{pmap sample}
 @end deftypefn
 
 
@@ -2668,7 +2765,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @cindex Grad
 @cindex Grid
 
-Эти функции строят графики для двумерных (2D) массивов. Двумерными считаются массивы, зависящие только от двух параметров (индексов) подобно матрице @math{f(x_i,y_j), i=1...n, j=1...m}. По умолчанию (если отсутствуют) значения @var{x}, @var{y} равно распределены в диапазоне осей координат. Младшие размерности массивов @var{x}, @var{y}, @var{z} должны быть одинаковы @code{x.nx=z.nx && y.nx=z.ny} или @code{x.nx=y.nx=z.nx && x.ny=y.ny=z.ny}. Массивы @var{x} и @var{y} могут быть векторами (не матрицами как @var{z}). График строится для каждого z среза данных. Строка @var{sch} задает цветовую схему (см. @ref{Color scheme}). Строка @var{opt} задает опции графика (см. @ref{Command options}). @sref{2D samples}
+Эти функции строят графики для двумерных (2D) массивов. Двумерными считаются массивы, зависящие только от двух параметров (индексов) подобно матрице @math{f(x_i,y_j), i=1...n, j=1...m}. По умолчанию (если отсутствуют) значения @var{x}, @var{y} равно распределены в диапазоне осей координат. Младшие размерности массивов @var{x}, @var{y}, @var{z} должны быть одинаковы @code{x.nx=z.nx && y.nx=z.ny} или @code{x.nx=y.nx=z.nx && x.ny=y.ny=z.ny}. Массивы @var{x} и @var{y} могут быть векторами (не матрицами как @var{z}). График строится для каждого z среза данных. Строка @var{sch} задает цветовую схему (см. @ref{Color scheme}). Строка @var{opt} задает опции графика (см. @ref{Command options}).
 
 @anchor{surf}
 @deftypefn {Команда MGL} {} surf zdat ['sch'='']
@@ -2679,7 +2776,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_surf (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_surf_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует параметрически заданную поверхность @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Если @var{sch} содержит @samp{#}, то рисуется сетка на поверхности. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{mesh}, @ref{dens}, @ref{belt}, @ref{tile}, @ref{boxs}, @ref{surfc}, @ref{surfa}. @sref{Surf sample}
+Рисует параметрически заданную поверхность @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Если @var{sch} содержит @samp{#}, то рисуется сетка на поверхности. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{mesh}, @ref{dens}, @ref{belt}, @ref{tile}, @ref{boxs}, @ref{surfc}, @ref{surfa}. @sref{surf sample}
 @end deftypefn
 
 @anchor{mesh}
@@ -2691,7 +2788,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_mesh (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_mesh_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует сетчатую поверхность, заданную параметрически @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. См. также @ref{surf}, @ref{fall}, @ref{meshnum}, @ref{cont}, @ref{tens}. @sref{Mesh sample}
+Рисует сетчатую поверхность, заданную параметрически @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. См. также @ref{surf}, @ref{fall}, @ref{meshnum}, @ref{cont}, @ref{tens}. @sref{mesh sample}
 @end deftypefn
 
 @anchor{fall}
@@ -2703,7 +2800,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_fall (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_fall_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует водопад для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. График удобен для построения нескольких кривых, сдвинутых вглубь друг относительно друга. Если @var{sch} содержит @samp{x}, то линии рисуются вдоль оси x, иначе (по умолчанию) вдоль оси y. См. также @ref{belt}, @ref{mesh}, @ref{tens}, @ref{meshnum}. @sref{Fall sample}
+Рисует водопад для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. График удобен для построения нескольких кривых, сдвинутых вглубь друг относительно друга. Если @var{sch} содержит @samp{x}, то линии рисуются вдоль оси x, иначе (по умолчанию) вдоль оси y. См. также @ref{belt}, @ref{mesh}, @ref{tens}, @ref{meshnum}. @sref{fall sample}
 @end deftypefn
 
 @anchor{belt}
@@ -2715,7 +2812,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_belt (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_belt_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует ленточки для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. График может использоваться как 3d обобщение графика @ref{plot}. Если @var{sch} содержит @samp{x}, то ленточки рисуются вдоль оси x, иначе (по умолчанию) вдоль оси y. См. также @ref{fall}, @ref{surf}, @ref{beltc}, @ref{plot}, @ref{meshnum}. @sref{Belt sample}
+Рисует ленточки для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. График может использоваться как 3d обобщение графика @ref{plot}. Если @var{sch} содержит @samp{x}, то ленточки рисуются вдоль оси x, иначе (по умолчанию) вдоль оси y. См. также @ref{fall}, @ref{surf}, @ref{beltc}, @ref{plot}, @ref{meshnum}. @sref{belt sample}
 @end deftypefn
 
 @anchor{boxs}
@@ -2727,7 +2824,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_boxs (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_boxs_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует вертикальные ящики для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. См. также @ref{surf}, @ref{dens}, @ref{tile}, @ref{step}. @sref{Boxs sample}
+Рисует вертикальные ящики для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. См. также @ref{surf}, @ref{dens}, @ref{tile}, @ref{step}. @sref{boxs sample}
 @end deftypefn
 
 @anchor{tile}
@@ -2742,7 +2839,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_tile_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_tile_xyc (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует плитки для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с цветом, заданным массивом @var{c}[i,j]. Если строка @var{sch} содержит стиль @samp{x} или @samp{y}, то плитки будут ориентированы перпендикулярно x- или y-оси. График может использоваться как 3d обобщение @ref{step}. См. также @ref{surf}, @ref{boxs}, @ref{step}, @ref{tiles}. @sref{Tile sample}
+Рисует плитки для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с цветом, заданным массивом @var{c}[i,j]. Если строка @var{sch} содержит стиль @samp{x} или @samp{y}, то плитки будут ориентированы перпендикулярно x- или y-оси. График может использоваться как 3d обобщение @ref{step}. См. также @ref{surf}, @ref{boxs}, @ref{step}, @ref{tiles}. @sref{tile sample}
 @end deftypefn
 
 @anchor{dens}
@@ -2754,7 +2851,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_dens (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_dens_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует график плотности для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} при @var{z} равном минимальному значению оси z. Если @var{sch} содержит @samp{#}, то рисуется сетка. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{surf}, @ref{cont}, @ref{contf}, @ref{boxs}, @ref{tile}, @code{dens[xyz]}. @sref{Dens sample}
+Рисует график плотности для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} при @var{z} равном минимальному значению оси z. Если @var{sch} содержит @samp{#}, то рисуется сетка. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{surf}, @ref{cont}, @ref{contf}, @ref{boxs}, @ref{tile}, @code{dens[xyz]}. @sref{dens sample}
 @end deftypefn
 
 @anchor{cont}
@@ -2766,7 +2863,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_cont__val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_cont_xy_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует линии уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} при @var{z=v}[k] или при @var{z}  равном минимальному значению оси z если @var{sch} содержит @samp{_}. Линии уровня рисуются для @var{z}[i,j]=@var{v}[k]. Если @var{sch} содержит @samp{t} или @samp{T}, то значения @var{v}[k] будут выведены вдоль контуров над (или под) кривой. См. также @ref{dens}, @ref{contf}, @ref{contd}, @ref{axial}, @code{cont[xyz]}. @sref{Cont sample}
+Рисует линии уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} при @var{z=v}[k] или при @var{z}  равном минимальному значению оси z если @var{sch} содержит @samp{_}. Линии уровня рисуются для @var{z}[i,j]=@var{v}[k]. Если @var{sch} содержит @samp{t} или @samp{T}, то значения @var{v}[k] будут выведены вдоль контуров над (или под) кривой. См. также @ref{dens}, @ref{contf}, @ref{contd}, @ref{axial}, @code{cont[xyz]}. @sref{cont sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} cont zdat ['sch'='']
@@ -2777,7 +2874,15 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_cont (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_cont_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Как предыдущий с вектором @var{v} из @var{num} элементов равно распределенных в диапазоне изменения цвета. Здесь @var{num} равен значению параметра @code{value} в опциях @var{opt} (по умолчанию 7).
+Как предыдущий с вектором @var{v} из @var{num} элементов равно распределенных в диапазоне изменения цвета. Здесь @var{num} равен значению параметра @code{value} в опциях @var{opt} (по умолчанию 7). Если @var{sch} содержит @samp{.}, то будут строится только контуры по уровням седловых точек.
+@end deftypefn
+
+@deftypefn  {Команда MGL} {} cont @code{val} adat xdat ydat zdat ['sch'='']
+@ifclear UDAV
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} ContGen (@code{mreal} val, @code{const mglDataA &}a, @code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Функция С} @code{void} mgl_cont_gen (@code{HMGL} gr, @code{mreal} val, @code{HCDT} a, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
+@end ifclear
+Рисует линии уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} при @var{a}[i,j]=@var{val}. Если @var{sch} содержит @samp{t} или @samp{T}, то значения @var{v}[k] будут выведены вдоль контуров над (или под) кривой. 
 @end deftypefn
 
 @anchor{contf}
@@ -2789,7 +2894,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_contf_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_contf_xy_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует закрашенные линии (контуры) уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} при @var{z=v}[k] или при @var{z}  равном минимальному значению оси z если @var{sch} содержит @samp{_}. Линии уровня рисуются для @var{z}[i,j]=@var{v}[k]. См. также @ref{dens}, @ref{cont}, @ref{contd}, @code{contf[xyz]}. @sref{ContF sample}
+Рисует закрашенные линии (контуры) уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} при @var{z=v}[k] или при @var{z}  равном минимальному значению оси z если @var{sch} содержит @samp{_}. Линии уровня рисуются для @var{z}[i,j]=@var{v}[k]. См. также @ref{dens}, @ref{cont}, @ref{contd}, @code{contf[xyz]}. @sref{contf sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} contf zdat ['sch'='']
@@ -2803,6 +2908,14 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 Как предыдущий с вектором @var{v} из @var{num} элементов равно распределенных в диапазоне изменения цвета. Здесь @var{num} равен значению параметра @code{value} в опциях @var{opt} (по умолчанию 7).
 @end deftypefn
 
+@deftypefn  {Команда MGL} {} contf @code{v1 v2} adat xdat ydat zdat ['sch'='']
+@ifclear UDAV
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} ContFGen (@code{mreal} v1, @code{mreal} v2, @code{const mglDataA &}a, @code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Функция С} @code{void} mgl_contf_gen (@code{HMGL} gr, @code{mreal} v1, @code{mreal} v2, @code{HCDT} a, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
+@end ifclear
+Рисует закрашенные линии (контуры) уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} между @var{a}[i,j]=@var{v1} и @var{a}[i,j]=@var{v2}.
+@end deftypefn
+
 @anchor{contd}
 @deftypefn {Команда MGL} {} contd vdat zdat ['sch'='']
 @deftypefnx {Команда MGL} {} contd vdat xdat ydat zdat ['sch'='']
@@ -2812,7 +2925,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_contd_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_contd_xy_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует закрашенные линии (контуры) уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} при @var{z=v}[k] или при @var{z}  равном минимальному значению оси z если @var{sch} содержит @samp{_}. Линии уровня рисуются для @var{z}[i,j]=@var{v}[k]. Строка @var{sch} задает цвета контуров: цвет k-го контура определяется как k-ый цвет строки. См. также @ref{dens}, @ref{cont}, @ref{contf}. @sref{ContD sample}
+Рисует закрашенные линии (контуры) уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} при @var{z=v}[k] или при @var{z}  равном минимальному значению оси z если @var{sch} содержит @samp{_}. Линии уровня рисуются для @var{z}[i,j]=@var{v}[k]. Строка @var{sch} задает цвета контуров: цвет k-го контура определяется как k-ый цвет строки. См. также @ref{dens}, @ref{cont}, @ref{contf}. @sref{contd sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} contd zdat ['sch'='']
@@ -2833,7 +2946,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} ContP (@code{const mglDataA &}v, @code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
 @deftypefnx {Функция С} @code{void} mgl_contp_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует линии уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Линии уровня рисуются для @var{a}[i,j]=@var{v}[k]. Если @var{sch} содержит @samp{t} или @samp{T}, то значения @var{v}[k] будут выведены вдоль контуров над (или под) кривой. Если @var{sch} содержит @samp{f}, то контуры будут закрашены. См. также @ref{cont}, @ref{contf}, @ref{surfc}, @code{cont[xyz]}. @c TODO @sref{Cont sample}
+Рисует линии уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Линии уровня рисуются для @var{a}[i,j]=@var{v}[k]. Если @var{sch} содержит @samp{t} или @samp{T}, то значения @var{v}[k] будут выведены вдоль контуров над (или под) кривой. Если @var{sch} содержит @samp{f}, то контуры будут закрашены. См. также @ref{cont}, @ref{contf}, @ref{surfc}, @code{cont[xyz]}. @c TODO @sref{contp sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} contp xdat ydat zdat adat ['sch'='']
@@ -2853,7 +2966,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_contv_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_contv_xy_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует вертикальные цилиндры от линий уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} при @var{z}=@var{v}[k] или при @var{z}  равном минимальному значению оси z если @var{sch} содержит @samp{_}. Линии уровня рисуются для @var{z}[i,j]=@var{v}[k]. См. также @ref{cont}, @ref{contf}. @sref{ContV sample}
+Рисует вертикальные цилиндры от линий уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} при @var{z}=@var{v}[k] или при @var{z}  равном минимальному значению оси z если @var{sch} содержит @samp{_}. Линии уровня рисуются для @var{z}[i,j]=@var{v}[k]. См. также @ref{cont}, @ref{contf}. @sref{contv sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} contv zdat ['sch'='']
@@ -2876,7 +2989,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_axial_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_axial_xy_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует поверхность вращения линии уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Линии уровня рисуются для @var{z}[i,j]=@var{v}[k]. Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. Если строка содержит символы @samp{x} или @samp{z}, то ось вращения устанавливается в указанное направление (по умолчанию вдоль @samp{y}). См. также @ref{cont}, @ref{contf}, @ref{torus}, @ref{surf3}. @sref{Axial sample}
+Рисует поверхность вращения линии уровня для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@}. Линии уровня рисуются для @var{z}[i,j]=@var{v}[k]. Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. Если строка содержит символы @samp{x} или @samp{z}, то ось вращения устанавливается в указанное направление (по умолчанию вдоль @samp{y}). См. также @ref{cont}, @ref{contf}, @ref{torus}, @ref{surf3}. @sref{axial sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} axial zdat ['sch'='']
@@ -2916,7 +3029,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @cindex Cloud
 @cindex Beam
 
-Эти функции строят графики для трехмерных (3D) массивов. Трёхмерными считаются массивы, зависящие от трёх параметров (индексов) подобно матрице @math{f(x_i,y_j,z_k), i=1...n, j=1...m, k=1...l}. По умолчанию (если отсутствуют) значения @var{x}, @var{y}, @var{z} равно распределены в диапазоне осей координат. Младшие размерности массивов @var{x}, @var{y}, @var{z} должны быть одинаковы @code{x.nx=a.nx && y.nx=a.ny && z.nz=a.nz} или @code{x.nx=y.nx=z.nx=a.nx && x.ny=y.ny=z.ny=a.ny && x.nz=y.nz=z.nz=a.nz}. Массивы @var{x}, @var{y} и @var{z} могут быть векторами (не матрицами как @var{a}). Строка @var{sch} задает цветовую схему (см. @ref{Color scheme}). Строка @var{opt} задает опции графика (см. @ref{Command options}). @sref{3D samples}
+Эти функции строят графики для трехмерных (3D) массивов. Трёхмерными считаются массивы, зависящие от трёх параметров (индексов) подобно матрице @math{f(x_i,y_j,z_k), i=1...n, j=1...m, k=1...l}. По умолчанию (если отсутствуют) значения @var{x}, @var{y}, @var{z} равно распределены в диапазоне осей координат. Младшие размерности массивов @var{x}, @var{y}, @var{z} должны быть одинаковы @code{x.nx=a.nx && y.nx=a.ny && z.nz=a.nz} или @code{x.nx=y.nx=z.nx=a.nx && x.ny=y.ny=z.ny=a.ny && x.nz=y.nz=z.nz=a.nz}. Массивы @var{x}, @var{y} и @var{z} могут быть векторами (не матрицами как @var{a}). Строка @var{sch} задает цветовую схему (см. @ref{Color scheme}). Строка @var{opt} задает опции графика (см. @ref{Command options}).
 
 
 @anchor{surf3}
@@ -2928,7 +3041,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_surf3_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_surf3_xyz_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует поверхность уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) при @var{a}(x,y,z)=@var{val}. Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. Замечу, что возможно некорректная отрисовка граней вследствие неопределённости построения сечения если поверхность пересекает ячейку данных 2 и более раз. См. также @ref{cloud}, @ref{dens3}, @ref{surf3c}, @ref{surf3a}, @ref{axial}. @sref{Surf3 sample}
+Рисует поверхность уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) при @var{a}(x,y,z)=@var{val}. Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. Замечу, что возможно некорректная отрисовка граней вследствие неопределённости построения сечения если поверхность пересекает ячейку данных 2 и более раз. См. также @ref{cloud}, @ref{dens3}, @ref{surf3c}, @ref{surf3a}, @ref{axial}. @sref{surf3 sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} surf3 adat ['sch'='']
@@ -2951,7 +3064,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_cloud (@code{HMGL} gr, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_cloud_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует облачный график для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). График состоит из кубиков с цветом и прозрачностью пропорциональной значениям @var{a}. Результат похож на облако -- малые значения прозрачны, а большие нет. Число кубиков зависит от @ref{meshnum}. Если @var{sch} содержит @samp{.}, то будет построен график более низкого качества, но с заметно меньшим использованием памяти. Если @var{sch} содержит @samp{i}, то прозрачность будет инвертирована, т.е. области с более высокими значениями будут более прозрачны, а с более низким -- менее прозрачны. См. также @ref{surf3}, @ref{meshnum}. @sref{Cloud sample}
+Рисует облачный график для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). График состоит из кубиков с цветом и прозрачностью пропорциональной значениям @var{a}. Результат похож на облако -- малые значения прозрачны, а большие нет. Число кубиков зависит от @ref{meshnum}. Если @var{sch} содержит @samp{.}, то будет построен график более низкого качества, но с заметно меньшим использованием памяти. Если @var{sch} содержит @samp{i}, то прозрачность будет инвертирована, т.е. области с более высокими значениями будут более прозрачны, а с более низким -- менее прозрачны. См. также @ref{surf3}, @ref{meshnum}. @sref{cloud sample}
 @end deftypefn
 
 @anchor{dens3}
@@ -2963,7 +3076,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_dens3 (@code{HMGL} gr, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_dens3_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-Рисует график плотности для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). График рисуется на срезе @var{sVal} в направлении @{@samp{x}, @samp{y}, @samp{z}@}, указанном в строке @var{sch} (по умолчанию, в напралении @samp{y}). Если @var{sch} содержит @samp{#}, то на срезе рисуется сетка. См. также @ref{cont3}, @ref{contf3}, @ref{dens}, @ref{grid3}. @sref{Dens3 sample}
+Рисует график плотности для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). График рисуется на срезе @var{sVal} в направлении @{@samp{x}, @samp{y}, @samp{z}@}, указанном в строке @var{sch} (по умолчанию, в напралении @samp{y}). Если @var{sch} содержит @samp{#}, то на срезе рисуется сетка. См. также @ref{cont3}, @ref{contf3}, @ref{dens}, @ref{grid3}. @sref{dens3 sample}
 @end deftypefn
 
 @anchor{cont3}
@@ -2975,13 +3088,13 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_cont3_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_cont3_xyz_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-Рисует линии уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Линии рисуются для значений из массива @var{v} на срезе @var{sVal} в направлении @{@samp{x}, @samp{y}, @samp{z}@}, указанном в строке @var{sch} (по умолчанию, в напралении @samp{y}). Если @var{sch} содержит @samp{#}, то на срезе рисуется сетка. Если @var{sch} содержит @samp{t} или @samp{T}, то значения @var{v}[k] будут выведены вдоль контуров над (или под) кривой. См. также @ref{dens3}, @ref{contf3}, @ref{cont}, @ref{grid3}. @sref{Cont3 sample}
+Рисует линии уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Линии рисуются для значений из массива @var{v} на срезе @var{sVal} в направлении @{@samp{x}, @samp{y}, @samp{z}@}, указанном в строке @var{sch} (по умолчанию, в напралении @samp{y}). Если @var{sch} содержит @samp{#}, то на срезе рисуется сетка. Если @var{sch} содержит @samp{t} или @samp{T}, то значения @var{v}[k] будут выведены вдоль контуров над (или под) кривой. См. также @ref{dens3}, @ref{contf3}, @ref{cont}, @ref{grid3}. @sref{cont3 sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} cont3 adat ['sch'='' @code{sval=-1}]
 @deftypefnx {Команда MGL} {} cont3 xdat ydat zdat adat ['sch'='' @code{sval=-1}]
 @ifclear UDAV
-@deftypefnx {Метод класса @code{mglGraph}} @code{void} Cont3 (@code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} Cont3 (@code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""})
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Cont3 (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""})
 @deftypefnx {Функция С} @code{void} mgl_cont3 (@code{HMGL} gr, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_cont3_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
@@ -2998,13 +3111,13 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_contf3_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_contf3_xyz_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-Рисует закрашенные линии (контуры) уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Линии рисуются для значений из массива @var{v} на срезе @var{sVal} в направлении @{@samp{x}, @samp{y}, @samp{z}@}, указанном в строке @var{sch} (по умолчанию, в напралении @samp{y}). Если @var{sch} содержит @samp{#}, то на срезе рисуется сетка. См. также @ref{dens3}, @ref{cont3}, @ref{contf}, @ref{grid3}. @sref{ContF3 sample}
+Рисует закрашенные линии (контуры) уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Линии рисуются для значений из массива @var{v} на срезе @var{sVal} в направлении @{@samp{x}, @samp{y}, @samp{z}@}, указанном в строке @var{sch} (по умолчанию, в напралении @samp{y}). Если @var{sch} содержит @samp{#}, то на срезе рисуется сетка. См. также @ref{dens3}, @ref{cont3}, @ref{contf}, @ref{grid3}. @sref{contf3 sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} contf3 adat ['sch'='' @code{sval=-1}]
 @deftypefnx {Команда MGL} {} contf3 xdat ydat zdat adat ['sch'='' @code{sval=-1}]
 @ifclear UDAV
-@deftypefnx {Метод класса @code{mglGraph}} @code{void} Contf3 (@code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} Contf3 (@code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""})
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Contf3 (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}a, @code{const char *}sch=@code{""}, @code{mreal} sVal=@code{-1}, @code{const char *}opt=@code{""})
 @deftypefnx {Функция С} @code{void} mgl_contf3 (@code{HMGL} gr, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_contf3_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
@@ -3022,6 +3135,29 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_grid3_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
 Рисует сетку для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). График рисуется на срезе @var{sVal} в направлении @{@samp{x}, @samp{y}, @samp{z}@}, указанном в строке @var{sch} (по умолчанию, в напралении @samp{y}). См. также @ref{cont3}, @ref{contf3}, @ref{dens3}, @ref{grid2}, @ref{meshnum}.
+@end deftypefn
+
+@anchor{dcont}
+@deftypefn {Команда MGL} {} dcont vdat adat bdat ['sch'='']
+@deftypefnx {Команда MGL} {} dcont vdat xdat ydat zdat adat bdat ['sch'='']
+@ifclear UDAV
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} DCont (@code{const mglDataA &}v, @code{const mglDataA &}a, @code{const mglDataA &}b, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} DCont (@code{const mglDataA &}v, @code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}a, @code{const mglDataA &}b, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Функция С} @code{void} mgl_dcont_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} a, @code{HCDT} b, @code{const char *}sch, @code{const char *}opt)
+@deftypefnx {Функция С} @code{void} mgl_dcont_xyz_val (@code{HMGL} gr, @code{HCDT} v, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{HCDT} b, @code{const char *}sch, @code{const char *}opt)
+@end ifclear
+Рисует линии пересечений поверхностей постоянного уровня для 3d данных @var{a}, @var{b} заданных параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]). Поверхности уровня берутся при значениях функции равных элементам массива @var{v}. См. также @ref{cont}, @ref{cont3}. @sref{dcont sample}
+@end deftypefn
+
+@deftypefn {Команда MGL} {} dcont adat bdat ['sch'='' @code{sval=-1}]
+@deftypefnx {Команда MGL} {} dcont xdat ydat zdat adat bdat ['sch'='' @code{sval=-1}]
+@ifclear UDAV
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} DCont (@code{const mglDataA &}a, @code{const mglDataA &}b, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} DCont (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}a, @code{const mglDataA &}b, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Функция С} @code{void} mgl_dcont (@code{HMGL} gr, @code{HCDT} a, @code{HCDT} b, @code{const char *}sch, @code{mreal} sVal, @code{const char *}opt)
+@deftypefnx {Функция С} @code{void} mgl_@code{HCDT} b, cont_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{HCDT} b, @code{const char *}sch, @code{const char *}opt)
+@end ifclear
+Аналогично предыдущему для @var{num} уровней равномерно распределённых в диапазоне изменения цвета. Величина @var{num} равна значению параметра @code{value} в опциях @var{opt} (по умолчанию 7).
 @end deftypefn
 
 @anchor{beam}
@@ -3061,7 +3197,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_surfc (@code{HMGL} gr, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_surfc_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует параметрически заданную поверхность @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с цветом, заданным массивом @var{c}[i,j]. Если @var{sch} содержит @samp{#}, то на поверхности рисуется сетка. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. Размерность массивов @var{z} и @var{c} должна быть одинакова. График строится для каждого z среза данных. См. также @ref{surf}, @ref{surfa}, @ref{beltc}, @ref{surf3c}. @sref{SurfC sample}
+Рисует параметрически заданную поверхность @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с цветом, заданным массивом @var{c}[i,j]. Если @var{sch} содержит @samp{#}, то на поверхности рисуется сетка. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. Размерность массивов @var{z} и @var{c} должна быть одинакова. График строится для каждого z среза данных. См. также @ref{surf}, @ref{surfa}, @ref{beltc}, @ref{surf3c}. @sref{surfc sample}
 @end deftypefn
 
 
@@ -3074,7 +3210,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_beltc (@code{HMGL} gr, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_beltc_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует ленточки для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с цветом, заданным массивом @var{c}[i,j]. График может использоваться как 3d обобщение графика @ref{plot}. Если @var{sch} содержит @samp{x}, то ленточки рисуются вдоль оси x, иначе (по умолчанию) вдоль оси y. См. также @ref{belt}, @ref{surfc}, @ref{meshnum}. @c TODO @sref{Belt sample}
+Рисует ленточки для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с цветом, заданным массивом @var{c}[i,j]. График может использоваться как 3d обобщение графика @ref{plot}. Если @var{sch} содержит @samp{x}, то ленточки рисуются вдоль оси x, иначе (по умолчанию) вдоль оси y. См. также @ref{belt}, @ref{surfc}, @ref{meshnum}. @sref{beltc sample}
 @end deftypefn
 
 
@@ -3087,7 +3223,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_surf3c_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} a, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_surf3c_xyz_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует поверхность уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) при @var{a}(x,y,z)=@var{val}. Аналогично @ref{surf3}, но цвет задается массивом @var{c}. Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{surf3}, @ref{surfc}, @ref{surf3a}. @sref{Surf3C sample}
+Рисует поверхность уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) при @var{a}(x,y,z)=@var{val}. Аналогично @ref{surf3}, но цвет задается массивом @var{c}. Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{surf3}, @ref{surfc}, @ref{surf3a}. @sref{surf3c sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} surf3c adat cdat ['sch'='']
@@ -3111,7 +3247,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_surfa (@code{HMGL} gr, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_surfa_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует параметрически заданную поверхность @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с прозрачностью, заданной массивом @var{c}[i,j]. Если @var{sch} содержит @samp{#}, то на поверхности рисуется сетка. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. Размерность массивов @var{z} и @var{c} должна быть одинакова. График строится для каждого z среза данных. См. также @ref{surf}, @ref{surfc}, @ref{surf3a}. @sref{SurfA sample}
+Рисует параметрически заданную поверхность @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с прозрачностью, заданной массивом @var{c}[i,j]. Если @var{sch} содержит @samp{#}, то на поверхности рисуется сетка. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. Размерность массивов @var{z} и @var{c} должна быть одинакова. График строится для каждого z среза данных. См. также @ref{surf}, @ref{surfc}, @ref{surf3a}. @sref{surfa sample}
 @end deftypefn
 
 @anchor{surf3a}
@@ -3123,7 +3259,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_surf3a_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} a, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_surf3a_xyz_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует поверхность уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) при @var{a}(x,y,z)=@var{val}. Аналогично @ref{surf3}, но прозрачность задается массивом @var{c}. Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{surf3}, @ref{surfc}, @ref{surf3a}. @sref{Surf3A sample}
+Рисует поверхность уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) при @var{a}(x,y,z)=@var{val}. Аналогично @ref{surf3}, но прозрачность задается массивом @var{c}. Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{surf3}, @ref{surfc}, @ref{surf3a}. @sref{surf3a sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} surf3a adat cdat ['sch'='']
@@ -3148,7 +3284,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_surfca (@code{HMGL} gr, @code{HCDT} z, @code{HCDT} c, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_surfca_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует параметрически заданную поверхность @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с цветом и прозрачностью, заданными массивами @var{c}[i,j] и @var{a}[i,j] соответственно. Если @var{sch} содержит @samp{#}, то на поверхности рисуется сетка. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. Размерность массивов @var{z} и @var{c} должна быть одинакова. График строится для каждого z среза данных. См. также @ref{surf}, @ref{surfc}, @ref{surfa}, @ref{surf3ca}. @sref{SurfCA sample}
+Рисует параметрически заданную поверхность @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с цветом и прозрачностью, заданными массивами @var{c}[i,j] и @var{a}[i,j] соответственно. Если @var{sch} содержит @samp{#}, то на поверхности рисуется сетка. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. Размерность массивов @var{z} и @var{c} должна быть одинакова. График строится для каждого z среза данных. См. также @ref{surf}, @ref{surfc}, @ref{surfa}, @ref{surf3ca}. @sref{surfca sample}
 @end deftypefn
 
 @anchor{surf3ca}
@@ -3160,7 +3296,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_surf3ca_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} a, @code{HCDT} c, @code{HCDT} b, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_surf3ca_xyz_val (@code{HMGL} gr, @code{mreal} val, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{HCDT} c, @code{HCDT} b, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует поверхность уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) при @var{a}(x,y,z)=@var{val}. Аналогично @ref{surf3}, но цвет и прозрачность задается массивами @var{c} и @var{b} соответственно. Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{surf3}, @ref{surfc}, @ref{surf3a}. @sref{Surf3A sample}
+Рисует поверхность уровня для 3d массива, заданного параметрически @var{a}[i,j,k](@var{x}[i,j,k], @var{y}[i,j,k], @var{z}[i,j,k]) при @var{a}(x,y,z)=@var{val}. Аналогично @ref{surf3}, но цвет и прозрачность задается массивами @var{c} и @var{b} соответственно. Если @var{sch} содержит @samp{#}, то рисуется сетчатая поверхность. Если @var{sch} содержит @samp{.}, то рисуется поверхность из точек. См. также @ref{surf3}, @ref{surfc}, @ref{surf3a}. @sref{surf3a sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} surf3ca adat cdat ['sch'='']
@@ -3187,7 +3323,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_tiles_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_tiles_xyc (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} r, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует плитки для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с цветом, заданным массивом @var{c}[i,j]. Аналогично Tile(), но размер плиток задается массивов @var{r}. Если строка @var{sch} содержит стиль @samp{x} или @samp{y}, то плитки будут ориентированы перпендикулярно x- или y-оси. Это создает эффект "прозрачности" при экспорте в файлы EPS. График строится для каждого z среза данных. См. также @ref{surfa}, @ref{tile}. @sref{TileS sample}
+Рисует плитки для параметрически заданной поверхности @{@var{x}[i,j], @var{y}[i,j], @var{z}[i,j]@} с цветом, заданным массивом @var{c}[i,j]. Аналогично Tile(), но размер плиток задается массивов @var{r}. Если строка @var{sch} содержит стиль @samp{x} или @samp{y}, то плитки будут ориентированы перпендикулярно x- или y-оси. Это создает эффект "прозрачности" при экспорте в файлы EPS. График строится для каждого z среза данных. См. также @ref{surfa}, @ref{tile}. @sref{tiles sample}
 @end deftypefn
 
 @anchor{map}
@@ -3211,7 +3347,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_stfa (@code{HMGL} gr, @code{HCDT} re, @code{HCDT} im, @code{int} dn, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_stfa_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} re, @code{HCDT} im, @code{int} dn, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует спектрограмму комплексного массива @var{re}+i*@var{im} для Фурье размером @var{dn} точек в плоскости @var{z} равно минимальному значению оси z. Параметр @var{dn} -- любое чётное число. Например в 1D случае, результатом будет график плотности от массива @math{res[i,j]=|\sum_d^dn exp(I*j*d)*(re[i*dn+d]+I*im[i*dn+d])|/dn} размером @{int(nx/dn), dn, ny@}. Массивы @var{re}, @var{im} параметрически зависят от координат @var{x}, @var{y}. Все размеры массивов @var{re} и @var{im} должны быть одинаковы. Младшие размерности массивов @var{x}, @var{y}, @var{re} должны быть одинаковы. Массивы @var{x} и @var{y} могут быть векторами (не матрицами как @var{re}). @sref{STFA sample}
+Рисует спектрограмму комплексного массива @var{re}+i*@var{im} для Фурье размером @var{dn} точек в плоскости @var{z} равно минимальному значению оси z. Параметр @var{dn} -- любое чётное число. Например в 1D случае, результатом будет график плотности от массива @math{res[i,j]=|\sum_d^dn exp(I*j*d)*(re[i*dn+d]+I*im[i*dn+d])|/dn} размером @{int(nx/dn), dn, ny@}. Массивы @var{re}, @var{im} параметрически зависят от координат @var{x}, @var{y}. Все размеры массивов @var{re} и @var{im} должны быть одинаковы. Младшие размерности массивов @var{x}, @var{y}, @var{re} должны быть одинаковы. Массивы @var{x} и @var{y} могут быть векторами (не матрицами как @var{re}). @sref{stfa sample}
 @end deftypefn
 
 
@@ -3229,6 +3365,21 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 
 Эти функции рисуют графики для 2D и 3D векторных полей. Есть несколько типов графиков: просто векторное поле (Vect), вектора вдоль траектории (Traj), векторное поле каплями (Dew), нити тока (Flow, FlowP), трубки тока (Pipe). По умолчанию (если отсутствуют) значения @var{x}, @var{y} и @var{z} равно распределены в диапазоне осей координат. Младшие размерности массивов @var{x}, @var{y}, @var{z} и @var{ax} должны быть одинаковы. Размеры массивов @var{ax}, @var{ay} и @var{az} должны быть одинаковы. Массивы @var{x}, @var{y} и @var{z} могут быть векторами (не матрицами как @var{ax}). Строка @var{sch} задает цветовую схему (см. @ref{Color scheme}). Строка @var{opt} задает опции графика (см. @ref{Command options}).
 
+@anchor{lines}
+@deftypefn {Команда MGL} {} lines y1dat y2dat ['sch'='']
+@deftypefnx {Команда MGL} {} lines x1dat y1dat x2dat y2dat ['sch'='']
+@deftypefnx {Команда MGL} {} lines x1dat y1dat z1dat x2dat y2dat z2dat ['sch'='']
+@ifclear UDAV
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} Lines (@code{const mglDataA &}y1, @code{const mglDataA &}y2, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} Lines (@code{const mglDataA &}x1, @code{const mglDataA &}y1, @code{const mglDataA &}x2, @code{const mglDataA &}y2, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} Lines (@code{const mglDataA &}x1, @code{const mglDataA &}y1, @code{const mglDataA &}z1, @code{const mglDataA &}x2, @code{const mglDataA &}y2, @code{const mglDataA &}z2, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
+@deftypefnx {Функция С} @code{void} mgl_lines_xyz (@code{HMGL} gr, @code{HCDT}x1, @code{HCDT}y1, @code{HCDT}z1, @code{HCDT}x2, @code{HCDT}y2, @code{HCDT}z2, @code{const char *}sch, @code{const char *}opt)
+@deftypefnx {Функция С} @code{void} mgl_lines_xy (@code{HMGL} gr, @code{HCDT}x1, @code{HCDT}y1, @code{HCDT}x2, @code{HCDT}y2, @code{const char *}sch, @code{const char *}opt)
+@deftypefnx {Функция С} @code{void} mgl_lines (@code{HMGL} gr, @code{HCDT}y1, @code{HCDT}y2, @code{const char *}sch, @code{const char *}opt)
+@end ifclear
+Функция рисует линии между точками @{@var{x1}, @var{y1}, @var{z1}@} и @{@var{x2}, @var{y2}, @var{z2}@}. Строка @var{pen} задает цвет (см. @ref{Line styles}). По умолчанию (@code{pen=""}) используется текущий цвет из палитры (см. @ref{Palette and colors}). Размер по 1-му индексу должен быть одинаков. График рисуется для каждой строки если один из массивов матрица. См. также @ref{plot}, @ref{traj}. @sref{lines sample}
+@end deftypefn
+
 @anchor{traj}
 @deftypefn {Команда MGL} {} traj xdat ydat udat vdat ['sch'='']
 @deftypefnx {Команда MGL} {} traj xdat ydat zdat udat vdat wdat ['sch'='']
@@ -3238,7 +3389,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_traj_xyz (@code{HMGL} gr, @code{HCDT}x, @code{HCDT}y, @code{HCDT}z, @code{HCDT}ax, @code{HCDT}ay, @code{HCDT}az, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_traj_xy (@code{HMGL} gr, @code{HCDT}x, @code{HCDT}y, @code{HCDT}ax, @code{HCDT}ay, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует вектора @{@var{ax}, @var{ay}, @var{az}@} вдоль кривой @{@var{x}, @var{y}, @var{z}@}. Длина векторов пропорциональна @math{\sqrt@{ax^2+ay^2+az^2@}}. Строка @var{pen} задает цвет (см. @ref{Line styles}). По умолчанию (@code{pen=""}) используется текущий цвет из палитры (см. @ref{Palette and colors}). Опция @code{value} задает фактор длины векторов (если не нуль) или выбирать длину пропорционально расстоянию между точками кривой (если @code{value=0}). Размер по 1-му индексу должен быть 2 или больше. График рисуется для каждой строки если один из массивов матрица. См. также @ref{vect}. @sref{Traj sample}
+Рисует вектора @{@var{ax}, @var{ay}, @var{az}@} вдоль кривой @{@var{x}, @var{y}, @var{z}@}. Длина векторов пропорциональна @math{\sqrt@{ax^2+ay^2+az^2@}}. Строка @var{pen} задает цвет (см. @ref{Line styles}). По умолчанию (@code{pen=""}) используется текущий цвет из палитры (см. @ref{Palette and colors}). Опция @code{value} задает фактор длины векторов (если не нуль) или выбирать длину пропорционально расстоянию между точками кривой (если @code{value=0}). Размер по 1-му индексу должен быть 2 или больше. График рисуется для каждой строки если один из массивов матрица. См. также @ref{vect}. @sref{traj sample}
 @end deftypefn
 
 @anchor{vect}
@@ -3261,7 +3412,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @item
 @samp{=} для использования градиента цвета вдоль стрелок.
 @end itemize
-См. также @ref{flow}, @ref{dew}. @sref{Vect sample}
+См. также @ref{flow}, @ref{dew}. @sref{vect sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} vect udat vdat wdat ['sch'='']
@@ -3295,7 +3446,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @item
 @samp{=} для использования градиента цвета вдоль стрелок.
 @end itemize
-См. также @ref{vect}, @ref{flow}, @ref{dew}. @sref{Vect sample}
+См. также @ref{vect}, @ref{flow}, @ref{dew}. @sref{vect sample}
 @end deftypefn
 
 @anchor{dew}
@@ -3307,7 +3458,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_dew (@code{HMGL} gr, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_dew_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует капли для векторного поля @{@var{ax}, @var{ay}@}, параметрически зависящего от координат @var{x}, @var{y} при @var{z} равном минимальному значению оси z. Замечу, что график требует много памяти и процессорного времени для своего создания! Цвет капель пропорционален @math{\sqrt@{ax^2+ay^2@}}. Число капель определяется @ref{meshnum}. См. также @ref{vect}. @sref{Dew sample}
+Рисует капли для векторного поля @{@var{ax}, @var{ay}@}, параметрически зависящего от координат @var{x}, @var{y} при @var{z} равном минимальному значению оси z. Замечу, что график требует много памяти и процессорного времени для своего создания! Цвет капель пропорционален @math{\sqrt@{ax^2+ay^2@}}. Число капель определяется @ref{meshnum}. См. также @ref{vect}. @sref{dew sample}
 @end deftypefn
 
 @anchor{flow}
@@ -3326,13 +3477,15 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @item
 @samp{#} для использования нитей, начинающихся только на границе;
 @item
+@samp{.} для рисования сепаратрис (нитей из/в стационарных точек).
+@item
 @samp{*} для использования нитей, начинающихся с двумерной сетки внутри данных;
 @item
 @samp{v} для рисования стрелок на нитях;
 @item
 @samp{x}, @samp{z} для рисования лент нормалей, начинающихся в плоскостях x-y и y-z соответственно.
 @end itemize
-См. также @ref{pipe}, @ref{vect}, @ref{tape}, @ref{barwidth}. @sref{Flow sample}
+См. также @ref{pipe}, @ref{vect}, @ref{tape}, @ref{flow3}, @ref{barwidth}. @sref{flow sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} flow udat vdat wdat ['sch'='']
@@ -3354,7 +3507,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_flowp_2d (@code{HMGL} gr, @code{mreal} x0, @code{mreal} y0, @code{mreal} z0, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_flowp_xy (@code{HMGL} gr, @code{mreal} x0, @code{mreal} y0, @code{mreal} z0, @code{HCDT} x, @code{HCDT} y, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Аналогично @ref{flow}, но рисует одну нить из точки @var{p0}=@{@var{x0},@var{y0},@var{z0}@}.
+Аналогично @ref{flow}, но рисует одну нить из точки @var{p0}=@{@var{x0},@var{y0},@var{z0}@}. Строка @var{sch} также может содержать: @samp{>} или @samp{<} для рисования линии тока только вперед или только назад от заданной точки (по умолчанию, рисует в обе стороны).
 @end deftypefn
 
 @deftypefn {Команда MGL} {} flow @code{x0 y0 z0} udat vdat wdat ['sch'='']
@@ -3367,6 +3520,30 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @end ifclear
 Это 3d версия графика.
 @end deftypefn
+
+@anchor{flow3}
+@deftypefn {Команда MGL} {} flow3 udat vdat wdat ['sch'='']
+@deftypefnx {Команда MGL} {} flow3 xdat ydat zdat udat vdat ['sch'='']
+@ifclear UDAV
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} Flow3 (@code{const mglDataA &}ax, @code{const mglDataA &}ay, @code{const mglDataA &}az, @code{const char *}sch=@code{""}, @code{double} sVal=@code{-1}, @code{const char *}opt=@code{""})
+@deftypefnx {Метод класса @code{mglGraph}} @code{void} Flow3 (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const mglDataA &}ax, @code{const mglDataA &}ay, @code{const mglDataA &}az, @code{const char *}sch=@code{""}, @code{double} sVal=@code{-1}, @code{const char *}opt=@code{""})
+@deftypefnx {Функция С} @code{void} mgl_flow3 (@code{HMGL} gr, @code{HCDT} ax, @code{HCDT} ay, @code{HCDT} az, @code{const char *}sch, @code{double} sVal, @code{const char *}opt)
+@deftypefnx {Функция С} @code{void} mgl_flow3_xyz (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} ax, @code{HCDT} ay, @code{HCDT} az, @code{const char *}sch, @code{double} sVal, @code{const char *}opt)
+@end ifclear
+The function draws flow threads for the 3D vector field @{@var{ax}, @var{ay}, @var{az}@} parametrically depending on coordinates @var{x}, @var{y}, @var{z}. Flow threads starts from given plane. Option @code{value} set the approximate number of threads (default is 5). String @var{sch} may contain:
+@itemize @bullet
+@item
+color scheme -- up-half (warm) corresponds to normal flow (like attractor), bottom-half (cold) corresponds to inverse flow (like source);
+@item
+@samp{x}, @samp{z} for normal of starting plane (default is y-direction);
+@item
+@samp{v} for drawing arrows on the threads;
+@item
+@samp{t} for drawing tapes of normals in x-y and y-z planes.
+@end itemize
+See also @ref{flow}, @ref{pipe}, @ref{vect}. @sref{flow3 sample}
+@end deftypefn
+
 
 @anchor{grad}
 @deftypefn {Команда MGL} {} grad pdat ['sch'='']
@@ -3392,7 +3569,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_pipe_2d (@code{HMGL} gr, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{mreal} r0, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_pipe_xy (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} ax, @code{HCDT} ay, @code{const char *}sch, @code{mreal} r0, @code{const char *}opt)
 @end ifclear
-Рисует трубки тока для векторного поля @{@var{ax}, @var{ay}@}, параметрически зависящего от координат @var{x}, @var{y} на плоскости при @var{z} равном минимальному значению оси z. Число трубок пропорционально значению опции @code{value}. Цвет и радиус трубок пропорционален @math{\sqrt@{ax^2+ay^2@}}. Тёплые цвета соответствуют нормальному току (типа стока). Холодные цвета соответствуют обратному току (типа источника). Параметр @var{r0} задает радиус трубок. При @var{r0}<0 радиус трубок обратно пропорционален их амплитуде. См. также @ref{flow}, @ref{vect}. @sref{Pipe sample}
+Рисует трубки тока для векторного поля @{@var{ax}, @var{ay}@}, параметрически зависящего от координат @var{x}, @var{y} на плоскости при @var{z} равном минимальному значению оси z. Число трубок пропорционально значению опции @code{value}. Цвет и радиус трубок пропорционален @math{\sqrt@{ax^2+ay^2@}}. Тёплые цвета соответствуют нормальному току (типа стока). Холодные цвета соответствуют обратному току (типа источника). Параметр @var{r0} задает радиус трубок. При @var{r0}<0 радиус трубок обратно пропорционален их амплитуде. См. также @ref{flow}, @ref{vect}. @sref{pipe sample}
 @end deftypefn
 
 @deftypefn {Команда MGL} {} pipe udat vdat wdat ['sch'='' @code{r0=0.05}]
@@ -3437,7 +3614,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_dens_y (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_dens_z (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-Эти функции рисуют график плотности на x, y или z плоскостях. Если @var{a} -- 3d массив, то выполняется интерполяция к заданному срезу @var{sVal}. Функции полезны для создания проекций 3D массивов на оси координат. См. также @ref{ContXYZ}, @ref{ContFXYZ}, @ref{dens}, @ref{Data manipulation}. @sref{Dens projection sample}
+Эти функции рисуют график плотности на x, y или z плоскостях. Если @var{a} -- 3d массив, то выполняется интерполяция к заданному срезу @var{sVal}. Функции полезны для создания проекций 3D массивов на оси координат. См. также @ref{ContXYZ}, @ref{ContFXYZ}, @ref{dens}, @ref{Data manipulation}. @sref{dens_xyz sample}
 @end deftypefn
 
 @anchor{contz} @anchor{conty} @anchor{contx} @anchor{ContXYZ}
@@ -3452,7 +3629,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_cont_y (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_cont_z (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-Эти функции рисуют линии уровня на x, y или z плоскостях. Если @var{a} -- 3d массив, то выполняется интерполяция к заданному срезу @var{sVal}. Опция @code{value} задает число контуров. Функции полезны для создания проекций 3D массивов на оси координат. См. также @ref{ContFXYZ}, @ref{DensXYZ}, @ref{cont}, @ref{Data manipulation}. @sref{Cont projection sample}
+Эти функции рисуют линии уровня на x, y или z плоскостях. Если @var{a} -- 3d массив, то выполняется интерполяция к заданному срезу @var{sVal}. Опция @code{value} задает число контуров. Функции полезны для создания проекций 3D массивов на оси координат. См. также @ref{ContFXYZ}, @ref{DensXYZ}, @ref{cont}, @ref{Data manipulation}. @sref{cont_xyz sample}
 @end deftypefn
 
 @ifclear UDAV
@@ -3478,7 +3655,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_contf_y (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_contf_z (@code{HMGL} gr, @code{HCDT} a, @code{const char *}stl, @code{mreal} sVal, @code{const char *}opt)
 @end ifclear
-Эти функции рисуют закрашенные контуры уровня на x, y или z плоскостях. Если @var{a} -- 3d массив, то выполняется интерполяция к заданному срезу @var{sVal}. Опция @code{value} задает число контуров. Функции полезны для создания проекций 3D массивов на оси координат. См. также @ref{ContFXYZ}, @ref{DensXYZ}, @ref{cont}, @ref{Data manipulation}. @sref{ContF projection sample}
+Эти функции рисуют закрашенные контуры уровня на x, y или z плоскостях. Если @var{a} -- 3d массив, то выполняется интерполяция к заданному срезу @var{sVal}. Опция @code{value} задает число контуров. Функции полезны для создания проекций 3D массивов на оси координат. См. также @ref{ContFXYZ}, @ref{DensXYZ}, @ref{cont}, @ref{Data manipulation}. @sref{contf_xyz sample}
 @end deftypefn
 
 @ifclear UDAV
@@ -3538,7 +3715,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_triplot_xyz (@code{HMGL} gr, @code{HCDT} id, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_triplot_xyzc (@code{HMGL} gr, @code{HCDT} id, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует поверхность из треугольников. Вершины треугольников задаются индексами @var{id} в массиве точек @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Строка @var{sch} задает цветовую схему. Если строка содержит @samp{#}, то рисуется сетчатая поверхность. Размер по 1-му индексу массива @var{id} должен быть 3 или больше. Массивы @var{x}, @var{y}, @var{z} должны иметь одинаковые размеры. Массив @var{c} задает цвет треугольников (если @var{id}.ny=@var{c}.nx) или цвет вершин (если @var{x}.nx=@var{c}.nx). См. также @ref{dots}, @ref{crust}, @ref{quadplot}, @ref{triangulation}. @sref{TriPlot and QuadPlot}
+Рисует поверхность из треугольников. Вершины треугольников задаются индексами @var{id} в массиве точек @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Строка @var{sch} задает цветовую схему. Если строка содержит @samp{#}, то рисуется сетчатая поверхность. Размер по 1-му индексу массива @var{id} должен быть 3 или больше. Массивы @var{x}, @var{y}, @var{z} должны иметь одинаковые размеры. Массив @var{c} задает цвет треугольников (если @var{id}.ny=@var{c}.nx) или цвет вершин (если @var{x}.nx=@var{c}.nx). См. также @ref{dots}, @ref{crust}, @ref{quadplot}, @ref{triangulation}. @sref{triplot sample}
 @end deftypefn
 
 @anchor{tricont}
@@ -3570,7 +3747,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_quadplot_xyz (@code{HMGL} gr, @code{HCDT} id, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_quadplot_xyzc (@code{HMGL} gr, @code{HCDT} id, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует поверхность из четырёхугольников. Вершины четырёхугольников задаются индексами @var{id} в массиве точек @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Строка @var{sch} задает цветовую схему. Если строка содержит @samp{#}, то рисуется сетчатая поверхность. Размер по 1-му индексу массива @var{id} должен быть 4 или больше. Массивы @var{x}, @var{y}, @var{z} должны иметь одинаковые размеры. Массив @var{c} задает цвет четырёхугольников (если @var{id}.ny=@var{c}.nx) или цвет вершин (если @var{x}.nx=@var{c}.nx). См. также @ref{triplot}. @sref{TriPlot and QuadPlot}
+Рисует поверхность из четырёхугольников. Вершины четырёхугольников задаются индексами @var{id} в массиве точек @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Строка @var{sch} задает цветовую схему. Если строка содержит @samp{#}, то рисуется сетчатая поверхность. Размер по 1-му индексу массива @var{id} должен быть 4 или больше. Массивы @var{x}, @var{y}, @var{z} должны иметь одинаковые размеры. Массив @var{c} задает цвет четырёхугольников (если @var{id}.ny=@var{c}.nx) или цвет вершин (если @var{x}.nx=@var{c}.nx). См. также @ref{triplot}. @sref{triplot sample}
 @end deftypefn
 
 @anchor{dots}
@@ -3584,7 +3761,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Функция С} @code{void} mgl_dots_a (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @deftypefnx {Функция С} @code{void} mgl_dots_ca (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{HCDT} c, @code{HCDT} a, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Рисует произвольно расположенные точки @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Строка @var{sch} задает цветовую схему и тип маркеров. Если определёны массивы @var{c}, @var{a} то они задают цвет и прозрачность точек соответственно. Непрозрачные точки с заданным цветом можно нарисовать с помощью @ref{tens}, используя стиль @samp{ .}. Массивы @var{x}, @var{y}, @var{z}, @var{a} должны иметь одинаковые размеры. См. также @ref{crust}, @ref{tens}, @ref{mark}, @ref{plot}. @sref{Dots sample}
+Рисует произвольно расположенные точки @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Строка @var{sch} задает цветовую схему и тип маркеров. Если определёны массивы @var{c}, @var{a} то они задают цвет и прозрачность точек соответственно. Непрозрачные точки с заданным цветом можно нарисовать с помощью @ref{tens}, используя стиль @samp{ .}. Массивы @var{x}, @var{y}, @var{z}, @var{a} должны иметь одинаковые размеры. См. также @ref{crust}, @ref{tens}, @ref{mark}, @ref{plot}. @sref{dots sample}
 @end deftypefn
 
 @anchor{crust}
@@ -3593,7 +3770,7 @@ Draw bitmap (logo) along whole axis range, which can be changed by @ref{Command 
 @deftypefnx {Метод класса @code{mglGraph}} @code{void} Crust (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z, @code{const char *}sch=@code{""}, @code{const char *}opt=@code{""})
 @deftypefnx {Функция С} @code{void} mgl_crust (@code{HMGL} gr, @code{HCDT} x, @code{HCDT} y, @code{HCDT} z, @code{const char *}sch, @code{const char *}opt)
 @end ifclear
-Реконструирует и рисует поверхность по произвольно расположенным точкам @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Опция @var{value} задает радиус ошибки (увеличите для удаления дыр). Строка @var{sch} задает цветовую схему. Если строка содержит @samp{#}, то рисуется сетчатая поверхность. Массивы @var{x}, @var{y}, @var{z} должны иметь одинаковые размеры. См. также @ref{dots}, @ref{triplot}. @c @sref{Crust sample}
+Реконструирует и рисует поверхность по произвольно расположенным точкам @{@var{x}[i], @var{y}[i], @var{z}[i]@}. Опция @var{value} задает радиус ошибки (увеличите для удаления дыр). Строка @var{sch} задает цветовую схему. Если строка содержит @samp{#}, то рисуется сетчатая поверхность. Массивы @var{x}, @var{y}, @var{z} должны иметь одинаковые размеры. См. также @ref{dots}, @ref{triplot}. @c @sref{crust sample}
 @end deftypefn
 
 @c ##################################################################

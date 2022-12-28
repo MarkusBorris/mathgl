@@ -1,7 +1,17 @@
+file(COPY ${CMAKE_SOURCE_DIR}/udav_new.png DESTINATION ${CMAKE_BINARY_DIR}/examples)
 file(COPY ${CMAKE_SOURCE_DIR}/examples/iris.dat DESTINATION ${CMAKE_BINARY_DIR}/examples)
 file(COPY ${CMAKE_SOURCE_DIR}/examples/Equirectangular-projection.jpg DESTINATION ${CMAKE_BINARY_DIR}/examples)
+file(COPY ${CMAKE_SOURCE_DIR}/examples/samples.cpp DESTINATION ${CMAKE_BINARY_DIR}/examples)
+file(COPY ${CMAKE_SOURCE_DIR}/examples/wnd_samples.cpp DESTINATION ${CMAKE_BINARY_DIR}/examples)
 add_executable(mgl_example wnd_samples.cpp full_test.cpp samples.cpp)
 target_link_libraries(mgl_example mgl-static ${getopt_lib-static})
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_COMPILER_IS_GNUCXX AND enable-lcov)
+	setup_target_for_coverage(
+	    NAME mgl_coverage
+	    EXECUTABLE $<TARGET_FILE:mgl_example> -mgl
+	    DEPENDENCIES mgl_example
+	)
+endif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_COMPILER_IS_GNUCXX AND enable-lcov)
 
 if(MGL_HAVE_FLTK)
 	include_directories(${FLTK_INCLUDE_DIR})
@@ -45,3 +55,8 @@ if(MGL_HAVE_LTDL)
 	target_link_libraries(mgl_module mgl)	# for compatibility with win32
 endif(MGL_HAVE_LTDL)
 
+if(MGL_HAVE_MPI)
+	add_executable(mgl_mpi_example mpi_test.cpp)
+	target_link_libraries(mgl_mpi_example mgl-mpi mgl ${MPI_LIBRARIES})
+	target_include_directories(mgl_mpi_example SYSTEM PUBLIC ${MPI_CXX_INCLUDE_PATH})
+endif(MGL_HAVE_MPI)

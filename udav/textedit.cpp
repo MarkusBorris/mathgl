@@ -170,7 +170,7 @@ int TextEdit::lineNumberAreaWidth()
 	int digits = 1;
 	int max = qMax(1, document()->blockCount());
 	while (max >= 10)	{	max /= 10;	++digits;	}
-	int space = 13 +  fontMetrics().width(QLatin1Char('9')) * (digits);
+	int space = 13 + fontMetrics().horizontalAdvance(QLatin1Char('9'))*digits;
 	return space;
 }
 //-----------------------------------------------------------------------------

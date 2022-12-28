@@ -5,16 +5,16 @@
 *   with enhancements contributed by Michail Vidiassov.
 *
 *   This program is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU Lesser General Public License as published by
+*   it under the terms of the GNU Lesser General Public License  as published by
 *   the Free Software Foundation, either version 3 of the License, or
 *   (at your option) any later version.
 *
 *   This program is distributed in the hope that it will be useful,
 *   but WITHOUT ANY WARRANTY; without even the implied warranty of
 *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU Lesser General Public License for more details.
+*   GNU Lesser General Public License  for more details.
 *
-*   You should have received a copy of the GNU Lesser General Public License
+*   You should have received a copy of the GNU Lesser General Public License 
 *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 *************/
@@ -67,7 +67,7 @@ using std::string;
 using namespace std;
 
 // Map [0,1] to [0,255]
-inline uint8_t byte(double r) 
+inline uint8_t toByte(double r) 
 {
   if(r < 0.0) r=0.0;
   else if(r > 1.0) r=1.0;
@@ -440,9 +440,9 @@ void oPRCFile::doGroup(PRCgroup& group)
               }
               if(!same_color && i>0)
               {
-                tess->rgba_vertices.push_back(byte(lit->color.red));
-                tess->rgba_vertices.push_back(byte(lit->color.green));
-                tess->rgba_vertices.push_back(byte(lit->color.blue));
+                tess->rgba_vertices.push_back(toByte(lit->color.red));
+                tess->rgba_vertices.push_back(toByte(lit->color.green));
+                tess->rgba_vertices.push_back(toByte(lit->color.blue));
               }
             }
           }
@@ -584,23 +584,23 @@ void oPRCFile::doGroup(PRCgroup& group)
           triangles++;
           if(!same_colour)
           {
-            tessFace->rgba_vertices.push_back(byte(C[1].R));
-            tessFace->rgba_vertices.push_back(byte(C[1].G));
-            tessFace->rgba_vertices.push_back(byte(C[1].B));
+            tessFace->rgba_vertices.push_back(toByte(C[1].R));
+            tessFace->rgba_vertices.push_back(toByte(C[1].G));
+            tessFace->rgba_vertices.push_back(toByte(C[1].B));
             if(tessFace->is_rgba)
-              tessFace->rgba_vertices.push_back(byte(C[1].A));
+              tessFace->rgba_vertices.push_back(toByte(C[1].A));
             
-            tessFace->rgba_vertices.push_back(byte(C[2].R));
-            tessFace->rgba_vertices.push_back(byte(C[2].G));
-            tessFace->rgba_vertices.push_back(byte(C[2].B));
+            tessFace->rgba_vertices.push_back(toByte(C[2].R));
+            tessFace->rgba_vertices.push_back(toByte(C[2].G));
+            tessFace->rgba_vertices.push_back(toByte(C[2].B));
             if(tessFace->is_rgba)
-              tessFace->rgba_vertices.push_back(byte(C[2].A));
+              tessFace->rgba_vertices.push_back(toByte(C[2].A));
             
-            tessFace->rgba_vertices.push_back(byte(C[3].R));
-            tessFace->rgba_vertices.push_back(byte(C[3].G));
-            tessFace->rgba_vertices.push_back(byte(C[3].B));
+            tessFace->rgba_vertices.push_back(toByte(C[3].R));
+            tessFace->rgba_vertices.push_back(toByte(C[3].G));
+            tessFace->rgba_vertices.push_back(toByte(C[3].B));
             if(tessFace->is_rgba)
-              tessFace->rgba_vertices.push_back(byte(C[3].A));
+              tessFace->rgba_vertices.push_back(toByte(C[3].A));
           }
         }
         else
@@ -611,23 +611,23 @@ void oPRCFile::doGroup(PRCgroup& group)
           triangles++;
           if(!same_colour)
           {
-            tessFace->rgba_vertices.push_back(byte(C[0].R));
-            tessFace->rgba_vertices.push_back(byte(C[0].G));
-            tessFace->rgba_vertices.push_back(byte(C[0].B));
+            tessFace->rgba_vertices.push_back(toByte(C[0].R));
+            tessFace->rgba_vertices.push_back(toByte(C[0].G));
+            tessFace->rgba_vertices.push_back(toByte(C[0].B));
             if(tessFace->is_rgba)
-              tessFace->rgba_vertices.push_back(byte(C[0].A));
+              tessFace->rgba_vertices.push_back(toByte(C[0].A));
             
-            tessFace->rgba_vertices.push_back(byte(C[2].R));
-            tessFace->rgba_vertices.push_back(byte(C[2].G));
-            tessFace->rgba_vertices.push_back(byte(C[2].B));
+            tessFace->rgba_vertices.push_back(toByte(C[2].R));
+            tessFace->rgba_vertices.push_back(toByte(C[2].G));
+            tessFace->rgba_vertices.push_back(toByte(C[2].B));
             if(tessFace->is_rgba)
-              tessFace->rgba_vertices.push_back(byte(C[2].A));
+              tessFace->rgba_vertices.push_back(toByte(C[2].A));
             
-            tessFace->rgba_vertices.push_back(byte(C[3].R));
-            tessFace->rgba_vertices.push_back(byte(C[3].G));
-            tessFace->rgba_vertices.push_back(byte(C[3].B));
+            tessFace->rgba_vertices.push_back(toByte(C[3].R));
+            tessFace->rgba_vertices.push_back(toByte(C[3].G));
+            tessFace->rgba_vertices.push_back(toByte(C[3].B));
             if(tessFace->is_rgba)
-              tessFace->rgba_vertices.push_back(byte(C[3].A));
+              tessFace->rgba_vertices.push_back(toByte(C[3].A));
           }
           tess->triangulated_index.push_back(vertex_indices[3]);
           tess->triangulated_index.push_back(vertex_indices[1]);
@@ -635,23 +635,23 @@ void oPRCFile::doGroup(PRCgroup& group)
           triangles++;
           if(!same_colour)
           {
-            tessFace->rgba_vertices.push_back(byte(C[3].R));
-            tessFace->rgba_vertices.push_back(byte(C[3].G));
-            tessFace->rgba_vertices.push_back(byte(C[3].B));
+            tessFace->rgba_vertices.push_back(toByte(C[3].R));
+            tessFace->rgba_vertices.push_back(toByte(C[3].G));
+            tessFace->rgba_vertices.push_back(toByte(C[3].B));
             if(tessFace->is_rgba)
-              tessFace->rgba_vertices.push_back(byte(C[3].A));
+              tessFace->rgba_vertices.push_back(toByte(C[3].A));
           
-            tessFace->rgba_vertices.push_back(byte(C[1].R));
-            tessFace->rgba_vertices.push_back(byte(C[1].G));
-            tessFace->rgba_vertices.push_back(byte(C[1].B));
+            tessFace->rgba_vertices.push_back(toByte(C[1].R));
+            tessFace->rgba_vertices.push_back(toByte(C[1].G));
+            tessFace->rgba_vertices.push_back(toByte(C[1].B));
             if(tessFace->is_rgba)
-              tessFace->rgba_vertices.push_back(byte(C[1].A));
+              tessFace->rgba_vertices.push_back(toByte(C[1].A));
           
-            tessFace->rgba_vertices.push_back(byte(C[0].R));
-            tessFace->rgba_vertices.push_back(byte(C[0].G));
-            tessFace->rgba_vertices.push_back(byte(C[0].B));
+            tessFace->rgba_vertices.push_back(toByte(C[0].R));
+            tessFace->rgba_vertices.push_back(toByte(C[0].G));
+            tessFace->rgba_vertices.push_back(toByte(C[0].B));
             if(tessFace->is_rgba)
-              tessFace->rgba_vertices.push_back(byte(C[0].A));
+              tessFace->rgba_vertices.push_back(toByte(C[0].A));
           }
         }
       }
@@ -1624,21 +1624,21 @@ uint32_t oPRCFile::createTriangleMesh(uint32_t nP, const double P[][3], uint32_t
     tessFace->rgba_vertices.reserve((tessFace->is_rgba?4:3)*3*nI);
     for(uint32_t i=0; i<nI; i++)
     {
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][0]].R));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][0]].G));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][0]].B));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][0]].R));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][0]].G));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][0]].B));
        if(tessFace->is_rgba)
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][0]].A));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].R));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].G));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].B));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][0]].A));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].R));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].G));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].B));
        if(tessFace->is_rgba)
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].A));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][2]].R));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][2]].G));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][2]].B));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].A));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][2]].R));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][2]].G));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][2]].B));
        if(tessFace->is_rgba)
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][2]].A));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][2]].A));
     }
   }
   tess->addTessFace(tessFace);
@@ -1768,37 +1768,37 @@ uint32_t oPRCFile::createQuadMesh(uint32_t nP, const double P[][3], uint32_t nI,
     for(uint32_t i=0; i<nI; i++)
     {
        // first triangle
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][0]].R));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][0]].G));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][0]].B));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][0]].R));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][0]].G));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][0]].B));
        if(tessFace->is_rgba)
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][0]].A));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].R));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].G));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].B));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][0]].A));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].R));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].G));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].B));
        if(tessFace->is_rgba)
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].A));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][3]].R));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][3]].G));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][3]].B));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].A));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][3]].R));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][3]].G));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][3]].B));
        if(tessFace->is_rgba)
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][3]].A));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][3]].A));
        // second triangle
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].R));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].G));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].B));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].R));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].G));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].B));
        if(tessFace->is_rgba)
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][1]].A));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][2]].R));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][2]].G));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][2]].B));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][1]].A));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][2]].R));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][2]].G));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][2]].B));
        if(tessFace->is_rgba)
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][2]].A));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][3]].R));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][3]].G));
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][3]].B));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][2]].A));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][3]].R));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][3]].G));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][3]].B));
        if(tessFace->is_rgba)
-       tessFace->rgba_vertices.push_back(byte(C[CI[i][3]].A));
+       tessFace->rgba_vertices.push_back(toByte(C[CI[i][3]].A));
     }
   }
   tess->addTessFace(tessFace);
@@ -1886,11 +1886,11 @@ uint32_t oPRCFile::createLines(uint32_t nP, const double P[][3], uint32_t nI, co
     tess->rgba_vertices.reserve((tess->is_rgba?4:3)*nCI);
     for(uint32_t i=0; i<nCI; i++)
     {
-       tess->rgba_vertices.push_back(byte(C[CI[i]].R));
-       tess->rgba_vertices.push_back(byte(C[CI[i]].G));
-       tess->rgba_vertices.push_back(byte(C[CI[i]].B));
+       tess->rgba_vertices.push_back(toByte(C[CI[i]].R));
+       tess->rgba_vertices.push_back(toByte(C[CI[i]].G));
+       tess->rgba_vertices.push_back(toByte(C[CI[i]].B));
        if(tess->is_rgba)
-       tess->rgba_vertices.push_back(byte(C[CI[i]].A));
+       tess->rgba_vertices.push_back(toByte(C[CI[i]].A));
     }
   }
   const uint32_t tess_index = add3DWireTess(tess);
@@ -1934,22 +1934,22 @@ uint32_t oPRCFile::createSegments(uint32_t nP, const double P[][3], uint32_t nI,
     for(uint32_t i=0; i<nI; i++)
     {
       if (segment_color) {
-        tess->rgba_vertices.push_back(byte(0.5*C[CI[i][0]].R+0.5*C[CI[i][1]].R));
-        tess->rgba_vertices.push_back(byte(0.5*C[CI[i][0]].G+0.5*C[CI[i][1]].G));
-        tess->rgba_vertices.push_back(byte(0.5*C[CI[i][0]].B+0.5*C[CI[i][1]].B));
+        tess->rgba_vertices.push_back(toByte(0.5*C[CI[i][0]].R+0.5*C[CI[i][1]].R));
+        tess->rgba_vertices.push_back(toByte(0.5*C[CI[i][0]].G+0.5*C[CI[i][1]].G));
+        tess->rgba_vertices.push_back(toByte(0.5*C[CI[i][0]].B+0.5*C[CI[i][1]].B));
         if(tess->is_rgba)
-          tess->rgba_vertices.push_back(byte(0.5*C[CI[i][0]].A+0.5*C[CI[i][1]].A));
+          tess->rgba_vertices.push_back(toByte(0.5*C[CI[i][0]].A+0.5*C[CI[i][1]].A));
       } else {
-        tess->rgba_vertices.push_back(byte(C[CI[i][0]].R));
-        tess->rgba_vertices.push_back(byte(C[CI[i][0]].G));
-        tess->rgba_vertices.push_back(byte(C[CI[i][0]].B));
+        tess->rgba_vertices.push_back(toByte(C[CI[i][0]].R));
+        tess->rgba_vertices.push_back(toByte(C[CI[i][0]].G));
+        tess->rgba_vertices.push_back(toByte(C[CI[i][0]].B));
         if(tess->is_rgba)
-          tess->rgba_vertices.push_back(byte(C[CI[i][0]].A));
-        tess->rgba_vertices.push_back(byte(C[CI[i][1]].R));
-        tess->rgba_vertices.push_back(byte(C[CI[i][1]].G));
-        tess->rgba_vertices.push_back(byte(C[CI[i][1]].B));
+          tess->rgba_vertices.push_back(toByte(C[CI[i][0]].A));
+        tess->rgba_vertices.push_back(toByte(C[CI[i][1]].R));
+        tess->rgba_vertices.push_back(toByte(C[CI[i][1]].G));
+        tess->rgba_vertices.push_back(toByte(C[CI[i][1]].B));
         if(tess->is_rgba)
-          tess->rgba_vertices.push_back(byte(C[CI[i][1]].A));
+          tess->rgba_vertices.push_back(toByte(C[CI[i][1]].A));
       }
     }
   }

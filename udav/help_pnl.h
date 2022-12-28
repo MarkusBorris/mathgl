@@ -34,7 +34,7 @@ public:
 	HelpPanel(QWidget *parent = 0);
 public slots:
 //	void showExamples();
-	void showHelp(const QString &cmd=QString::null);
+	void showHelp(const QString &cmd=QString());
 	void zoomIn();
 	void zoomOut();
 private:

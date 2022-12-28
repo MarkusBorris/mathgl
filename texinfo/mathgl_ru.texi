@@ -1,5 +1,5 @@
 \input texinfo
-@c @documentencoding UTF-8
+@documentencoding UTF-8
 @documentlanguage ru
 
 @setfilename mathgl_ru.info
@@ -50,6 +50,7 @@
 * MGL scripts::
 * UDAV::
 * Other classes::
+* All samples::
 * Symbols and hot-keys::
 * File formats::
 @ifhtml
@@ -103,10 +104,13 @@
 @node UDAV, Other classes, MGL scripts, Top
 @include udav_ru.texi
 
-@node Other classes, Symbols and hot-keys, UDAV, Top
-@include other_ru.texi
+@node Other classes, All samples, UDAV, Top
+@include other_en.texi
 
-@node Symbols and hot-keys, File formats, Other classes, Top
+@node All samples, Symbols and hot-keys, Other classes, Top
+@include samples.texi
+
+@node Symbols and hot-keys, File formats, All samples, Top
 @appendix Symbols and hot-keys
 @include symbols_ru.texi
 

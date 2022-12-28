@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -32,6 +32,14 @@ class QSpinBox;
 class QTimer;
 class mglCanvas;
 class mglTask;
+#if MGL_FORCE_QT4
+#define angleDelta()	delta()
+#define setPageOrientation(a)	setOrientation(a)
+#define horizontalAdvance(a)	width(a)
+#define asprintf(a)	sprintf(a)
+#define setTabStopWidth(a)	setTabStopDistance(a)	
+#define QPageLayout	QPrinter
+#endif
 //-----------------------------------------------------------------------------
 /// Class is Qt widget which display MathGL graphics
 class MGL_EXPORT QMathGL : public QWidget
@@ -43,9 +51,8 @@ public:
 	bool enableMouse;	///< Enable mouse handlers
 	bool enableWheel;	///< Enable mouse wheel handlers
 	QString primitives;	///< Manual primitives, defined by user
-	mglCanvas *gr;		///< Built-in mglCanvas instance (mglCanvasQT is used by default)
 
-	QMathGL(QWidget *parent = 0, Qt::WindowFlags f = 0);
+	QMathGL(QWidget *parent = 0, Qt::WindowFlags f = Qt::WindowFlags());
 	virtual ~QMathGL();
 	double getRatio();
 	void setPopup(QMenu *p)	{	popup = p;	}	///< Set popup menu pointer
@@ -54,6 +61,9 @@ public:
 	inline void setGraph(mglGraph *GR)
 	{	setGraph(GR->Self());	}
 	inline HMGL getGraph()	{	return (HMGL)gr;	}
+	/// Nullify grapher object for disabling double free. NOTE: this is internal function.
+	void noGraph()	{gr=0;};
+
 	/// Set drawing functions and its parameter
 	void setDraw(int (*func)(mglBase *gr, void *par), void *par);
 	void setDraw(mglDraw *dr);
@@ -185,6 +195,7 @@ protected:
 	void wheelEvent(QWheelEvent *);
 	void mouseDoubleClickEvent(QMouseEvent *);
 
+	mglCanvas *gr;		///< Built-in mglCanvas instance (mglCanvasQT is used by default)
 	void *draw_par;		///< Parameters for drawing function mglCanvasWnd::DrawFunc.
 	/// Drawing function for window procedure. It should return the number of frames.
 	int (*draw_func)(mglBase *gr, void *par);

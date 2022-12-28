@@ -27,7 +27,7 @@ const char *head =
 // Copyright (C) 2008-2013 Mikhail Barg, Alexey Balakin                    *\n\
 //                                                                         *\n\
 //   This program is free software; you can redistribute it and/or modify  *\n\
-//   it under the terms of the GNU Library General Public License as       *\n\
+//   it under the terms of the GNU Lesser General Public License  as       *\n\
 //   published by the Free Software Foundation; either version 2 of the    *\n\
 //   License, or (at your option) any later version.                       *\n\
 //                                                                         *\n\
@@ -36,7 +36,7 @@ const char *head =
 //   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *\n\
 //   GNU General Public License for more details.                          *\n\
 //                                                                         *\n\
-//   You should have received a copy of the GNU Library General Public     *\n\
+//   You should have received a copy of the GNU Lesser General Public     *\n\
 //   License along with this program; if not, write to the                 *\n\
 //   Free Software Foundation, Inc.,                                       *\n\
 //   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *\n\
@@ -58,7 +58,6 @@ uses\n\
 Windows, Graphics,\n\
 {$ENDIF}\n\
 Math;\n\n\
-const MGL_VER2 = 2.2;\n\
 //* This define enables double precision in MathGL */\n\
 MGL_USE_DOUBLE = 1;\n\n\
 const\n\
@@ -363,7 +362,7 @@ bool parse_file(const char *fname, FILE *out)
 	char buf[1024], *ptr;
 	while ( !feof(fp) )
 	{
-		fgets(buf, 1024, fp);
+		if(!fgets(buf, 1024, fp)) break;
 		// first filter unwanted strings
 		if ( buf[0] == 0 || buf[0] == '\n' || buf[1] == '\n' )
 		{
@@ -421,7 +420,7 @@ bool parse_file(const char *fname, FILE *out)
 		{
 			do
 			{
-				fgets(buf, 1024, fp);
+				if(!fgets(buf, 1024, fp))	break;
 			}
 			while ( !strstr(buf, "*/") );
 			continue;

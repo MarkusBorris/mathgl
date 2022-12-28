@@ -2,7 +2,7 @@
  * Copyright (C) 2007-2014 Alexey Balakin <mathgl.abalakin@gmail.ru>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
+ * modify it under the terms of the GNU Lesser General Public License 
  * as published by the Free Software Foundation
  *
  * This program is distributed in the hope that it will be useful,
@@ -41,23 +41,27 @@ Fl_Text_Display::Style_Table_Entry styletable[10] = {	// Style table
 		{ FL_DARK_CYAN,	FL_COURIER,		14, 0 },		// F - Flow command
 		{ FL_DARK_MAGENTA,	FL_COURIER,	14, 0 },		// G - New-data command
 		{ FL_DARK_RED,	FL_COURIER,		14, 0 },		// H - Option
-		{ FL_DARK_GREEN,FL_COURIER,		14, 0 },		// I - Inactive command
+		{ FL_GRAY,		FL_COURIER,		14, 0 },		// I - Inactive command
 		{ FL_MAGENTA,	FL_COURIER,		14, 0 }			// J - Error line ???
 	};
 int font_kind;	///< Editor font kind
 int font_size;	///< Editor font size
 //-----------------------------------------------------------------------------
-void set_style(int kind, int size)
+void set_style(int kind, int size, int fdark)
 {
+	Fl_Color c1[10]={FL_BLACK,FL_DARK_GREEN,FL_BLUE,FL_RED,FL_DARK_BLUE,FL_DARK_CYAN,FL_DARK_MAGENTA,FL_DARK_RED,FL_GRAY,FL_MAGENTA};
+	Fl_Color c2[10]={FL_WHITE,FL_GREEN,FL_CYAN,FL_YELLOW,FL_BLUE,FL_CYAN,FL_MAGENTA,FL_RED,FL_GRAY,FL_MAGENTA};
 	if(kind<0 || kind>2)	kind = 1;
 	if(size<1)	size = 14;
 	for(int i=0;i<10;i++)	// set font for styles
 	{	styletable[i].size = size;	styletable[i].font = 4*kind;	}
 	styletable[1].font = 4*kind+2;
 	font_kind = kind;	font_size = size;
+	if(fdark)	for(int i=0;i<10;i++)	styletable[i].color = c2[i];
+	else		for(int i=0;i<10;i++)	styletable[i].color = c1[i];
 }
 //-----------------------------------------------------------------------------
-bool is_sfx(const char *s)	// suffix
+bool MGL_FUNC_PURE is_sfx(const char *s)	// suffix
 {
 	size_t i,n=strlen(s);
 	for(i=0;i<n && s[i]>='a';i++);
@@ -71,7 +75,7 @@ bool is_sfx(const char *s)	// suffix
 //	char *t = new char[i+1];	memcpy(t,s,i*sizeof(char));	t[i]=0;
 }
 //-----------------------------------------------------------------------------
-bool is_opt(const char *s)	// option
+bool MGL_FUNC_PURE is_opt(const char *s)	// option
 {
 	const char *o[13]={"xrange","yrange","zrange","crange","alpha",
 					"cut","value","meshnum","size","legend",
@@ -81,7 +85,7 @@ bool is_opt(const char *s)	// option
 	return false;
 }
 //-----------------------------------------------------------------------------
-bool is_num(const char *s)	// number
+bool MGL_FUNC_PURE is_num(const char *s)	// number
 {
 	size_t n=strlen(s);
 //	if(s[0]==':' && (s[1]<=' ' || s[1]==';'))	return true;
@@ -109,7 +113,7 @@ bool is_num(const char *s)	// number
 //-----------------------------------------------------------------------------
 char is_cmd(const char *s)	// command
 {
-	register long i,n=strlen(s)+1;
+	long i,n=strlen(s)+1;
 	char res=0, *w=new char[n];	strcpy(w,s);
 	for(i=0;i<n;i++)	if(!isalnum(s[i]))	w[i]=0;
 	int rts = Parse->CmdType(w);
@@ -338,7 +342,7 @@ void load_file(const char *newfile, int ipos, ScriptWindow *e)
 
 		char *t = textbuf->text();
 #ifndef WIN32
-		register size_t i,l=strlen(t);
+		size_t i,l=strlen(t);
 		for(i=0;i<l;i++)	if(t[i]=='\r')	t[i]=' ';
 		textbuf->text(t);
 #endif
@@ -358,9 +362,10 @@ void save_file(const char *newfile, ScriptWindow *e)
 	if (textbuf->savefile(newfile))
 		fl_alert(_("Error writing to file \'%s\':\n%s."), newfile, strerror(errno));
 	else
-	{	filename = newfile;	add_filename(filename.c_str(),e);	}
-	changed = 0;
-	textbuf->call_modify_callbacks();
+	{
+		filename = newfile;	add_filename(filename.c_str(),e);
+		changed = 0;	textbuf->call_modify_callbacks();
+	}
 }
 //-----------------------------------------------------------------------------
 void undo_cb(Fl_Widget*, void* v)
@@ -481,12 +486,12 @@ void changed_cb(int pos, int nInserted, int nDeleted, int nRestyled, const char 
 	if (loading) w->editor->show_insert_position();
 }
 //-----------------------------------------------------------------------------
-void insert_cb(Fl_Widget*, void *v)
-{
-	const char *newfile = mgl_file_chooser(_("Insert file content?"));
-	ScriptWindow *w = (ScriptWindow *)v;
-	if (newfile != NULL) load_file(newfile, w->editor->insert_position(),w);
-}
+// void insert_cb(Fl_Widget*, void *v)
+// {
+// 	const char *newfile = mgl_file_chooser(_("Insert file content?"));
+// 	ScriptWindow *w = (ScriptWindow *)v;
+// 	if (newfile != NULL) load_file(newfile, w->editor->insert_position(),w);
+// }
 //-----------------------------------------------------------------------------
 void paste_cb(Fl_Widget*, void* v)
 {
@@ -496,10 +501,10 @@ void paste_cb(Fl_Widget*, void* v)
 //-----------------------------------------------------------------------------
 #include "../widgets/image.h"
 #include "xpm/box.xpm"
-Fl_Widget *add_editor(ScriptWindow *w)
+Fl_Widget *add_editor(ScriptWindow *w, int txtW, int wndH)
 {
-	Fl_Window *w1=new Fl_Window(0,30,300,455,0);
-	Fl_Group *g = new Fl_Group(0,0,290,30);
+	Fl_Window *w1=new Fl_Window(0,30,txtW,wndH-55,0);
+	Fl_Group *g = new Fl_Group(0,0,txtW-10,30);
 	Fl_Button *o;
 
 	o = new Fl_Button(0, 1, 25, 25);	o->image(img_load);	o->callback(open_cb,w);
@@ -524,10 +529,10 @@ Fl_Widget *add_editor(ScriptWindow *w)
 	o = new Fl_Button(210, 1, 25, 25);	o->image(img_calc);	o->callback(calc_dlg_cb,w);
 	o->tooltip(_("Show calculator window"));
 	o = new Fl_Button(240, 1, 25, 25);	o->image(img_curve);o->callback(prim_dlg_cb,w);
-	o->tooltip(_("Show calculator window"));
+	o->tooltip(_("Show window for primitives"));
 	g->end();	g->resizable(0);
 
-	w->editor = new Fl_Text_Editor(0, 28, 300, 425);
+	w->editor = new Fl_Text_Editor(0, 28, txtW, wndH-85);
 	w->editor->textfont(FL_COURIER);
 	w->editor->buffer(textbuf);
 	w->editor->highlight_data(stylebuf, styletable, sizeof(styletable) / sizeof(styletable[0]), 'A', style_unfinished_cb, 0);
@@ -648,13 +653,12 @@ void find_next_cb(Fl_Widget*,void *v)
 }
 //-----------------------------------------------------------------------------
 void ins_fname_cb(Fl_Widget *, void *v)
-{
-	static std::string prev;
+{	// TODO: use previous file name?!?
 	ScriptWindow* e = (ScriptWindow*)v;
-	const char *s = mgl_file_chooser(_("Select file name"), "DAT files \t*.{dat,csv}\nHDF files \t*.{hdf,h5}");
+	const char *s = mgl_file_chooser(_("Select file name"), "DAT files \t*.{dat,csv}\nHDF files \t*.{hdf,h5}\nImage files \t*.{png,jpg,jpeg}");
 	if(s)
 	{
-		std::string ss=prev=s;	ss = '\''+ss+'\'';
+		std::string ss=s;	ss = '\''+ss+'\'';
 		if(e)	e->editor->insert(ss.c_str());
 		else	cb_args_set(ss.c_str());
 	}

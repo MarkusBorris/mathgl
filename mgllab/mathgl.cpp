@@ -2,7 +2,7 @@
  * Copyright (C) 2007-2014 Alexey Balakin <mathgl.abalakin@gmail.ru>
  *
  * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
+ * modify it under the terms of the GNU Lesser General Public License 
  * as published by the Free Software Foundation
  *
  * This program is distributed in the hope that it will be useful,
@@ -20,7 +20,7 @@
 //-----------------------------------------------------------------------------
 mglParse *Parse=0;
 //-----------------------------------------------------------------------------
-mreal udav_delay(void *v)
+mreal MGL_FUNC_PURE udav_delay(void *v)
 {	return ((Fl_MGL*)v)->delay;	}
 void udav_reload(void *v)
 {	Parse->RestoreOnce();	((Fl_MGL*)v)->update();	}
@@ -61,6 +61,9 @@ Fl_MGL::Fl_MGL(Fl_MGLView *GR)
 //-----------------------------------------------------------------------------
 Fl_MGL::~Fl_MGL()	{}
 //-----------------------------------------------------------------------------
+void Fl_MGL::Param(char id, const char *val)
+{	Parse->AddParam(id<='9' ? id-'0' : id-'a'+10, val);	}
+//-----------------------------------------------------------------------------
 void Fl_MGL::Reload()
 {
 	Parse->RestoreOnce();
@@ -87,9 +90,8 @@ int Fl_MGL::Draw(mglGraph *gr)
 	if(textbuf)
 	{
 		char *text = textbuf->text();
-		if(highlight)	gr->Highlight(e->graph->FMGL->get_last_id());		// TODO check highlight
+		if(highlight)	gr->Highlight(e->graph->FMGL->get_last_id());
 		Parse->Execute(gr,text);
-//		gr->Highlight(-1);
 		free(text);
 	}
 	// TODO go to line with warning?!!
@@ -113,13 +115,13 @@ void Fl_MGL::update()
 	}
 }
 //-----------------------------------------------------------------------------
-void add_suffix(char *fname, const char *ext)
-{
-	long n=strlen(fname);
-	if(n>4 && fname[n-4]=='.')
-	{	fname[n-3]=ext[0];	fname[n-2]=ext[1];	fname[n-1]=ext[2];	}
-	else	{	strcat(fname,".");	strcat(fname,ext);	}
-}
+// void add_suffix(char *fname, const char *ext)
+// {
+// 	long n=strlen(fname);
+// 	if(n>4 && fname[n-4]=='.')
+// 	{	fname[n-3]=ext[0];	fname[n-2]=ext[1];	fname[n-1]=ext[2];	}
+// 	else	{	strcat(fname,".");	strcat(fname,ext);	}
+// }
 //-----------------------------------------------------------------------------
 class ArgsDlg : public GeneralDlg
 {
@@ -312,37 +314,11 @@ void fill_animate(const char *text, Fl_MGL *dr)
 			}
 		}
 	}
-	dr->anim.clear();	dr->a1=dr->a2=0;	dr->da=1;	// reset animation
-	const char *str = strstr(text, "##c");
-	if(str)	// this is animation loop
-	{
-		double a1=0, a2=0, da=1;
-		int res=sscanf(str+3, "%lg%lg%lg", &a1, &a2, &da);
-		da = res<3?1:da;
-		if(res>2 && da*(a2-a1)>0)
-		{
-			dr->a1=a1;	dr->a2=a2;	dr->da=da;
-			for(double a=a1;da*(a2-a)>=0;a+=da)
-			{
-				char buf[128];	snprintf(buf,128,"%g",a);
-				dr->anim.push_back(buf);
-			}
-			return;
-		}
-	}
-	str = strstr(text, "##a");
-	while(str)
-	{
-		str += 3;
-		while(*str>0 && *str<=' ' && *str!='\n')	str++;
-		if(*str>' ')
-		{
-			size_t j=0;	while(str[j]>' ')	j++;
-			std::string val(str,j);
-			dr->anim.push_back(val);
-		}
-		str = strstr(str, "##a");
-	}
+	dr->anim.clear();
+	std::string ids;
+	std::vector<std::string> par;
+	mgl_parse_comments(text, dr->a1, dr->a2, dr->da, dr->anim, ids, par);
+	if(!ids.empty())	dr->gr->dialog(ids,par);
 }
 //-----------------------------------------------------------------------------
 Fl_Text_Display::Style_Table_Entry stylemess[2] = {	// Style table

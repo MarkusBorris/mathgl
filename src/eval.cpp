@@ -3,7 +3,7 @@
  * Copyright (C) 2007-2016 Alexey Balakin <mathgl.abalakin@gmail.ru>       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
+ *   it under the terms of the GNU Lesser General Public License  as       *
  *   published by the Free Software Foundation; either version 3 of the    *
  *   License, or (at your option) any later version.                       *
  *                                                                         *
@@ -12,7 +12,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
  *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
+ *   You should have received a copy of the GNU Lesser General Public     *
  *   License along with this program; if not, write to the                 *
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
@@ -20,7 +20,7 @@
 #include <time.h>
 #include <ctype.h>
 
-#include "mgl2/data_cf.h"
+#include "mgl2/data.h"
 #include "mgl2/eval.h"
 
 #if MGL_HAVE_GSL
@@ -132,7 +132,7 @@ EQ_CL		// Clausen function
 //-----------------------------------------------------------------------------
 int mglFormula::Error=0;
 bool MGL_LOCAL_PURE mglCheck(char *str,int n);
-int MGL_LOCAL_PURE mglFindInText(const char *str, const char *lst);
+long MGL_LOCAL_PURE mglFindInText(const char *str, const char *lst);
 //-----------------------------------------------------------------------------
 #if MGL_HAVE_GSL
 MGL_NO_EXPORT gsl_rng *mgl_rng=0;	// NOTE: should be deleted by gsl_rng_free() but I don't know where :(
@@ -187,13 +187,16 @@ double MGL_EXPORT mgl_rnd_()	{	return mgl_rnd();	}
 //-----------------------------------------------------------------------------
 mglFormula::~mglFormula()
 {
-	if(Left) delete Left;
-	if(Right) delete Right;
+	if(tmp)		delete tmp;
+	if(Left)	delete Left;
+	if(Right)	delete Right;
 }
 //-----------------------------------------------------------------------------
 // Formula constructor (automatically parse and "compile" formula)
 mglFormula::mglFormula(const char *string)
 {
+	dat = tmp = NULL;
+	dx1=dy1=dz1=0;	dx2=dy2=dz2=1;
 #if MGL_HAVE_GSL
 	gsl_set_error_handler_off();
 #endif
@@ -214,6 +217,21 @@ mglFormula::mglFormula(const char *string)
 		len-=2;	str[len]=0;
 	}
 	len=strlen(str);
+	if(str[0]==':' && str[1]!=0)		//	this data file for interpolation
+	{
+		double sx1,sx2,sy1,sy2,sz1,sz2;
+		char *buf = strchr(str+1,':');
+		if(buf && *buf)
+		{
+			*buf = 0;
+			int r = sscanf(buf+1,"%lg:%lg:%lg:%lg:%lg:%lg",&sx1,&sx2,&sy1,&sy2,&sz1,&sz2);
+			if(r>1 && sx1!=sx2)	{	dx1=sx1;	dx2=sx2;	}
+			if(r>3 && sy1!=sy2)	{	dy1=sy1;	dy2=sy2;	}
+			if(r>5 && sz1!=sz2)	{	dz1=sz1;	dz2=sz2;	}
+		}
+		dat = tmp = new mglData(str+1);
+		delete []str;	return;
+	}
 	n=mglFindInText(str,"&|");				// lowest priority -- logical
 	if(n>=0)
 	{
@@ -235,7 +253,7 @@ mglFormula::mglFormula(const char *string)
 		delete []str;	return;
 	}
 	n=mglFindInText(str,"+-");				// normal priority -- additions
-	if(n>=0 && (n<2 || str[n-1]!='e' || (str[n-2]!='.' && !isdigit(str[n-2]))))
+	if(n>=0 && (n<2 || !strchr("eE",str[n-1]) || (str[n-2]!='.' && !isdigit(str[n-2]))))
 	{
 		if(str[n]=='+') Kod=EQ_ADD; else Kod=EQ_SUB;
 		str[n]=0;
@@ -243,10 +261,12 @@ mglFormula::mglFormula(const char *string)
 		Right=new mglFormula(str+n+1);
 		delete []str;	return;
 	}
-	n=mglFindInText(str,"*/");				// high priority -- multiplications
+	n=mglFindInText(str,"*/%");				// high priority -- multiplications
 	if(n>=0)
 	{
-		if(str[n]=='*') Kod=EQ_MUL; else Kod=EQ_DIV;
+		if(str[n]=='*')	Kod=EQ_MUL;
+		else if(str[n]=='/') Kod=EQ_DIV;
+		else	Kod=EQ_MOD;
 		str[n]=0;
 		Left=new mglFormula(str);
 		Right=new mglFormula(str+n+1);
@@ -417,7 +437,8 @@ mreal mglFormula::Calc(mreal x,mreal y,mreal t,mreal u) const
 	a1['x'-'a'] = a1['r'-'a'] = x;
 	a1['y'-'a'] = a1['n'-'a'] = a1['v'-'a'] = y;
 	a1['z'-'a'] = a1['t'-'a'] = t;
-	return CalcIn(a1);
+	mreal b = CalcIn(a1);
+	return mgl_isfin(b) ? b : NAN;
 }
 //-----------------------------------------------------------------------------
 // evaluate formula for 'x'='r', 'y'='n', 't'='z', 'u'='a', 'v'='b', 'w'='c' variables
@@ -431,14 +452,16 @@ mreal mglFormula::Calc(mreal x,mreal y,mreal t,mreal u,mreal v,mreal w) const
 	a1['x'-'a'] = a1['r'-'a'] = x;
 	a1['y'-'a'] = a1['n'-'a'] = y;
 	a1['z'-'a'] = a1['t'-'a'] = t;
-	return CalcIn(a1);
+	mreal b = CalcIn(a1);
+	return mgl_isfin(b) ? b : NAN;
 }
 //-----------------------------------------------------------------------------
 // evaluate formula for arbitrary set of variables
 mreal mglFormula::Calc(const mreal var[MGL_VS]) const
 {
 	Error=0;
-	return CalcIn(var);
+	mreal b = CalcIn(var);
+	return mgl_isfin(b) ? b : NAN;
 }
 //-----------------------------------------------------------------------------
 // evaluate formula for 'x'='r', 'y'='n'='v', 't'='z', 'u'='a' variables
@@ -450,7 +473,8 @@ mreal mglFormula::CalcD(char diff,mreal x,mreal y,mreal t,mreal u) const
 	a1['x'-'a'] = a1['r'-'a'] = x;
 	a1['y'-'a'] = a1['n'-'a'] = a1['v'-'a'] = y;
 	a1['z'-'a'] = a1['t'-'a'] = t;
-	return CalcDIn(diff-'a', a1);
+	mreal b = CalcDIn(diff-'a', a1);
+	return mgl_isfin(b) ? b : NAN;
 }
 //-----------------------------------------------------------------------------
 // evaluate formula for 'x'='r', 'y'='n', 't'='z', 'u'='a', 'v'='b', 'w'='c' variables
@@ -464,14 +488,16 @@ mreal mglFormula::CalcD(char diff,mreal x,mreal y,mreal t,mreal u,mreal v,mreal 
 	a1['x'-'a'] = a1['r'-'a'] = x;
 	a1['y'-'a'] = a1['n'-'a'] = y;
 	a1['z'-'a'] = a1['t'-'a'] = t;
-	return CalcDIn(diff-'a', a1);
+	mreal b = CalcDIn(diff-'a', a1);
+	return mgl_isfin(b) ? b : NAN;
 }
 //-----------------------------------------------------------------------------
 // evaluate derivate of formula respect to 'diff' variable for arbitrary set of other variables
 mreal mglFormula::CalcD(const mreal var[MGL_VS], char diff) const
 {
 	Error=0;
-	return CalcDIn(diff-'a', var);
+	mreal b = CalcDIn(diff-'a', var);
+	return mgl_isfin(b) ? b : NAN;
 }
 //-----------------------------------------------------------------------------
 double MGL_LOCAL_CONST cand(double a,double b)	{return a&&b?1:0;}
@@ -506,6 +532,7 @@ double MGL_LOCAL_CONST mgl_acosh(double x)	{	return x>1 ? log(x+sqrt(x*x-1.)) : 
 double MGL_LOCAL_CONST mgl_atanh(double x)	{	return fabs(x)<1 ? log((1.+x)/(1.-x))/2 : NAN;	}
 double MGL_LOCAL_CONST mgl_fmin(double a,double b)	{	return a > b ? b : a;	}
 double MGL_LOCAL_CONST mgl_fmax(double a,double b)	{	return a > b ? a : b;	}
+double MGL_LOCAL_CONST mgl_fmod(double a, double m)	{	return (a>=0)?fmod(a,m):fmod(a,m)+m;	}
 //-----------------------------------------------------------------------------
 typedef double (*func_1)(double);
 typedef double (*func_2)(double, double);
@@ -517,7 +544,7 @@ static const mreal z2[EQ_SIN-EQ_LT] = {3,3,3,3,0,3,3,0,0,0,0,0,NAN,3,3,3,3
 	,0,0,0,0,0,0,0,0,0
 #endif
 };
-static const func_2 f2[EQ_SIN-EQ_LT] = {clt,cgt,ceq,cor,cand,add,sub,mul,del,ipw,pow,fmod,llg,arg,hypot,mgl_fmax,mgl_fmin
+static const func_2 f2[EQ_SIN-EQ_LT] = {clt,cgt,ceq,cor,cand,add,sub,mul,del,ipw,pow,mgl_fmod,llg,arg,hypot,mgl_fmax,mgl_fmin
 #if MGL_HAVE_GSL
 	,gsl_sf_bessel_Jnu,gsl_sf_bessel_Ynu,
 	gsl_sf_bessel_Inu,gsl_sf_bessel_Knu,
@@ -543,6 +570,13 @@ static const func_1 f1[EQ_SN-EQ_SIN] = {sin,cos,tan,asin,acos,atan,sinh,cosh,tan
 // evaluation of embedded (included) expressions
 mreal mglFormula::CalcIn(const mreal *a1) const
 {
+	if(dat)
+	{
+		mreal x = (a1['x'-'a']-dx1)*(dat->GetNx()-1)/(dx2-dx1);
+		mreal y = (a1['y'-'a']-dy1)*(dat->GetNy()-1)/(dy2-dy1);
+		mreal z = (a1['z'-'a']-dz1)*(dat->GetNz()-1)/(dz2-dz1);
+		return mgl_data_spline(dat,x,y,z);
+	}
 	if(Kod<EQ_LT)
 	{
 		if(Kod==EQ_RND)	return mgl_rnd();
@@ -555,18 +589,14 @@ mreal mglFormula::CalcIn(const mreal *a1) const
 		{
 			// try to bypass calc b if a==0
 			if(a==0 && z2[Kod-EQ_LT]!=3)	return z2[Kod-EQ_LT];
-			double b = Right->CalcIn(a1);
-			b = mgl_isfin(b) ? f2[Kod-EQ_LT](a,b):NAN;
-			return mgl_isfin(b) ? b : NAN;
+			return Right?f2[Kod-EQ_LT](a, Right->CalcIn(a1)):NAN;
 		}
-		else if(Kod<EQ_SN)
-		{	a = f1[Kod-EQ_SIN](a);	return mgl_isfin(a)?a:NAN;	}
+		else if(Kod<EQ_SN)	return f1[Kod-EQ_SIN](a);
 #if MGL_HAVE_GSL
 		else if(Kod<=EQ_DC)
 		{
-			double sn=0,cn=0,dn=0,b = Right->CalcIn(a1);
-			if(mgl_isbad(b))	return NAN;
-			gsl_sf_elljac_e(a,b, &sn, &cn, &dn);
+			double sn=0, cn=0, dn=0;
+			gsl_sf_elljac_e(a,Right->CalcIn(a1), &sn, &cn, &dn);
 			switch(Kod)
 			{
 			case EQ_SN:		return sn;
@@ -664,23 +694,36 @@ static const func_1 f11[EQ_SN-EQ_SIN] = {cos,cos_d,tan_d,asin_d,acos_d,atan_d,co
 // evaluation of derivative of embedded (included) expressions
 mreal mglFormula::CalcDIn(int id, const mreal *a1) const
 {
-	if(Kod<EQ_LT)	return (Kod==EQ_A && id==(int)Res)?1:0;
-
+	if(dat)
+	{
+		mreal x = (a1['x'-'a']-dx1)*(dat->GetNx()-1)/(dx2-dx1);
+		mreal y = (a1['y'-'a']-dy1)*(dat->GetNy()-1)/(dy2-dy1);
+		mreal z = (a1['z'-'a']-dz1)*(dat->GetNz()-1)/(dz2-dz1);
+		mreal dx,dy,dz, res=0;
+		mgl_data_spline_ext(dat,x,y,z,&dx,&dy,&dz);
+		if(id=='x'-'a')	res = dx/(dat->GetNx()-1)*(dx2-dx1);
+		if(id=='y'-'a')	res = dy/(dat->GetNy()-1)*(dy2-dy1);
+		if(id=='z'-'a')	res = dz/(dat->GetNz()-1)*(dz2-dz1);
+		return res;
+	}
+	if(Kod==EQ_A && id==(int)Res)	return 1;
+	else if(Kod<EQ_LT)	return 0;
 	double a = Left->CalcIn(a1), d = Left->CalcDIn(id,a1);
 	if(mgl_isfin(a) && mgl_isfin(d))
 	{
 		if(Kod<EQ_SIN)
 		{
-			double b = Right->CalcIn(a1), c = Right->CalcDIn(id,a1);
-			b = mgl_isfin(b) ? (d?f21[Kod-EQ_LT](a,b)*d:0) + (c?f22[Kod-EQ_LT](a,b)*c:0) : NAN;
-			return mgl_isfin(b) ? b : NAN;
+			double b = Right?Right->CalcIn(a1):NAN;
+			double c = Right?Right->CalcDIn(id,a1):NAN;
+//			return mgl_isfin(b) ? (f21[Kod-EQ_LT](a,b)*d + f22[Kod-EQ_LT](a,b)*c) : NAN;
+			return mgl_isfin(b) ? (d?f21[Kod-EQ_LT](a,b)*d:0) + (c?f22[Kod-EQ_LT](a,b)*c:0) : NAN;
 		}
-		else if(Kod<EQ_SN)
-		{	a = (d?f11[Kod-EQ_SIN](a)*d:0);	return mgl_isfin(a)?a:NAN;	}
+//		else if(Kod<EQ_SN)	return f11[Kod-EQ_SIN](a)*d;
+		else if(Kod<EQ_SN)	return d?f11[Kod-EQ_SIN](a)*d:0;
 #if MGL_HAVE_GSL
 		else if(Kod<=EQ_DC)
 		{
-			double sn=0,cn=0,dn=0,b = Right->CalcIn(a1);
+			double sn=0, cn=0, dn=0, b = Right->CalcIn(a1);
 			if(mgl_isbad(b))	return NAN;
 			gsl_sf_elljac_e(a,b, &sn, &cn, &dn);
 			switch(Kod)	// At this moment parse only differentiation or argument NOT mu !!!
@@ -718,7 +761,7 @@ bool MGL_LOCAL_PURE mglCheck(char *str,int n)
 }
 //-----------------------------------------------------------------------------
 // Try to find one of symbols lst in the string str
-int MGL_LOCAL_PURE mglFindInText(const char *str, const char *lst)
+long MGL_LOCAL_PURE mglFindInText(const char *str, const char *lst)
 {
 	long l=0,r=0,len=strlen(str);
 	for(long i=len-1;i>=0;i--)
@@ -732,13 +775,13 @@ int MGL_LOCAL_PURE mglFindInText(const char *str, const char *lst)
 //-----------------------------------------------------------------------------
 HMEX MGL_EXPORT mgl_create_expr(const char *expr)	{	return new mglFormula(expr);	}
 void MGL_EXPORT mgl_delete_expr(HMEX ex)	{	if(ex)	delete ex;	}
-double MGL_EXPORT mgl_expr_eval(HMEX ex, double x, double y,double z)
+double MGL_EXPORT_PURE mgl_expr_eval(HMEX ex, double x, double y,double z)
 {	return ex->Calc(x,y,z);	}
-double MGL_EXPORT mgl_expr_eval_v(HMEX ex, mreal *var)
+double MGL_EXPORT_PURE mgl_expr_eval_v(HMEX ex, mreal *var)
 {	return ex->Calc(var);	}
-double MGL_EXPORT mgl_expr_diff(HMEX ex, char dir, double x, double y,double z)
+double MGL_EXPORT_PURE mgl_expr_diff(HMEX ex, char dir, double x, double y,double z)
 {	return ex->CalcD(dir,x,y,z);	}
-double MGL_EXPORT mgl_expr_diff_v(HMEX ex, char dir, mreal *var)
+double MGL_EXPORT_PURE mgl_expr_diff_v(HMEX ex, char dir, mreal *var)
 {	return ex->CalcD(var, dir);		}
 //-----------------------------------------------------------------------------
 uintptr_t MGL_EXPORT mgl_create_expr_(const char *expr, int l)
@@ -746,8 +789,8 @@ uintptr_t MGL_EXPORT mgl_create_expr_(const char *expr, int l)
 	uintptr_t res = uintptr_t(mgl_create_expr(s));
 	delete []s;	return res;	}
 void MGL_EXPORT mgl_delete_expr_(uintptr_t *ex)	{	mgl_delete_expr((HMEX)ex);	}
-double MGL_EXPORT mgl_expr_eval_(uintptr_t *ex, mreal *x, mreal *y, mreal *z)
+double MGL_EXPORT_PURE mgl_expr_eval_(uintptr_t *ex, mreal *x, mreal *y, mreal *z)
 {	return mgl_expr_eval((HMEX) ex, *x,*y,*z);		}
-double MGL_EXPORT mgl_expr_diff_(uintptr_t *ex, const char *dir, mreal *x, mreal *y, mreal *z, int)
+double MGL_EXPORT_PURE mgl_expr_diff_(uintptr_t *ex, const char *dir, mreal *x, mreal *y, mreal *z, int)
 {	return mgl_expr_diff((HMEX) ex, *dir,*x,*y,*z);	}
 //-----------------------------------------------------------------------------

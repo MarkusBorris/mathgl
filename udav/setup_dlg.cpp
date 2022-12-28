@@ -193,9 +193,9 @@ bool SetupDialog::convert()
 		x1=xlight[i]->text().toDouble();	y1=ylight[i]->text().toDouble();
 		z1=zlight[i]->text().toDouble();	j = clight[i]->currentIndex();
 		if(blight[i]->text().isEmpty())
-			s.sprintf("light %d %g %g %g '%c'\n", i,x1,y1,z1, col[j].toLatin1());
+			s.asprintf("light %d %g %g %g '%c'\n", i,x1,y1,z1, col[j].toLatin1());
 		else
-			s.sprintf("light %d %g %g %g '%c' %g\n", i,x1,y1,z1, col[j].toLatin1(), blight[i]->text().toDouble());
+			s.asprintf("light %d %g %g %g '%c' %g\n", i,x1,y1,z1, col[j].toLatin1(), blight[i]->text().toDouble());
 		res += s;
 	}
 	u1 = !xmin->text().isEmpty();	if(u1)	x1 = xmin->text().toDouble();
@@ -205,21 +205,21 @@ bool SetupDialog::convert()
 	w1 = !zmin->text().isEmpty();	if(w1)	z1 = zmin->text().toDouble();
 	w2 = !zmin->text().isEmpty();	if(w2)	z2 = zmax->text().toDouble();
 	if(u1&&v1&&w1&&u2&&v2&&w2)
-	{	s.sprintf("axis %g %g %g %g %g %g\n",x1,y1,z1,x2,y2,z2);	res += s;	}
+	{	s.asprintf("axis %g %g %g %g %g %g\n",x1,y1,z1,x2,y2,z2);	res += s;	}
 	else
 	{
-		if(u1 && u2)	{s.sprintf("xrange %g %g\n",x1,x2);	res += s;}
-		if(v1 && v2)	{s.sprintf("yrange %g %g\n",y1,y2);	res += s;}
-		if(w1 && w2)	{s.sprintf("zrange %g %g\n",z1,z2);	res += s;}
+		if(u1 && u2)	{s.asprintf("xrange %g %g\n",x1,x2);	res += s;}
+		if(v1 && v2)	{s.asprintf("yrange %g %g\n",y1,y2);	res += s;}
+		if(w1 && w2)	{s.asprintf("zrange %g %g\n",z1,z2);	res += s;}
 	}
 	u1 = !cmin->text().isEmpty();	if(u1)	x1 = cmin->text().toDouble();
 	u2 = !cmax->text().isEmpty();	if(u2)	x2 = cmax->text().toDouble();
-	if(u1&&u2)	{s.sprintf("crange %g %g\n",x1,x2);	res += s;}
+	if(u1&&u2)	{s.asprintf("crange %g %g\n",x1,x2);	res += s;}
 
 	u1 = !xmin->text().isEmpty();	if(u1)	x1 = xorg->text().toDouble();
 	v1 = !yorg->text().isEmpty();	if(v1)	y1 = yorg->text().toDouble();
 	w1 = !zorg->text().isEmpty();	if(w1)	z1 = zorg->text().toDouble();
-	if(u1&&v1&&w1)	{s.sprintf("origin %g %g %g\n",x1,y1,z1);	res += s;}
+	if(u1&&v1&&w1)	{s.asprintf("origin %g %g %g\n",x1,y1,z1);	res += s;}
 
 	u1 = !xtck->text().isEmpty();	if(u1)	x1 = xtck->text().toDouble();
 	u2 = !xsub->text().isEmpty();	if(u2)	x2 = xsub->text().toDouble();
@@ -229,25 +229,25 @@ bool SetupDialog::convert()
 	w2 = !zsub->text().isEmpty();	if(w2)	z2 = zsub->text().toDouble();
 	if(u1 && u2)
 	{
-		if(xort->text().isEmpty())	s.sprintf("xtick %g %g\n",x1,x2);
-		else	s.sprintf("xtick %g %g %g\n",x1,x2,xort->text().toDouble());
+		if(xort->text().isEmpty())	s.asprintf("xtick %g %g\n",x1,x2);
+		else	s.asprintf("xtick %g %g %g\n",x1,x2,xort->text().toDouble());
 		res += s;
 	}
 	if(v1 && v2)
 	{
-		if(yort->text().isEmpty())	s.sprintf("ytick %g %g\n",y1,y2);
-		else	s.sprintf("ytick %g %g %g\n",y1,y2,yort->text().toDouble());
+		if(yort->text().isEmpty())	s.asprintf("ytick %g %g\n",y1,y2);
+		else	s.asprintf("ytick %g %g %g\n",y1,y2,yort->text().toDouble());
 		res += s;
 	}
 	if(w1 && w2)
 	{
-		if(zort->text().isEmpty())	s.sprintf("ztick %g %g\n",z1,z2);
-		else	s.sprintf("ztick %g %g %g\n",z1,z2,zort->text().toDouble());
+		if(zort->text().isEmpty())	s.asprintf("ztick %g %g\n",z1,z2);
+		else	s.asprintf("ztick %g %g %g\n",z1,z2,zort->text().toDouble());
 		res += s;
 	}
-	if(u1 && !u2)	{s.sprintf("xtick %g\n",x1);	res += s;}
-	if(v1 && !v2)	{s.sprintf("ytick %g\n",y1);	res += s;}
-	if(w1 && !w2)	{s.sprintf("ztick %g\n",z1);	res += s;}
+	if(u1 && !u2)	{s.asprintf("xtick %g\n",x1);	res += s;}
+	if(v1 && !v2)	{s.asprintf("ytick %g\n",y1);	res += s;}
+	if(w1 && !w2)	{s.asprintf("ztick %g\n",z1);	res += s;}
 	if(!xtt->text().isEmpty())	res = res + "xtick '" + xtt->text() + "'\n";
 	if(!ytt->text().isEmpty())	res = res + "ytick '" + ytt->text() + "'\n";
 	if(!ztt->text().isEmpty())	res = res + "ztick '" + ztt->text() + "'\n";
@@ -255,40 +255,40 @@ bool SetupDialog::convert()
 
 	if(!xlbl->text().isEmpty())
 	{
-		s.sprintf("' %d\n",	xpos->currentIndex()-1);
+		s.asprintf("' %d\n",	xpos->currentIndex()-1);
 		res = res + "xlabel '"+ xlbl->text() + s;
 	}
 	if(!ylbl->text().isEmpty())
 	{
-		s.sprintf("' %d\n",	ypos->currentIndex()-1);
+		s.asprintf("' %d\n",	ypos->currentIndex()-1);
 		res = res + "ylabel '"+ ylbl->text() + s;
 	}
 	if(!zlbl->text().isEmpty())
 	{
-		s.sprintf("' %d\n",	zpos->currentIndex()-1);
+		s.asprintf("' %d\n",	zpos->currentIndex()-1);
 		res = res + "zlabel '"+ zlbl->text() + s;
 	}
 
 	if(!aldef->text().isEmpty())
-	{	s.sprintf("alphadef %g\n",aldef->text().toDouble());	res += s;	}
+	{	s.asprintf("alphadef %g\n",aldef->text().toDouble());	res += s;	}
 	if(!amb->text().isEmpty())
-	{	s.sprintf("ambient %g\n",amb->text().toDouble());		res += s;	}
+	{	s.asprintf("ambient %g\n",amb->text().toDouble());		res += s;	}
 
 	if(!basew->text().isEmpty())
-	{	s.sprintf("baselinewidth %g\n",basew->text().toDouble());	res += s;	}
+	{	s.asprintf("baselinewidth %g\n",basew->text().toDouble());	res += s;	}
 	if(!mesh->text().isEmpty())
-	{	s.sprintf("meshnum %d\n",mesh->text().toInt());	res += s;	}
+	{	s.asprintf("meshnum %d\n",mesh->text().toInt());	res += s;	}
 	if(axial->currentIndex()>0)
 	{
-		s.sprintf("axialdir '%c'\n",char('x'+axial->currentIndex()-1));
+		s.asprintf("axialdir '%c'\n",char('x'+axial->currentIndex()-1));
 		res += s;
 	}
 
 	if(!font->text().isEmpty())
 	{
 		res = res + "font '" + font->text();
-		if(!fsize->text().isEmpty())	s.sprintf("' %g\n",fsize->text().toDouble());
-		else	s.sprintf("'\n");
+		if(!fsize->text().isEmpty())	s.asprintf("' %g\n",fsize->text().toDouble());
+		else	s.asprintf("'\n");
 		res += s;
 	}
 	if(rotate->isChecked())	res = res + "rotatetext off\n";
