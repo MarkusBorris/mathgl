@@ -12,6 +12,8 @@ endif()
 
 project( MathGL2 )
 
+include(warnings_suppressions_hotfix.cmake)
+
 set(mgl_clean_files )
 set(MGL_DEP_LIBS)
 add_definitions(-DMGL_SRC)
