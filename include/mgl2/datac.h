@@ -414,14 +414,14 @@ using mglDataA::Momentum;
 	inline dual Linear(mglPoint &dif, mreal x,mreal y=0,mreal z=0)	const
 	{
 		dual val,dx,dy,dz;
-		val = mgl_datac_linear_ext(this,x,y,z, &dx, &dy, &dz);
+		val = (double)mgl_datac_linear_ext(this,x,y,z, &dx, &dy, &dz);
 		dif.Set(dx.real(),dy.real(),dz.real());	return val;
 	}
 	/// Interpolate by line the data and return its derivatives at given point x,\a y,\a z which normalized in range [0, 1]
 	inline dual Linear1(mglPoint &dif, mreal x,mreal y=0,mreal z=0) const
 	{
 		dual val,dx,dy,dz;
-		val = mgl_datac_linear_ext(this,x,y,z, &dx, &dy, &dz);
+		val = (double)mgl_datac_linear_ext(this,x,y,z, &dx, &dy, &dz);
 		dif.Set(dx.real(),dy.real(),dz.real());
 		dif.x/=nx>1?nx-1:1;	dif.y/=ny>1?ny-1:1;	dif.z/=nz>1?nz-1:1;
 		return val;

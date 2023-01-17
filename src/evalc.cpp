@@ -304,11 +304,11 @@ mdual MGL_EXPORT_CONST mgl_ipowc(dual x,int n)
 	dual t;
 	if(n==2)	t = x*x;
 	else if(n==1)	t = x;
-	else if(n<0)	t = mreal(1)/mgl_ipowc(x,-n);
+	else if(n<0)	t = mreal(1)/(double)mgl_ipowc(x,-n);
 	else if(n==0)	t = mreal(1);
 	else
 	{
-		t = mgl_ipowc(x,n/2);	t = t*t;
+		t = (double)mgl_ipowc(x,n/2);	t = t*t;
 		if(n%2==1)	t *= x;
 	}
 	return t.real()+t.imag()*mgl_I;

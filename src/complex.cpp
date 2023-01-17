@@ -1339,7 +1339,7 @@ void MGL_EXPORT mgl_datac_refill_xyz(HADT dat, HCDT xdat, HCDT ydat, HCDT zdat, 
 		for(long i=0;i<nz;i++)	w.a[i] = mgl_index_1(z1+dz*i,zdat);
 #pragma omp parallel for collapse(3)
 		for(long k=0;k<nz;k++)	for(long j=0;j<ny;j++)	for(long i=0;i<nx;i++)
-			dat->a[i+nx*(j+ny*k)] = mgl_datac_spline(vdat,u.a[i],v.a[j],w.a[k]);
+			dat->a[i+nx*(j+ny*k)] = (double)mgl_datac_spline(vdat,u.a[i],v.a[j],w.a[k]);
 	}
 }
 //-----------------------------------------------------------------------------
