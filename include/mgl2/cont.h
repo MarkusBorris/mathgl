@@ -123,20 +123,6 @@ void MGL_EXPORT mgl_contv_xy_(uintptr_t *gr, uintptr_t *x, uintptr_t *y, uintptr
 void MGL_EXPORT mgl_contv(HMGL gr, HCDT z, const char *sch, const char *opt);
 void MGL_EXPORT mgl_contv_(uintptr_t *gr, uintptr_t *z, const char *sch, const char *opt,int,int);
 
-
-/// Draw contour lines on parametric surface at manual levels for 2d data specified parametrically
-/** Style ‘f’ to draw solid contours.
- * Style ‘t’/‘T’ draw contour labels below/above contours. */
-void MGL_EXPORT mgl_contp_val(HMGL gr, HCDT v, HCDT x, HCDT y, HCDT z, HCDT a, const char *sch, const char *opt);
-void MGL_EXPORT mgl_contp_val_(uintptr_t *gr, uintptr_t *v, uintptr_t *x, uintptr_t *y, uintptr_t *z, uintptr_t *a, const char *sch, const char *opt,int,int);
-/// Draw contour lines on parametric surface for 2d data specified parametrically
-/** Style ‘f’ to draw solid contours.
- * Style ‘t’/‘T’ draw contour labels below/above contours.
- * Option "value" set the number of contour levels (default is 7). */
-void MGL_EXPORT mgl_contp(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT a, const char *sch, const char *opt);
-void MGL_EXPORT mgl_contp_(uintptr_t *gr, uintptr_t *x, uintptr_t *y, uintptr_t *z, uintptr_t *a, const char *sch, const char *opt,int,int);
-
-
 /// Draw axial-symmetric isosurfaces at manual levels for 2d data specified parametrically
 /** String \a sch may contain:
  * ‘#’ for wired plot;

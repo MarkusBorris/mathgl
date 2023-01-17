@@ -56,8 +56,7 @@ protected:
 	void quad_draw(const mglPnt &p1, const mglPnt &p2, const mglPnt &p3, const mglPnt &p4, const mglDrawReg *d);
 	void pnt_draw(const mglPnt &p, const mglDrawReg *d);
 	void mark_draw(const mglPnt &q, char type, mreal size, mglDrawReg *d);
-	void glyph_fill(mreal phi, const mglPnt &p, mreal f, const mglGlyph &g, const mglDrawReg *d);
-	
+
 	unsigned char **GetRGBLines(long &w, long &h, unsigned char *&f, bool solid=true);
 	void LightScale(const mglMatrix *M);
 

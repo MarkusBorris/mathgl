@@ -25,7 +25,6 @@
 #include <QToolButton>
 #include <stdio.h>
 //-----------------------------------------------------------------------------
-#include "mgl2/define.h"
 #include "help_pnl.h"
 extern QString pathHelp;
 void raisePanel(QWidget *w);
@@ -45,16 +44,16 @@ HelpPanel::HelpPanel(QWidget *parent) : QWidget(parent)
 	QVBoxLayout *v = new QVBoxLayout(this);	v->addWidget(t);
 	help = new QTextBrowser(this);	v->addWidget(help);	help->setOpenExternalLinks(false);
 
-	t->addAction(QPixmap(":/png/go-previous.png"), _("Backward"), help, SLOT(backward()));
+	t->addAction(QPixmap(":/png/go-previous.png"), tr("Backward"), help, SLOT(backward()));
 	entry = new QLineEdit(this);	t->addWidget(entry);
 	connect(entry, SIGNAL(textChanged(const QString &)), this, SLOT(showHelp(const QString &)));
 	connect(entry, SIGNAL(returnPressed()), this, SLOT(showHelp()));
-	t->addAction(QPixmap(":/png/go-next.png"), _("Forward"), help, SLOT(forward()));
+	t->addAction(QPixmap(":/png/go-next.png"), tr("Forward"), help, SLOT(forward()));
 	t->addSeparator();
-//	t->addAction(QPixmap(":/png/help-faq.png"), _("Examples"), this, SLOT(showExamples()));
-	t->addAction(QPixmap(":/png/zoom-in.png"), _("Zoom in text"), this, SLOT(zoomIn()));
-	t->addAction(QPixmap(":/png/zoom-out.png"), _("Zoom out text"), this, SLOT(zoomOut()));
-	setWindowTitle(_("Help"));
+//	t->addAction(QPixmap(":/png/help-faq.png"), tr("Examples"), this, SLOT(showExamples()));
+	t->addAction(QPixmap(":/png/zoom-in.png"), tr("Zoom in text"), this, SLOT(zoomIn()));
+	t->addAction(QPixmap(":/png/zoom-out.png"), tr("Zoom out text"), this, SLOT(zoomOut()));
+	setWindowTitle(tr("Help"));
 }
 //-----------------------------------------------------------------------------
 // void HelpPanel::showExamples()
@@ -62,7 +61,7 @@ HelpPanel::HelpPanel(QWidget *parent) : QWidget(parent)
 // 	QStringList s;	s<<(pathHelp);
 // 	help->setSearchPaths(s);
 // 	setWindowTitle("Examples");	raisePanel(this);
-// 	help->setSource("mgl_en"+"_2.html");
+// 	help->setSource(tr("mgl_en")+"_2.html");
 // }
 //-----------------------------------------------------------------------------
 void HelpPanel::showHelp(const QString &txt)
@@ -72,9 +71,8 @@ void HelpPanel::showHelp(const QString &txt)
 	QStringList s;	s<<(pathHelp);
 	help->setSearchPaths(s);
 	if(cmd.isEmpty())	cmd = entry->text().trimmed();
-	// NOTE disable other translations for help files due to Qt bug
-	if(cmd.isEmpty())	help->setSource("mgl_en"+QString(".html"));
-	else	help->setSource("mgl_en"+QString(".html#")+cmd);
+	if(cmd.isEmpty())	help->setSource(tr("mgl_en")+".html");
+	else	help->setSource(tr("mgl_en")+".html#"+cmd);
 	setWindowTitle("Help");
 }
 //-----------------------------------------------------------------------------

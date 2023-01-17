@@ -55,7 +55,6 @@ void *calc(void *)
 }
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL);
 	static pthread_t thr;
 	pthread_create(&thr,0,calc,0);
 	pthread_detach(thr);
@@ -88,7 +87,6 @@ int Foo::Draw(mglGraph *gr)
 }
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL);
 	Foo *foo = new Foo;
 	mglQT gr(foo,"MathGL examples");
 	foo->Gr = &gr;
@@ -111,7 +109,7 @@ class myDraw : public mglDraw
 	long i;			// another variable to be shown
 	mglWnd *wnd;	// external window for plotting
 public:
-	myDraw(mglWnd *w=0) : mglDraw()	{	wnd=w;	i=0;	}
+	myDraw(mglWnd *w=0) : mglDraw()	{	wnd=w;	}
 	void SetWnd(mglWnd *w)	{	wnd=w;	}
 	int Draw(mglGraph *gr)
 	{
@@ -135,7 +133,6 @@ public:
 //-----------------------------------------------------------------------------
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL,"");
 	mglQT *gr;
 	char key = 0;
 	if(argc>1)	key = argv[1][0]!='-' ? argv[1][0]:argv[1][1];

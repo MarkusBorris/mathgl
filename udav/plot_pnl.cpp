@@ -41,7 +41,7 @@
 #include "style_dlg.h"
 #include "newcmd_dlg.h"
 #include "subplot_dlg.h"
-#undef sprintf
+
 extern bool mglAutoSave;
 extern bool mglHighlight;
 extern bool mglDotsRefr;
@@ -63,7 +63,7 @@ PlotPanel::PlotPanel(QWidget *parent) : QWidget(parent)
 	connect(newCmdDlg, SIGNAL(result(const QString&, bool)), this, SLOT(putCmd(const QString&)));
 	connect(subplotDlg, SIGNAL(result(const QString&)), this, SLOT(insCmd(const QString&)));
 
-	menu = new QMenu(_("Graphics"),this);
+	menu = new QMenu(tr("Graphics"),this);
 	popup = new QMenu(this);
 	mgl = new QMathGL(this);
 	draw = new mglDrawScript(parser.Self());
@@ -108,7 +108,7 @@ void PlotPanel::execute()
 	draw->text=textMGL->toPlainText();
 	draw->line=curPos;
 	mgl->update();
-	setStatus(QString(_("Drawing time %1 ms")).arg(t.elapsed()*1e-3));
+	setStatus(QString(tr("Drawing time %1 ms")).arg(t.elapsed()*1e-3));
 	emit giveFocus();
 }
 //-----------------------------------------------------------------------------
@@ -127,7 +127,7 @@ void PlotPanel::pressF9()
 	parser.RestoreOnce();
 	draw->text=textMGL->toPlainText();
 	draw->line=curPos;	mgl->update();
-	setStatus(QString(_("Drawing time %1 ms")).arg(t.elapsed()*1e-3));
+	setStatus(QString(tr("Drawing time %1 ms")).arg(t.elapsed()*1e-3));
 	emit giveFocus();
 }
 //-----------------------------------------------------------------------------
@@ -188,8 +188,8 @@ void PlotPanel::next()
 	{
 		gr.NewFrame();	execute();	gr.EndFrame();
 		if(jpgOn)	gr.WriteFrame();
-		QString s;	s.sprintf(_("%d - %d of %d"),gr.GetNumFrame(),animPos,n);
-		setStatus(QString(_("Frame %1 of %2")).arg(animPos).arg(n));
+		QString s;	s.sprintf("%d - %d of %d",gr.GetNumFrame(),animPos,n);
+		setStatus(QString(tr("Frame %1 of %2")).arg(animPos).arg(n));
 	}
 }
 //-----------------------------------------------------------------------------
@@ -287,134 +287,134 @@ void PlotPanel::toolTop(QBoxLayout *v)
 	QToolBar *t = new QToolBar(this);	v->addWidget(t);	t->setMovable(false);
 
 	// graphics menu
-	a = new QAction(QPixmap(":/png/alpha.png"), _("Alpha"), this);
+	a = new QAction(QPixmap(":/png/alpha.png"), tr("Alpha"), this);
 	a->setShortcut(Qt::CTRL+Qt::Key_T);	a->setCheckable(true);
 	connect(a, SIGNAL(toggled(bool)), mgl, SLOT(setAlpha(bool)));
 	connect(mgl, SIGNAL(alphaChanged(bool)), a, SLOT(setChecked(bool)));
-	a->setToolTip(_("Switch on/off transparency for the graphics (Ctrl+T)."));
+	a->setToolTip(tr("Switch on/off transparency for the graphics (Ctrl+T)."));
 	o->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/weather-clear.png"), _("Light"), this);
+	a = new QAction(QPixmap(":/png/weather-clear.png"), tr("Light"), this);
 	a->setShortcut(Qt::CTRL+Qt::Key_L);	a->setCheckable(true);
 	connect(a, SIGNAL(toggled(bool)), mgl, SLOT(setLight(bool)));
 	connect(mgl, SIGNAL(lightChanged(bool)), a, SLOT(setChecked(bool)));
-	a->setToolTip(_("Switch on/off lightning for the graphics (Ctrl+L)."));
+	a->setToolTip(tr("Switch on/off lightning for the graphics (Ctrl+L)."));
 	o->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/view-grid.png"), _("Grid"), this);
+	a = new QAction(QPixmap(":/png/view-grid.png"), tr("Grid"), this);
 	a->setShortcut(Qt::CTRL+Qt::Key_G);	a->setCheckable(true);
 	connect(a, SIGNAL(toggled(bool)), mgl, SLOT(setGrid(bool)));
-	a->setToolTip(_("Switch on/off grid of absolute coordinates (Ctrl+G)."));
+	a->setToolTip(tr("Switch on/off grid of absolute coordinates (Ctrl+G)."));
 	o->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/transform-move.png"), _("Rotate by mouse"), this);
+	a = new QAction(QPixmap(":/png/transform-move.png"), tr("Rotate by mouse"), this);
 	a->setCheckable(true);
 	connect(a, SIGNAL(toggled(bool)), mgl, SLOT(setRotate(bool)));
 	connect(mgl, SIGNAL(rotateChanged(bool)), a, SLOT(setChecked(bool)));
-	a->setToolTip(_("Switch on/off mouse handling of the graphics\n(rotation, shifting, zooming and perspective)."));
+	a->setToolTip(tr("Switch on/off mouse handling of the graphics\n(rotation, shifting, zooming and perspective)."));
 	t->addAction(a);
 
-/*	a = new QAction(QPixmap(":/png/zoom-fit-best.png"), _("Zoom by mouse"), this);
+/*	a = new QAction(QPixmap(":/png/zoom-fit-best.png"), tr("Zoom by mouse"), this);
 	a->setCheckable(true);
 	connect(a, SIGNAL(toggled(bool)), mgl, SLOT(setZoom(bool)));
 	connect(mgl, SIGNAL(zoomChanged(bool)), a, SLOT(setChecked(bool)));
-	a->setToolTip(_("Switch on/off mouse zoom of selected region."));
+	a->setToolTip(tr("Switch on/off mouse zoom of selected region."));
 	t->addAction(a);*/
 
 	o->addSeparator();
-	a = new QAction(QPixmap(":/png/zoom-original.png"), _("Restore"), this);
+	a = new QAction(QPixmap(":/png/zoom-original.png"), tr("Restore"), this);
 	connect(a, SIGNAL(triggered()), mgl, SLOT(restore()));
-	a->setToolTip(_("Restore default graphics rotation, zoom and perspective (Ctrl+Space)."));
+	a->setToolTip(tr("Restore default graphics rotation, zoom and perspective (Ctrl+Space)."));
 	a->setShortcut(Qt::CTRL+Qt::Key_Space);
 	o->addAction(a);	popup->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/view-refresh.png"), _("Redraw"), this);
+	a = new QAction(QPixmap(":/png/view-refresh.png"), tr("Redraw"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(execute()));
-	a->setToolTip(_("Execute script and redraw graphics (F5)."));
+	a->setToolTip(tr("Execute script and redraw graphics (F5)."));
 	a->setShortcut(Qt::Key_F5);
 	o->addAction(a);	popup->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/view-fullscreen.png"), _("Adjust size"), this);
+	a = new QAction(QPixmap(":/png/view-fullscreen.png"), tr("Adjust size"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(adjust()));
-	a->setToolTip(_("Change canvas size to fill whole region (F6)."));
+	a->setToolTip(tr("Change canvas size to fill whole region (F6)."));
 	a->setShortcut(Qt::Key_F6);		o->addAction(a);
 
-	a = new QAction(QPixmap(":/png/document-revert.png"), _("Reload"), this);
+	a = new QAction(QPixmap(":/png/document-revert.png"), tr("Reload"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(pressF9()));
-	a->setToolTip(_("Restore status for 'once' command and reload data (F9)."));
+	a->setToolTip(tr("Restore status for 'once' command and reload data (F9)."));
 	a->setShortcut(Qt::Key_F9);	o->addAction(a);	popup->addAction(a);
 
-	a = new QAction(QPixmap(":/png/process-stop.png"), _("Stop"), this);
+	a = new QAction(QPixmap(":/png/process-stop.png"), tr("Stop"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(stop()));
-	a->setToolTip(_("Stop script execution (F7)."));
+	a->setToolTip(tr("Stop script execution (F7)."));
 	a->setShortcut(Qt::Key_F7);	o->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/edit-copy.png"), _("Copy plot"), this);
+	a = new QAction(QPixmap(":/png/edit-copy.png"), tr("Copy plot"), this);
 	connect(a, SIGNAL(triggered()), mgl, SLOT(copy()));
-	a->setToolTip(_("Copy graphics to clipboard (Ctrl+Shift+G)."));
+	a->setToolTip(tr("Copy graphics to clipboard (Ctrl+Shift+G)."));
 	a->setShortcut(Qt::CTRL+Qt::SHIFT+Qt::Key_G);
 	o->addAction(a);	popup->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/edit-copy.png"), _("Copy click coor."), this);
+	a = new QAction(QPixmap(":/png/edit-copy.png"), tr("Copy click coor."), this);
 	connect(a, SIGNAL(triggered()), mgl, SLOT(copyClickCoor()));
-	a->setToolTip(_("Copy coordinates of last mouse click to clipboard."));
+	a->setToolTip(tr("Copy coordinates of last mouse click to clipboard."));
 	o->addAction(a);	popup->addAction(a);
 
 //	l->addStretch(1);
 	{
-		oo = new QMenu(_("Primitives ..."),this);
-		aa=a = new QAction(QPixmap(line_xpm), _("Add line"), this);
+		oo = new QMenu(tr("Primitives ..."),this);
+		aa=a = new QAction(QPixmap(line_xpm), tr("Add line"), this);
 		connect(a, SIGNAL(triggered()), mgl, SLOT(addLine()));
 		connect(mgl, SIGNAL(usePrimChanged(bool)), a, SLOT(setVisible(bool)));
-		a->setToolTip(_("Add line which properties can be changed later by mouse."));
+		a->setToolTip(tr("Add line which properties can be changed later by mouse."));
 		oo->addAction(a);
 
-		a = new QAction(QPixmap(arc_xpm), _("Add arc"), this);
+		a = new QAction(QPixmap(arc_xpm), tr("Add arc"), this);
 		connect(a, SIGNAL(triggered()), mgl, SLOT(addArc()));
 		connect(mgl, SIGNAL(usePrimChanged(bool)), a, SLOT(setVisible(bool)));
-		a->setToolTip(_("Add arc which properties can be changed later by mouse."));
+		a->setToolTip(tr("Add arc which properties can be changed later by mouse."));
 		oo->addAction(a);
 
-		a = new QAction(QPixmap(curve_xpm), _("Add curve"), this);
+		a = new QAction(QPixmap(curve_xpm), tr("Add curve"), this);
 		connect(a, SIGNAL(triggered()), mgl, SLOT(addCurve()));
 		connect(mgl, SIGNAL(usePrimChanged(bool)), a, SLOT(setVisible(bool)));
-		a->setToolTip(_("Add curve which properties can be changed later by mouse."));
+		a->setToolTip(tr("Add curve which properties can be changed later by mouse."));
 		oo->addAction(a);
 
-		a = new QAction(QPixmap(mark_s_xpm), _("Add rect"), this);
+		a = new QAction(QPixmap(mark_s_xpm), tr("Add rect"), this);
 		connect(a, SIGNAL(triggered()), mgl, SLOT(addRect()));
 		connect(mgl, SIGNAL(usePrimChanged(bool)), a, SLOT(setVisible(bool)));
-		a->setToolTip(_("Add rectangle which properties can be changed later by mouse."));
+		a->setToolTip(tr("Add rectangle which properties can be changed later by mouse."));
 		oo->addAction(a);
 
-		a = new QAction(QPixmap(mark_d_xpm), _("Add rhombus"), this);
+		a = new QAction(QPixmap(mark_d_xpm), tr("Add rhombus"), this);
 		connect(a, SIGNAL(triggered()), mgl, SLOT(addRhomb()));
 		connect(mgl, SIGNAL(usePrimChanged(bool)), a, SLOT(setVisible(bool)));
-		a->setToolTip(_("Add rhombus which properties can be changed later by mouse."));
+		a->setToolTip(tr("Add rhombus which properties can be changed later by mouse."));
 		oo->addAction(a);
 
-		a = new QAction(QPixmap(mark_o_xpm), _("Add ellipse"), this);
+		a = new QAction(QPixmap(mark_o_xpm), tr("Add ellipse"), this);
 		connect(a, SIGNAL(triggered()), mgl, SLOT(addEllipse()));
 		connect(mgl, SIGNAL(usePrimChanged(bool)), a, SLOT(setVisible(bool)));
-		a->setToolTip(_("Add ellipse which properties can be changed later by mouse."));
+		a->setToolTip(tr("Add ellipse which properties can be changed later by mouse."));
 		oo->addAction(a);
 
-		a = new QAction(QPixmap(polygon_xpm), _("Add polygon"), this);
+		a = new QAction(QPixmap(polygon_xpm), tr("Add polygon"), this);
 		connect(a, SIGNAL(triggered()), mgl, SLOT(addPolygon()));
 		connect(mgl, SIGNAL(usePrimChanged(bool)), a, SLOT(setVisible(bool)));
-		a->setToolTip(_("Add ellipse which properties can be changed later by mouse."));
+		a->setToolTip(tr("Add ellipse which properties can be changed later by mouse."));
 		oo->addAction(a);
 
-		a = new QAction(QPixmap(mark_a_xpm), _("Add mark"), this);
+		a = new QAction(QPixmap(mark_a_xpm), tr("Add mark"), this);
 		connect(a, SIGNAL(triggered()), mgl, SLOT(addMark()));
 		connect(mgl, SIGNAL(usePrimChanged(bool)), a, SLOT(setVisible(bool)));
-		a->setToolTip(_("Add marker which properties can be changed later by mouse."));
+		a->setToolTip(tr("Add marker which properties can be changed later by mouse."));
 		oo->addAction(a);
 
-		a = new QAction(QPixmap(text_xpm), _("Add text"), this);
+		a = new QAction(QPixmap(text_xpm), tr("Add text"), this);
 		connect(a, SIGNAL(triggered()), mgl, SLOT(addText()));
 		connect(mgl, SIGNAL(usePrimChanged(bool)), a, SLOT(setVisible(bool)));
-		a->setToolTip(_("Add text which properties can be changed later by mouse."));
+		a->setToolTip(tr("Add text which properties can be changed later by mouse."));
 		oo->addAction(a);
 
 		QToolButton *bb = new QToolButton(this);
@@ -423,37 +423,37 @@ void PlotPanel::toolTop(QBoxLayout *v)
 		t->addWidget(bb);
 	}
 
-	a = new QAction(QPixmap(":/png/edit-delete.png"), _("Delete selected"), this);
+	a = new QAction(QPixmap(":/png/edit-delete.png"), tr("Delete selected"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(deleteSelected()));
-	a->setToolTip(_("Delete selected plot."));
+	a->setToolTip(tr("Delete selected plot."));
 	o->addAction(a);	popup->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/layer-visible-off.png"), _("Hide selected"), this);
+	a = new QAction(QPixmap(":/png/layer-visible-off.png"), tr("Hide selected"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(hideSelected()));
-	a->setToolTip(_("Hide selected plots."));
+	a->setToolTip(tr("Hide selected plot."));
 	o->addAction(a);	popup->addAction(a);	t->addAction(a);
 
 	const MainWindow *mw=findMain(this);
 	if(mw)	t->addAction(mw->ahide);
 
-	a = new QAction(QPixmap(":/png/format-indent-more.png"), _("New command"), this);
+	a = new QAction(QPixmap(":/png/format-indent-more.png"), tr("New command"), this);
 	connect(a, SIGNAL(triggered()), newCmdDlg, SLOT(show()));
-	a->setToolTip(_("Show dialog for new command or edit arguments of existed one."));
+	a->setToolTip(tr("Show dialog for new command and put it into the script."));
 	o->addAction(a);	popup->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(box_xpm), _("New inplot"), this);
+	a = new QAction(QPixmap(box_xpm), tr("New inplot"), this);
 	connect(a, SIGNAL(triggered()), subplotDlg, SLOT(show()));
-	a->setToolTip(_("Show dialog for new inplot and put it into the script."));
+	a->setToolTip(tr("Show dialog for new inplot and put it into the script."));
 	o->addAction(a);	popup->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/object-order-lower.png"), _("Move plot up"), this);
+	a = new QAction(QPixmap(":/png/object-order-lower.png"), tr("Move plot up"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(movePlotUp()));
-	a->setToolTip(_("Move selected plot up to previous subplot."));
+	a->setToolTip(tr("Move selected plot up to previous subplot."));
 	o->addAction(a);	popup->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/object-order-raise.png"), _("Move plot down"), this);
+	a = new QAction(QPixmap(":/png/object-order-raise.png"), tr("Move plot down"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(movePlotDown()));
-	a->setToolTip(_("Move selected plot down to next subplot."));
+	a->setToolTip(tr("Move selected plot down to next subplot."));
 	o->addAction(a);	popup->addAction(a);	t->addAction(a);
 
 
@@ -463,31 +463,31 @@ void PlotPanel::toolTop(QBoxLayout *v)
 	t->addWidget(tet);	tet->setRange(-180, 180);	tet->setSingleStep(10);
 	connect(tet, SIGNAL(valueChanged(int)), mgl, SLOT(setTet(int)));
 	connect(mgl, SIGNAL(tetChanged(int)), tet, SLOT(setValue(int)));
-	tet->setToolTip(_("Set value of \\theta angle.\nYou can use keys (Shift+Meta+Up or Shift+Meta+Down)."));
+	tet->setToolTip(tr("Set value of \\theta angle.\nYou can use keys (Shift+Meta+Up or Shift+Meta+Down)."));
 
 	phi = new QSpinBox(this);	phi->setWrapping(true);
 	t->addWidget(phi);	phi->setRange(-180, 180);	phi->setSingleStep(10);
 	connect(phi, SIGNAL(valueChanged(int)), mgl, SLOT(setPhi(int)));
 	connect(mgl, SIGNAL(phiChanged(int)), phi, SLOT(setValue(int)));
-	phi->setToolTip(_("Set value of \\phi angle.\nYou can use keys (Shift+Meta+Left or Shift+Meta+Right)."));
+	phi->setToolTip(tr("Set value of \\phi angle.\nYou can use keys (Shift+Meta+Left or Shift+Meta+Right)."));
 
-	oo = new QMenu(_("Export as 2D ..."),this);
-	oo->addAction(_("PNG"), mgl, SLOT(exportPNG()),Qt::ALT+Qt::Key_P);
-	oo->addAction(_("solid PNG"), mgl, SLOT(exportPNGs()),Qt::ALT+Qt::Key_F);
-	oo->addAction(_("JPEG"), mgl, SLOT(exportJPG()),Qt::ALT+Qt::Key_J);
-	oo->addAction(_("bitmap EPS"), mgl, SLOT(exportBPS()));
-	oo->addAction(_("vector EPS"), mgl, SLOT(exportEPS()),Qt::ALT+Qt::Key_E);
-	oo->addAction(_("SVG"), mgl, SLOT(exportSVG()),Qt::ALT+Qt::Key_S);
-	oo->addAction(_("LaTeX"), mgl, SLOT(exportTEX()),Qt::ALT+Qt::Key_L);
+	oo = new QMenu(tr("Export as 2D ..."),this);
+	oo->addAction(tr("PNG"), mgl, SLOT(exportPNG()),Qt::ALT+Qt::Key_P);
+	oo->addAction(tr("solid PNG"), mgl, SLOT(exportPNGs()),Qt::ALT+Qt::Key_F);
+	oo->addAction(tr("JPEG"), mgl, SLOT(exportJPG()),Qt::ALT+Qt::Key_J);
+	oo->addAction(tr("bitmap EPS"), mgl, SLOT(exportBPS()));
+	oo->addAction(tr("vector EPS"), mgl, SLOT(exportEPS()),Qt::ALT+Qt::Key_E);
+	oo->addAction(tr("SVG"), mgl, SLOT(exportSVG()),Qt::ALT+Qt::Key_S);
+	oo->addAction(tr("LaTeX"), mgl, SLOT(exportTEX()),Qt::ALT+Qt::Key_L);
 
 	o->addMenu(oo);		popup->addMenu(oo);
-	oo = new QMenu(_("Export as 3D ..."),this);
-	oo->addAction(_("MGLD"), mgl, SLOT(exportMGLD()),Qt::ALT+Qt::Key_M);
-	oo->addAction(_("PRC"), mgl, SLOT(exportPRC()),Qt::ALT+Qt::Key_D);
-	oo->addAction(_("OBJ"), mgl, SLOT(exportOBJ()),Qt::ALT+Qt::Key_O);
-	oo->addAction(_("STL"), mgl, SLOT(exportSTL()));
-	oo->addAction(_("XYZ"), mgl, SLOT(exportXYZ()));
-//	oo->addAction(_("X3D"), QMGL, SLOT(exportX3D()),Qt::ALT+Qt::Key_X);	// TODO: Add later
+	oo = new QMenu(tr("Export as 3D ..."),this);
+	oo->addAction(tr("MGLD"), mgl, SLOT(exportMGLD()),Qt::ALT+Qt::Key_M);
+	oo->addAction(tr("PRC"), mgl, SLOT(exportPRC()),Qt::ALT+Qt::Key_D);
+	oo->addAction(tr("OBJ"), mgl, SLOT(exportOBJ()),Qt::ALT+Qt::Key_O);
+	oo->addAction(tr("STL"), mgl, SLOT(exportSTL()));
+	oo->addAction(tr("XYZ"), mgl, SLOT(exportXYZ()));
+//	oo->addAction(tr("X3D"), QMGL, SLOT(exportX3D()),Qt::ALT+Qt::Key_X);	// TODO: Add later
 	o->addMenu(oo);		popup->addMenu(oo);
 }
 //-----------------------------------------------------------------------------
@@ -499,83 +499,83 @@ void PlotPanel::toolLeft(QBoxLayout *h)
 	t->setAllowedAreas(Qt::LeftToolBarArea);	t->setOrientation(Qt::Vertical);
 
 	// zooming menu
-	oo = o->addMenu(_("Zoom/move"));
-	a = new QAction(QPixmap(":/png/arrow-left.png"), _("Move left"), this);
+	oo = o->addMenu(tr("Zoom/move"));
+	a = new QAction(QPixmap(":/png/arrow-left.png"), tr("Move left"), this);
 	connect(a, SIGNAL(triggered()), mgl, SLOT(shiftLeft()));
 	a->setShortcut(Qt::ALT+Qt::Key_Left);
-	a->setToolTip(_("Move graphics left by 1/3 of its width."));
+	a->setToolTip(tr("Move graphics left by 1/3 of its width."));
 	oo->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/arrow-up.png"), _("Move up"), this);
+	a = new QAction(QPixmap(":/png/arrow-up.png"), tr("Move up"), this);
 	connect(a, SIGNAL(triggered()), mgl, SLOT(shiftUp()));
 	a->setShortcut(Qt::ALT+Qt::Key_Up);
-	a->setToolTip(_("Move graphics up by 1/3 of its height."));
+	a->setToolTip(tr("Move graphics up by 1/3 of its height."));
 	oo->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/zoom-in.png"), _("Zoom in"), this);
+	a = new QAction(QPixmap(":/png/zoom-in.png"), tr("Zoom in"), this);
 	connect(a, SIGNAL(triggered()), mgl, SLOT(zoomIn()));
 	a->setShortcut(Qt::ALT+Qt::Key_Equal);
-	a->setToolTip(_("Zoom in graphics."));
+	a->setToolTip(tr("Zoom in graphics."));
 	oo->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/zoom-out.png"), _("Zoom out"), this);
+	a = new QAction(QPixmap(":/png/zoom-out.png"), tr("Zoom out"), this);
 	connect(a, SIGNAL(triggered()), mgl, SLOT(zoomOut()));
 	a->setShortcut(Qt::ALT+Qt::Key_Minus);
-	a->setToolTip(_("Zoom out graphics."));
+	a->setToolTip(tr("Zoom out graphics."));
 	oo->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/arrow-down.png"), _("Move down"), this);
+	a = new QAction(QPixmap(":/png/arrow-down.png"), tr("Move down"), this);
 	connect(a, SIGNAL(triggered()), mgl, SLOT(shiftDown()));
 	a->setShortcut(Qt::ALT+Qt::Key_Down);
-	a->setToolTip(_("Move graphics up down 1/3 of its height."));
+	a->setToolTip(tr("Move graphics up down 1/3 of its height."));
 	oo->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/arrow-right.png"), _("Move right"), this);
+	a = new QAction(QPixmap(":/png/arrow-right.png"), tr("Move right"), this);
 	connect(a, SIGNAL(triggered()), mgl, SLOT(shiftRight()));
 	a->setShortcut(Qt::ALT+Qt::Key_Right);
-	a->setToolTip(_("Move graphics right by 1/3 of its width."));
+	a->setToolTip(tr("Move graphics right by 1/3 of its width."));
 	oo->addAction(a);	t->addAction(a);
 
 	// rotate menu
-	oo = o->addMenu(_("Rotate"));
-	a = new QAction(QPixmap(":/png/object-rotate-up.png"), _("Rotate up"), this);
+	oo = o->addMenu(tr("Rotate"));
+	a = new QAction(QPixmap(":/png/object-rotate-up.png"), tr("Rotate up"), this);
 	a->setShortcut(Qt::SHIFT+Qt::META+Qt::Key_Up);
 	connect(a, SIGNAL(triggered()), tet, SLOT(stepUp()));	oo->addAction(a);
-	a->setToolTip(_("Increase \\theta angle by 10 degrees."));
-	a = new QAction(QPixmap(":/png/object-rotate-down.png"), _("Rotate down"), this);
+	a->setToolTip(tr("Increase \\theta angle by 10 degrees."));
+	a = new QAction(QPixmap(":/png/object-rotate-down.png"), tr("Rotate down"), this);
 	a->setShortcut(Qt::SHIFT+Qt::META+Qt::Key_Down);
 	connect(a, SIGNAL(triggered()), tet, SLOT(stepDown()));	oo->addAction(a);
-	a->setToolTip(_("Decrease \\theta angle by 10 degrees."));
-	a = new QAction(QPixmap(":/png/object-rotate-left.png"), _("Rotate left"), this);
+	a->setToolTip(tr("Decrease \\theta angle by 10 degrees."));
+	a = new QAction(QPixmap(":/png/object-rotate-left.png"), tr("Rotate left"), this);
 	a->setShortcut(Qt::SHIFT+Qt::META+Qt::Key_Right);
 	connect(a, SIGNAL(triggered()), phi, SLOT(stepUp()));	oo->addAction(a);
-	a->setToolTip(_("Increase \\phi angle by 10 degrees."));
-	a = new QAction(QPixmap(":/png/object-rotate-right.png"), _("Rotate right"), this);
+	a->setToolTip(tr("Increase \\phi angle by 10 degrees."));
+	a = new QAction(QPixmap(":/png/object-rotate-right.png"), tr("Rotate right"), this);
 	a->setShortcut(Qt::SHIFT+Qt::META+Qt::Key_Left);
 	connect(a, SIGNAL(triggered()), phi, SLOT(stepDown()));	oo->addAction(a);
-	a->setToolTip(_("Decrease \\phi angle by 10 degrees."));
+	a->setToolTip(tr("Decrease \\phi angle by 10 degrees."));
 
 	// animation menu
-	oo = o->addMenu(_("Animation"));
-	a = new QAction(QPixmap(":/png/media-seek-forward.png"), _("Next slide"), this);
+	oo = o->addMenu(tr("Animation"));
+	a = new QAction(QPixmap(":/png/media-seek-forward.png"), tr("Next slide"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(nextSlide()));
 	a->setShortcut(Qt::CTRL+Qt::Key_Period);
-	a->setToolTip(_("Show next slide (Ctrl+.)."));
+	a->setToolTip(tr("Show next slide (Ctrl+.)."));
 	oo->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/media-playback-start.png"), _("Slideshow"), this);
+	a = new QAction(QPixmap(":/png/media-playback-start.png"), tr("Slideshow"), this);
 	a->setCheckable(true);
 	connect(a, SIGNAL(toggled(bool)), this, SLOT(animStart(bool)));
 	connect(this, SIGNAL(animSwitch(bool)),a,SLOT(setChecked(bool)));
-	a->setToolTip(_("Run slideshow (Ctrl+F5). If no parameter specified\nthen the dialog with slideshow options will appear."));
+	a->setToolTip(tr("Run slideshow (Ctrl+F5). If no parameter specified\nthen the dialog with slideshow options will appear."));
 	a->setShortcut(Qt::CTRL+Qt::Key_F5);	oo->addAction(a);	t->addAction(a);
 
-	oo->addAction(_("Setup show"), this, SLOT(animSetup()), Qt::CTRL+Qt::Key_W);
+	oo->addAction(tr("Setup show"), this, SLOT(animSetup()), Qt::CTRL+Qt::Key_W);
 
-	a = new QAction(QPixmap(":/png/media-seek-backward.png"), _("Prev slide"), this);
+	a = new QAction(QPixmap(":/png/media-seek-backward.png"), tr("Prev slide"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(prevSlide()));
 	a->setShortcut(Qt::CTRL+Qt::Key_Comma);
-	a->setToolTip(_("Show previous slide (Ctrl+,)."));
+	a->setToolTip(tr("Show previous slide (Ctrl+,)."));
 	oo->addAction(a);	t->addAction(a);
 }
 //-----------------------------------------------------------------------------

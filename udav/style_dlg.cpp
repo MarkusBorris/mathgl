@@ -33,7 +33,6 @@
 #include <mgl2/mgl.h>
 //-----------------------------------------------------------------------------
 #include "style_dlg.h"
-#include "mgl2/define.h"
 void fillColors(QComboBox *cb);
 void fillArrows(QComboBox *cb);
 void fillBArrows(QComboBox *cb);
@@ -45,7 +44,7 @@ void convertFromGraph(QPixmap &pic, mglGraph *gr, uchar **buf);
 StyleDialog::StyleDialog(QWidget *parent) : QDialog(parent)
 {
 	grBuf = 0;
-	setWindowTitle(_("UDAV - Insert style/scheme"));
+	setWindowTitle(tr("UDAV - Insert style/scheme"));
 	QWidget *p;
 	QHBoxLayout *h;
 	QVBoxLayout *v, *u, *vv;
@@ -58,13 +57,13 @@ StyleDialog::StyleDialog(QWidget *parent) : QDialog(parent)
 	p = new QWidget(this);	v = new QVBoxLayout(p);
 	g = new QGridLayout;	g->setAlignment(Qt::AlignTop);	v->addLayout(g);
 //	g->setColStretch(0, 1);	g->setColStretch(1, 1);	g->setColStretch(2, 1);
-	l = new QLabel(_("Arrow at start"), p);	g->addWidget(l, 0, 0);
-	l = new QLabel(_("Dashing"), p);		g->addWidget(l, 0, 1);
-	l = new QLabel(_("Arrow at end"), p);	g->addWidget(l, 0, 2);
+	l = new QLabel(tr("Arrow at start"), p);	g->addWidget(l, 0, 0);
+	l = new QLabel(tr("Dashing"), p);		g->addWidget(l, 0, 1);
+	l = new QLabel(tr("Arrow at end"), p);	g->addWidget(l, 0, 2);
 	a1 = new QComboBox(p);	g->addWidget(a1, 1, 0);	fillArrows(a1);
 	dash = new QComboBox(p);	g->addWidget(dash, 1, 1);	fillDashes(dash);
 	a2 = new QComboBox(p);	g->addWidget(a2, 1, 2);	fillBArrows(a2);
-	l = new QLabel(_("Color"), p);	g->addWidget(l, 2, 0, Qt::AlignRight);
+	l = new QLabel(tr("Color"), p);	g->addWidget(l, 2, 0, Qt::AlignRight);
 	cline=new QComboBox(p);	g->addWidget(cline, 2, 1);	fillColors(cline);
 
 	nline = new QSlider(p);		g->addWidget(nline, 2, 2);
@@ -72,15 +71,15 @@ StyleDialog::StyleDialog(QWidget *parent) : QDialog(parent)
 	nline->setTickPosition(QSlider::TicksBothSides);
 	nline->setTickInterval(1);	nline->setPageStep(2);
 	nline->setOrientation(Qt::Horizontal);
-
-	l = new QLabel(_("Marks"), p);	g->addWidget(l, 3, 0, Qt::AlignRight);
+	
+	l = new QLabel(tr("Marks"), p);	g->addWidget(l, 3, 0, Qt::AlignRight);
 	mark = new QComboBox(p);	g->addWidget(mark, 3, 1);	fillMarkers(mark);
-	l = new QLabel(_("Line width"), p);	g->addWidget(l, 4, 0, Qt::AlignRight);
+	l = new QLabel(tr("Line width"), p);	g->addWidget(l, 4, 0, Qt::AlignRight);
 	width = new QSpinBox(p);	g->addWidget(width, 4, 1);
 	width->setRange(1,9);	width->setValue(1);
-
+	
 	v->addStretch(1);
-	l = new QLabel(_("Manual dashing"), p);	v->addWidget(l);
+	l = new QLabel(tr("Manual dashing"), p);	v->addWidget(l);
 	h = new QHBoxLayout;	v->addLayout(h);	h->setSpacing(1);
 	for(int i=0;i<16;i++)
 	{
@@ -96,15 +95,15 @@ StyleDialog::StyleDialog(QWidget *parent) : QDialog(parent)
 	connect(cline,SIGNAL(activated(int)), this, SLOT(updatePic()));
 	connect(nline,SIGNAL(valueChanged(int)), this, SLOT(updatePic()));
 	connect(width,SIGNAL(valueChanged(int)), this, SLOT(updatePic()));
-	tab->addTab(p, _("Line style"));
+	tab->addTab(p, tr("Line style"));
 
 	// color scheme
 	p = new QWidget(this);
 	v = new QVBoxLayout(p);	v->setAlignment(Qt::AlignTop);
 	g = new QGridLayout();	v->addLayout(g);
 //	g->setColStretch(0, 1);			g->setColStretch(1, 1);
-	l = new QLabel(_("Color order"), p);	g->addWidget(l, 0, 0);
-	l = new QLabel(_("Saturation"),p);		g->addWidget(l, 0, 1);
+	l = new QLabel(tr("Color order"), p);	g->addWidget(l, 0, 0);
+	l = new QLabel(tr("Saturation"),p);		g->addWidget(l, 0, 1);
 	for(int i=0;i<7;i++)
 	{
 		cc[i] = new QComboBox(p);	g->addWidget(cc[i], i+1, 0);
@@ -117,23 +116,23 @@ StyleDialog::StyleDialog(QWidget *parent) : QDialog(parent)
 		connect(cc[i],SIGNAL(activated(int)), this, SLOT(updatePic()));
 		connect(nn[i],SIGNAL(valueChanged(int)), this, SLOT(updatePic()));
 	}
-	swire = new QCheckBox(_("Wire or mesh plot"),p);	v->addWidget(swire);
+	swire = new QCheckBox(tr("Wire or mesh plot"),p);	v->addWidget(swire);
 	g = new QGridLayout();	v->addLayout(g);
-	l = new QLabel(_("Axial direction"), p);	g->addWidget(l, 0, 0, Qt::AlignRight);
-	l = new QLabel(_("Text on contours"), p);	g->addWidget(l, 1, 0, Qt::AlignRight);
-	l = new QLabel(_("Mask for bitmap coloring"), p);	g->addWidget(l, 2, 0, Qt::AlignRight);
-	l = new QLabel(_("Mask rotation angle"), p);	g->addWidget(l, 3, 0, Qt::AlignRight);
-	l = new QLabel(_("Mask size"), p);	g->addWidget(l, 4, 0, Qt::AlignRight);
+	l = new QLabel(tr("Axial direction"), p);	g->addWidget(l, 0, 0, Qt::AlignRight);
+	l = new QLabel(tr("Text on contours"), p);	g->addWidget(l, 1, 0, Qt::AlignRight);
+	l = new QLabel(tr("Mask for bitmap coloring"), p);	g->addWidget(l, 2, 0, Qt::AlignRight);
+	l = new QLabel(tr("Mask rotation angle"), p);	g->addWidget(l, 3, 0, Qt::AlignRight);
+	l = new QLabel(tr("Mask size"), p);	g->addWidget(l, 4, 0, Qt::AlignRight);
 	axial = new QComboBox(p);	g->addWidget(axial, 0, 1);
-	axial->addItem(_("none"));	axial->addItem("x");
+	axial->addItem(tr("none"));	axial->addItem("x");
 	axial->addItem("y");	axial->addItem("z");
 	ctext = new QComboBox(p);	g->addWidget(ctext, 1, 1);
-	ctext->addItem(_("none"));	ctext->addItem(_("under"));	ctext->addItem(_("above"));
+	ctext->addItem(tr("none"));	ctext->addItem(tr("under"));	ctext->addItem(tr("above"));
 	mask = new QComboBox(p);	g->addWidget(mask, 2, 1);	fillMasks(mask);
 	angle = new QComboBox(p);	g->addWidget(angle, 3, 1);
-	angle->addItem(_("none"));
+	angle->addItem(tr("none"));	
 	angle->addItem(QString::fromWCharArray(L"+45\xb0"));
-	angle->addItem(QString::fromWCharArray(L"-45\xb0"));
+	angle->addItem(QString::fromWCharArray(L"-45\xb0"));	
 	angle->addItem(QString::fromWCharArray(L"90\xb0"));	// \xb0 <-> °
 	msize = new QSlider(p);		g->addWidget(msize, 4, 1);
 	msize->setRange(1, 9);		msize->setValue(1);
@@ -147,29 +146,29 @@ StyleDialog::StyleDialog(QWidget *parent) : QDialog(parent)
 	connect(mask,SIGNAL(activated(int)), this, SLOT(updatePic()));
 	connect(angle,SIGNAL(activated(int)), this, SLOT(updatePic()));
 	connect(msize,SIGNAL(valueChanged(int)), this, SLOT(updatePic()));
-	tab->addTab(p, _("Color scheme"));
+	tab->addTab(p, tr("Color scheme"));
 
 	// font style
 	p = new QWidget(this);
 	v = new QVBoxLayout(p);	v->setAlignment(Qt::AlignTop);
 	h = new QHBoxLayout();	v->addLayout(h);
 	u = new QVBoxLayout();	h->addLayout(u);
-	bold = new QCheckBox(_("Bold style"), p);	u->addWidget(bold);
-	ital = new QCheckBox(_("Italic style"), p);u->addWidget(ital);
-	wire = new QCheckBox(_("Wire style"), p);	u->addWidget(wire);
-	uline = new QCheckBox(_("Underline"), p);	u->addWidget(uline);
-	oline = new QCheckBox(_("Overline"), p);	u->addWidget(oline);
-	font_sch = new QCheckBox(_("Use color scheme"), p);	u->addWidget(font_sch);
+	bold = new QCheckBox(tr("Bold style"), p);	u->addWidget(bold);
+	ital = new QCheckBox(tr("Italic style"), p);u->addWidget(ital);
+	wire = new QCheckBox(tr("Wire style"), p);	u->addWidget(wire);
+	uline = new QCheckBox(tr("Underline"), p);	u->addWidget(uline);
+	oline = new QCheckBox(tr("Overline"), p);	u->addWidget(oline);
+	font_sch = new QCheckBox(tr("Use color scheme"), p);	u->addWidget(font_sch);
 	u = new QVBoxLayout();	h->addLayout(u);
-	l = new QLabel(_("Text color"), p);		u->addWidget(l);
+	l = new QLabel(tr("Text color"), p);		u->addWidget(l);
 	cfont = new QComboBox(p);	fillColors(cfont);	u->addWidget(cfont);
 	u->addSpacing(6);
-	align = new QGroupBox(_("Text align"), p);	u->addWidget(align);
+	align = new QGroupBox(tr("Text align"), p);	u->addWidget(align);
 	vv = new QVBoxLayout(align);		//vv->addSpacing(11);
-	rbL = new QRadioButton(_("left"), align);	vv->addWidget(rbL);
-	rbC = new QRadioButton(_("at center"), align);
+	rbL = new QRadioButton(tr("left"), align);	vv->addWidget(rbL);
+	rbC = new QRadioButton(tr("at center"), align);
 	vv->addWidget(rbC);	rbC->setChecked(true);
-	rbR = new QRadioButton(_("right"), align);	vv->addWidget(rbR);
+	rbR = new QRadioButton(tr("right"), align);	vv->addWidget(rbR);
 	connect(bold,SIGNAL(toggled(bool)), this, SLOT(updatePic()));
 	connect(ital,SIGNAL(toggled(bool)), this, SLOT(updatePic()));
 	connect(wire,SIGNAL(toggled(bool)), this, SLOT(updatePic()));
@@ -180,7 +179,7 @@ StyleDialog::StyleDialog(QWidget *parent) : QDialog(parent)
 	connect(rbL,SIGNAL(toggled(bool)), this, SLOT(updatePic()));
 	connect(rbC,SIGNAL(toggled(bool)), this, SLOT(updatePic()));
 	connect(rbR,SIGNAL(toggled(bool)), this, SLOT(updatePic()));
-	tab->addTab(p, _("Font style"));
+	tab->addTab(p, tr("Font style"));
 	connect(tab,SIGNAL(currentChanged(int)), this, SLOT(updatePic()));
 
 	// hex-mask
@@ -193,19 +192,19 @@ StyleDialog::StyleDialog(QWidget *parent) : QDialog(parent)
 		g->addWidget(mask_bit[i],7-i/8,i%8);
 		connect(mask_bit[i],SIGNAL(toggled(bool)), this, SLOT(updatePic()));
 	}
-	tab->addTab(p, _("Manual mask"));
+	tab->addTab(p, tr("Manual mask"));
 
 	// dialog itself
 	v = new QVBoxLayout(this);	v->addWidget(tab);
 	h = new QHBoxLayout();		v->addLayout(h);
-	l = new QLabel(_("Resulting string"), this);	h->addWidget(l);	h->addStretch(1);
+	l = new QLabel(tr("Resulting string"), this);	h->addWidget(l);	h->addStretch(1);
 	pic = new QLabel(this);	pic->setMinimumSize(QSize(128,30));	h->addWidget(pic);
 	res = new QLineEdit(this);	res->setReadOnly(true);	v->addWidget(res);
 
 	h = new QHBoxLayout();	v->addLayout(h);	h->addStretch(1);
-	b = new QPushButton(_("Cancel"), this);	h->addWidget(b);
+	b = new QPushButton(tr("Cancel"), this);	h->addWidget(b);
 	connect(b, SIGNAL(clicked()),this, SLOT(reject()));
-	b = new QPushButton(_("OK"), this);		h->addWidget(b);
+	b = new QPushButton(tr("OK"), this);		h->addWidget(b);
 	connect(b, SIGNAL(clicked()),this, SLOT(accept()));
 	b->setDefault(true);
 }
@@ -217,36 +216,36 @@ void fillColors(QComboBox *cb)
 {
 //	string id : 	"wbgrcmylenuqphkWBGRCMYLENUQPH"
 	QPixmap pic(16,16);
-	cb->addItem(QPixmap(none_xpm), _("none or default"));
-	pic.fill(QColor(255,255,255));	cb->addItem(pic, _("w - white"));
-	pic.fill(QColor(0,0,255));		cb->addItem(pic, _("b - blue"));
-	pic.fill(QColor(0,255,0));		cb->addItem(pic, _("g - lime"));
-	pic.fill(QColor(255,0,0));		cb->addItem(pic, _("r - red"));
-	pic.fill(QColor(0,255,255));	cb->addItem(pic, _("c - cyan"));
-	pic.fill(QColor(255,0,255));	cb->addItem(pic, _("m - magenta"));
-	pic.fill(QColor(255,255,0));	cb->addItem(pic, _("y - yellow"));
-	pic.fill(QColor(0,255,127));	cb->addItem(pic, _("l - springgreen"));
-	pic.fill(QColor(127,255,0));	cb->addItem(pic, _("e - lawngreen"));
-	pic.fill(QColor(0,127,255));	cb->addItem(pic, _("n - skyblue"));
-	pic.fill(QColor(127,0,255));	cb->addItem(pic, _("u - blueviolet"));
-	pic.fill(QColor(255,127,0));	cb->addItem(pic, _("q - orange"));
-	pic.fill(QColor(255,0,127));	cb->addItem(pic, _("p - deeppink"));
-	pic.fill(QColor(127,127,127));	cb->addItem(pic, _("h - gray"));
-	pic.fill(QColor(0,0,0));		cb->addItem(pic, _("k - black"));
-	pic.fill(QColor(179,179,179));	cb->addItem(pic, _("W - lightgray"));
-	pic.fill(QColor(0,0,127));		cb->addItem(pic, _("B - navy"));
-	pic.fill(QColor(0,127,0));		cb->addItem(pic, _("G - green"));
-	pic.fill(QColor(127,0,0));		cb->addItem(pic, _("R - maroon"));
-	pic.fill(QColor(0,127,127));	cb->addItem(pic, _("C - teal"));
-	pic.fill(QColor(127,0,127));	cb->addItem(pic, _("M - purple"));
-	pic.fill(QColor(127,127,0));	cb->addItem(pic, _("Y - olive"));
-	pic.fill(QColor(0,127,77));		cb->addItem(pic, _("L - seagreen"));
-	pic.fill(QColor(77,127,0));		cb->addItem(pic, _("E - darklawn"));
-	pic.fill(QColor(0,77,127));		cb->addItem(pic, _("N - darkskyblue"));
-	pic.fill(QColor(77,0,127));		cb->addItem(pic, _("U - indigo"));
-	pic.fill(QColor(127,77,0));		cb->addItem(pic, _("Q - brown"));
-	pic.fill(QColor(127,0,77));		cb->addItem(pic, _("P - darkpink"));
-	pic.fill(QColor(77,77,77));		cb->addItem(pic, _("H - darkgray"));
+	cb->addItem(QPixmap(none_xpm), QObject::tr("none or default"));
+	pic.fill(QColor(255,255,255));	cb->addItem(pic, QObject::tr("w - white"));
+	pic.fill(QColor(0,0,255));		cb->addItem(pic, QObject::tr("b - blue"));
+	pic.fill(QColor(0,255,0));		cb->addItem(pic, QObject::tr("g - lime"));
+	pic.fill(QColor(255,0,0));		cb->addItem(pic, QObject::tr("r - red"));
+	pic.fill(QColor(0,255,255));	cb->addItem(pic, QObject::tr("c - cyan"));
+	pic.fill(QColor(255,0,255));	cb->addItem(pic, QObject::tr("m - magenta"));
+	pic.fill(QColor(255,255,0));	cb->addItem(pic, QObject::tr("y - yellow"));
+	pic.fill(QColor(0,255,127));	cb->addItem(pic, QObject::tr("l - springgreen"));
+	pic.fill(QColor(127,255,0));	cb->addItem(pic, QObject::tr("e - lawngreen"));
+	pic.fill(QColor(0,127,255));	cb->addItem(pic, QObject::tr("n - skyblue"));
+	pic.fill(QColor(127,0,255));	cb->addItem(pic, QObject::tr("u - blueviolet"));
+	pic.fill(QColor(255,127,0));	cb->addItem(pic, QObject::tr("q - orange"));
+	pic.fill(QColor(255,0,127));	cb->addItem(pic, QObject::tr("p - deeppink"));
+	pic.fill(QColor(127,127,127));	cb->addItem(pic, QObject::tr("h - gray"));
+	pic.fill(QColor(0,0,0));		cb->addItem(pic, QObject::tr("k - black"));
+	pic.fill(QColor(179,179,179));	cb->addItem(pic, QObject::tr("W - lightgray"));
+	pic.fill(QColor(0,0,127));		cb->addItem(pic, QObject::tr("B - navy"));
+	pic.fill(QColor(0,127,0));		cb->addItem(pic, QObject::tr("G - green"));
+	pic.fill(QColor(127,0,0));		cb->addItem(pic, QObject::tr("R - maroon"));
+	pic.fill(QColor(0,127,127));	cb->addItem(pic, QObject::tr("C - teal"));
+	pic.fill(QColor(127,0,127));	cb->addItem(pic, QObject::tr("M - purple"));
+	pic.fill(QColor(127,127,0));	cb->addItem(pic, QObject::tr("Y - olive"));
+	pic.fill(QColor(0,127,77));		cb->addItem(pic, QObject::tr("L - seagreen"));
+	pic.fill(QColor(77,127,0));		cb->addItem(pic, QObject::tr("E - darklawn"));
+	pic.fill(QColor(0,77,127));		cb->addItem(pic, QObject::tr("N - darkskyblue"));
+	pic.fill(QColor(77,0,127));		cb->addItem(pic, QObject::tr("U - indigo"));
+	pic.fill(QColor(127,77,0));		cb->addItem(pic, QObject::tr("Q - brown"));
+	pic.fill(QColor(127,0,77));		cb->addItem(pic, QObject::tr("P - darkpink"));
+	pic.fill(QColor(77,77,77));		cb->addItem(pic, QObject::tr("H - darkgray"));
 }
 //-----------------------------------------------------------------------------
 #include "xpm/arrow_n.xpm"
@@ -261,15 +260,15 @@ void fillColors(QComboBox *cb)
 void fillArrows(QComboBox *cb)
 {
 	// "AVIKTSDO"
-	cb->addItem(QPixmap(arrow_n_xpm), _("'_' none"));
-	cb->addItem(QPixmap(arrow_a_xpm), _("'A' arrow"));
-	cb->addItem(QPixmap(arrow_v_xpm), _("'V' back arrow"));
-	cb->addItem(QPixmap(arrow_i_xpm), _("'I' stop"));
-	cb->addItem(QPixmap(arrow_k_xpm), _("'K' size"));
-	cb->addItem(QPixmap(arrow_t_xpm), _("'T' triangle"));
-	cb->addItem(QPixmap(arrow_s_xpm), _("'S' square"));
-	cb->addItem(QPixmap(arrow_d_xpm), _("'D' rhomb"));
-	cb->addItem(QPixmap(arrow_o_xpm), _("'O' circle"));
+	cb->addItem(QPixmap(arrow_n_xpm), QObject::tr("none"));
+	cb->addItem(QPixmap(arrow_a_xpm), QObject::tr("arrow"));
+	cb->addItem(QPixmap(arrow_v_xpm), QObject::tr("back arrow"));
+	cb->addItem(QPixmap(arrow_i_xpm), QObject::tr("stop"));
+	cb->addItem(QPixmap(arrow_k_xpm), QObject::tr("size"));
+	cb->addItem(QPixmap(arrow_t_xpm), QObject::tr("triangle"));
+	cb->addItem(QPixmap(arrow_s_xpm), QObject::tr("square"));
+	cb->addItem(QPixmap(arrow_d_xpm), QObject::tr("rhomb"));
+	cb->addItem(QPixmap(arrow_o_xpm), QObject::tr("circle"));
 }
 //-----------------------------------------------------------------------------
 #include "xpm/barrow_n.xpm"
@@ -284,15 +283,15 @@ void fillArrows(QComboBox *cb)
 void fillBArrows(QComboBox *cb)
 {
 	// "AVIKTSDO"
-	cb->addItem(QPixmap(barrow_n_xpm), _("'_' none"));
-	cb->addItem(QPixmap(barrow_a_xpm), _("'A' arrow"));
-	cb->addItem(QPixmap(barrow_v_xpm), _("'V' back arrow"));
-	cb->addItem(QPixmap(barrow_i_xpm), _("'I' stop"));
-	cb->addItem(QPixmap(barrow_k_xpm), _("'K' size"));
-	cb->addItem(QPixmap(barrow_t_xpm), _("'T' triangle"));
-	cb->addItem(QPixmap(barrow_s_xpm), _("'S' square"));
-	cb->addItem(QPixmap(barrow_d_xpm), _("'D' rhomb"));
-	cb->addItem(QPixmap(barrow_o_xpm), _("'O' circle"));
+	cb->addItem(QPixmap(barrow_n_xpm), QObject::tr("none"));
+	cb->addItem(QPixmap(barrow_a_xpm), QObject::tr("arrow"));
+	cb->addItem(QPixmap(barrow_v_xpm), QObject::tr("back arrow"));
+	cb->addItem(QPixmap(barrow_i_xpm), QObject::tr("stop"));
+	cb->addItem(QPixmap(barrow_k_xpm), QObject::tr("size"));
+	cb->addItem(QPixmap(barrow_t_xpm), QObject::tr("triangle"));
+	cb->addItem(QPixmap(barrow_s_xpm), QObject::tr("square"));
+	cb->addItem(QPixmap(barrow_d_xpm), QObject::tr("rhomb"));
+	cb->addItem(QPixmap(barrow_o_xpm), QObject::tr("circle"));
 }
 //-----------------------------------------------------------------------------
 #include "xpm/dash_e.xpm"
@@ -306,15 +305,15 @@ void fillBArrows(QComboBox *cb)
 void fillDashes(QComboBox *cb)
 {
 	// "-|;=ji: "
-	cb->addItem(QPixmap(dash_s_xpm), _("'-' solid"));
-	cb->addItem(QPixmap(dash_l_xpm), _("'|' long dash"));
-	cb->addItem(QPixmap(dash_m_xpm), _("';' dash"));
-	cb->addItem(QPixmap(dash_e_xpm), _("'=' small dash"));
-	cb->addItem(QPixmap(dash_j_xpm), _("'j' dash dot"));
-	cb->addItem(QPixmap(dash_i_xpm), _("'i' small dash dot"));
-	cb->addItem(QPixmap(dash_d_xpm), _("':' dots"));
-	cb->addItem(QPixmap(mark_n_xpm), _("' ' none"));
-	cb->addItem(QPixmap(":/png/tools-wizard.png"), _("manual"));
+	cb->addItem(QPixmap(dash_s_xpm), QObject::tr("solid"));
+	cb->addItem(QPixmap(dash_l_xpm), QObject::tr("long dash"));
+	cb->addItem(QPixmap(dash_m_xpm), QObject::tr("dash"));
+	cb->addItem(QPixmap(dash_e_xpm), QObject::tr("small dash"));
+	cb->addItem(QPixmap(dash_j_xpm), QObject::tr("dash dot"));
+	cb->addItem(QPixmap(dash_i_xpm), QObject::tr("small dash dot"));
+	cb->addItem(QPixmap(dash_d_xpm), QObject::tr("dots"));
+	cb->addItem(QPixmap(mark_n_xpm), QObject::tr("none"));
+	cb->addItem(QPixmap(":/png/tools-wizard.png"), QObject::tr("manual"));
 }
 //-----------------------------------------------------------------------------
 #include "xpm/mask_a.xpm"
@@ -336,24 +335,24 @@ void fillDashes(QComboBox *cb)
 void fillMasks(QComboBox *cb)
 {
 	// "-+=;oOsS~<>jdD*^"
-	cb->addItem(QPixmap(none_xpm), _("none"));
-	cb->addItem(QPixmap(mask_m_xpm), _("'-' lines"));
-	cb->addItem(QPixmap(mask_p_xpm), _("'+' plus"));
-	cb->addItem(QPixmap(mask_e_xpm), _("'=' double lines"));
-	cb->addItem(QPixmap(mask_i_xpm), _("';' dash"));
-	cb->addItem(QPixmap(mask_o_xpm), _("'o' circle"));
-	cb->addItem(QPixmap(mask_O_xpm), _("'O' solid circle"));
-	cb->addItem(QPixmap(mask_s_xpm), _("'s' square"));
-	cb->addItem(QPixmap(mask_S_xpm), _("'S' solid square"));
-	cb->addItem(QPixmap(mask_t_xpm), _("'~' waves"));
-	cb->addItem(QPixmap(mask_l_xpm), _("'<' left sign"));
-	cb->addItem(QPixmap(mask_r_xpm), _("'>' right sign"));
-	cb->addItem(QPixmap(mask_j_xpm), _("'j' dash dot"));
-	cb->addItem(QPixmap(mask_d_xpm), _("'d' rhomb"));
-	cb->addItem(QPixmap(mask_D_xpm), _("'D' solid rhomb"));
-	cb->addItem(QPixmap(mask_a_xpm), _("'*' cross"));
-	cb->addItem(QPixmap(mask_u_xpm), _("'^' hats"));
-	cb->addItem(QPixmap(":/png/tools-wizard.png"), _("manual"));
+	cb->addItem(QPixmap(none_xpm), QObject::tr("none"));
+	cb->addItem(QPixmap(mask_m_xpm), QObject::tr("line"));
+	cb->addItem(QPixmap(mask_p_xpm), QObject::tr("plus"));
+	cb->addItem(QPixmap(mask_e_xpm), QObject::tr("double line"));
+	cb->addItem(QPixmap(mask_i_xpm), QObject::tr("dash"));
+	cb->addItem(QPixmap(mask_o_xpm), QObject::tr("circle"));
+	cb->addItem(QPixmap(mask_O_xpm), QObject::tr("filled circle"));
+	cb->addItem(QPixmap(mask_s_xpm), QObject::tr("square"));
+	cb->addItem(QPixmap(mask_S_xpm), QObject::tr("filled square"));
+	cb->addItem(QPixmap(mask_t_xpm), QObject::tr("wave"));
+	cb->addItem(QPixmap(mask_l_xpm), QObject::tr("left sign"));
+	cb->addItem(QPixmap(mask_r_xpm), QObject::tr("right sign"));
+	cb->addItem(QPixmap(mask_j_xpm), QObject::tr("dash dot"));
+	cb->addItem(QPixmap(mask_d_xpm), QObject::tr("rhomb"));
+	cb->addItem(QPixmap(mask_D_xpm), QObject::tr("filled rhomb"));
+	cb->addItem(QPixmap(mask_a_xpm), QObject::tr("cross"));
+	cb->addItem(QPixmap(mask_u_xpm), QObject::tr("up sign"));
+	cb->addItem(QPixmap(":/png/tools-wizard.png"), QObject::tr("manual"));
 }
 //-----------------------------------------------------------------------------
 #include "xpm/mark_.xpm"
@@ -380,31 +379,31 @@ void fillMasks(QComboBox *cb)
 void fillMarkers(QComboBox *cb)
 {
 	// ".+x*sdv^<>o.*+xsdv^<>o" : nf = 10
-	cb->addItem(QPixmap(mark_n_xpm), _("none"));
-	cb->addItem(QPixmap(mark__xpm), _("'.' dot"));
-	cb->addItem(QPixmap(mark_p_xpm), _("'+' plus"));
-	cb->addItem(QPixmap(mark_x_xpm), _("'x' skew cross"));
-	cb->addItem(QPixmap(mark_a_xpm), _("'*' star"));
-	cb->addItem(QPixmap(mark_s_xpm), _("'s' square"));
-	cb->addItem(QPixmap(mark_d_xpm), _("'d' rhomb"));
-	cb->addItem(QPixmap(mark_v_xpm), _("'v' triangle down"));
-	cb->addItem(QPixmap(mark_t_xpm), _("'^' triangle up"));
-	cb->addItem(QPixmap(mark_l_xpm), _("'<' triangle left"));
-	cb->addItem(QPixmap(mark_r_xpm), _("'>' triangle right"));
-	cb->addItem(QPixmap(mark_o_xpm), _("'o' circle"));
+	cb->addItem(QPixmap(mark_n_xpm), QObject::tr("none"));
+	cb->addItem(QPixmap(mark__xpm), QObject::tr("dot"));
+	cb->addItem(QPixmap(mark_p_xpm), QObject::tr("plus"));
+	cb->addItem(QPixmap(mark_x_xpm), QObject::tr("skew cross"));
+	cb->addItem(QPixmap(mark_a_xpm), QObject::tr("asterix"));
+	cb->addItem(QPixmap(mark_s_xpm), QObject::tr("square"));
+	cb->addItem(QPixmap(mark_d_xpm), QObject::tr("rhomb"));
+	cb->addItem(QPixmap(mark_v_xpm), QObject::tr("triangle down"));
+	cb->addItem(QPixmap(mark_t_xpm), QObject::tr("triangle up"));
+	cb->addItem(QPixmap(mark_l_xpm), QObject::tr("triangle left"));
+	cb->addItem(QPixmap(mark_r_xpm), QObject::tr("triangle right"));
+	cb->addItem(QPixmap(mark_o_xpm), QObject::tr("circle"));
 
-	cb->addItem(QPixmap(mark_cf_xpm), _("'#.' circled dot"));
-	cb->addItem(QPixmap(mark_y_xpm),  _("'#*' Y-sign"));
-	cb->addItem(QPixmap(mark_pf_xpm), _("'#+' squared plus"));
-	cb->addItem(QPixmap(none_xpm),	  _("'#x' squared cross"));
+	cb->addItem(QPixmap(mark_cf_xpm), QObject::tr("circled dot"));
+	cb->addItem(QPixmap(mark_y_xpm),  QObject::tr("Y-sign"));
+	cb->addItem(QPixmap(mark_pf_xpm), QObject::tr("squared plus"));
+	cb->addItem(QPixmap(none_xpm),	  QObject::tr("squared cross"));
 
-	cb->addItem(QPixmap(mark_sf_xpm), _("'#s' solid square"));
-	cb->addItem(QPixmap(mark_df_xpm), _("'#d' solid rhomb"));
-	cb->addItem(QPixmap(mark_vf_xpm), _("'#v' solid triangle down"));
-	cb->addItem(QPixmap(mark_tf_xpm), _("'#^' solid triangle up"));
-	cb->addItem(QPixmap(mark_lf_xpm), _("'#<' solid triangle left"));
-	cb->addItem(QPixmap(mark_rf_xpm), _("'#>' solid triangle right"));
-	cb->addItem(QPixmap(mark_of_xpm), _("'#o' solid circle"));
+	cb->addItem(QPixmap(mark_sf_xpm), QObject::tr("solid square"));
+	cb->addItem(QPixmap(mark_df_xpm), QObject::tr("solid rhomb"));
+	cb->addItem(QPixmap(mark_vf_xpm), QObject::tr("solid triangle down"));
+	cb->addItem(QPixmap(mark_tf_xpm), QObject::tr("solid triangle up"));
+	cb->addItem(QPixmap(mark_lf_xpm), QObject::tr("solid triangle left"));
+	cb->addItem(QPixmap(mark_rf_xpm), QObject::tr("solid triangle right"));
+	cb->addItem(QPixmap(mark_of_xpm), QObject::tr("solid circle"));
 }
 //-----------------------------------------------------------------------------
 void StyleDialog::updatePic()
@@ -489,8 +488,8 @@ void StyleDialog::updatePic()
 			i = msize->value();
 			if(i>1)	result += char('0'+i);
 		}
-
-
+		
+		
 		i = axial->currentIndex();
 		if(i>0)	result = result+':'+char('x'+i-1);
 		gr.Surf(a,result.toLocal8Bit().constData());

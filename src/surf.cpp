@@ -29,19 +29,19 @@ void MGL_NO_EXPORT mgl_mesh_plot(mglBase *gr, long *pos, long n, long m, int how
 	// NOTE: number of lines in each direction can be reduced too
 	if(how&1)	for(long j=0;j<m;j+=dy)
 	{
-		long s=0;
-		for(long i=0;i<n-1;i++)	if(pos[n*j+i]>=0 && pos[n*j+i+1]>=0)	s++;
+		long s,i;
+		for(s=i=0;i<n-1;i++)	if(pos[n*j+i]>=0 && pos[n*j+i+1]>=0)	s++;
 		d = gr->FaceNum>0 ? gr->FaceNum+1 : n;	s = s>d?s/d:1;
-		for(long i=0;i<n-s;i+=s)
+		for(i=0;i<n-s;i+=s)
 			gr->line_plot(pos[n*j+i],pos[n*j+i+s]);
 
 	}
 	if(how&2)	for(long i=0;i<n;i+=dx)
 	{
-		long s=0;
-		for(long j=0;j<m-1;j++)	if(pos[n*j+i]>=0 && pos[n*j+i+n]>=0)	s++;
+		long s,j;
+		for(s=j=0;j<m-1;j++)	if(pos[n*j+i]>=0 && pos[n*j+i+n]>=0)	s++;
 		d = gr->FaceNum>0 ? gr->FaceNum+1 : n;	s = s>d?s/d:1;
-		for(long j=0;j<m-s;j+=s)
+		for(j=0;j<m-s;j+=s)
 			gr->line_plot(pos[n*j+i],pos[n*j+i+s*n]);
 	}
 }
@@ -428,11 +428,9 @@ void MGL_EXPORT mgl_surfa_(uintptr_t *gr, uintptr_t *z, uintptr_t *a, const char
 //
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_belt_xy(HMGL gr, HCDT x, HCDT y, HCDT z, const char *sch, const char *opt)
-{	mgl_beltc_xy(gr,x,y,z,z,sch,opt);	}
-void MGL_EXPORT mgl_beltc_xy(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT c, const char *sch, const char *opt)
 {
 	long n=z->GetNx(),m=z->GetNy();
-	if(mgl_check_dim2(gr,x,y,z,c,"Belt"))	return;
+	if(mgl_check_dim2(gr,x,y,z,0,"Belt"))	return;
 
 	gr->SaveState(opt);
 	static int cgid=1;	gr->StartGroup("Belt",cgid++);
@@ -443,7 +441,6 @@ void MGL_EXPORT mgl_beltc_xy(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT c, const char
 	bool how = !mglchr(sch,'x');
 
 	mglPoint p1,p2,q,s,xx,yy;
-	int dk = c->GetNz()>=z->GetNz() ? 1:0;
 	for(long k=0;k<z->GetNz();k++)
 	{
 		if(gr->NeedStop())	break;
@@ -455,10 +452,10 @@ void MGL_EXPORT mgl_beltc_xy(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT c, const char
 				p1.Set(xx.x, yy.x, z->v(i,j,k));
 				s.Set(xx.z, yy.z, z->dvy(i,j,k));
 				q.Set(xx.y, yy.y, 0);	s = q^s;
-				mreal cc = gr->GetC(ss,c->v(i,j,dk*k));
+				mreal c = gr->GetC(ss,p1.z);
 				p2.Set(GetX(x,i+dx,j,k).x,GetY(y,i+dx,j,k).x,p1.z);
-				pos[2*j] = gr->AddPnt(p1,cc,s);
-				pos[2*j+1]=gr->AddPnt(p2,cc,s);
+				pos[2*j] = gr->AddPnt(p1,c,s);
+				pos[2*j+1]=gr->AddPnt(p2,c,s);
 			}
 			mgl_surf_plot(gr,pos,2,m);
 		}
@@ -470,10 +467,10 @@ void MGL_EXPORT mgl_beltc_xy(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT c, const char
 				p1.Set(xx.x, yy.x, z->v(i,j,k));
 				q.Set(xx.y, yy.y, z->dvx(i,j,k));
 				s.Set(xx.z, yy.z, 0);	s = q^s;
-				mreal cc = gr->GetC(ss,c->v(i,j,dk*k));
+				mreal c = gr->GetC(ss,p1.z);
 				p2.Set(GetX(x,i,j+dy,k).x,GetY(y,i,j+dy,k).x,p1.z);
-				pos[2*i] = gr->AddPnt(p1,cc,s);
-				pos[2*i+1]=gr->AddPnt(p2,cc,s);
+				pos[2*i] = gr->AddPnt(p1,c,s);
+				pos[2*i+1]=gr->AddPnt(p2,c,s);
 			}
 			mgl_surf_plot(gr,pos,2,n);
 		}
@@ -482,14 +479,12 @@ void MGL_EXPORT mgl_beltc_xy(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT c, const char
 }
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_belt(HMGL gr, HCDT z, const char *sch, const char *opt)
-{	mgl_beltc(gr,z,z,sch,opt);	}
-void MGL_EXPORT mgl_beltc(HMGL gr, HCDT z, HCDT c, const char *sch, const char *opt)
 {
 	gr->SaveState(opt);
 	mglDataV x(z->GetNx()), y(z->GetNy());
 	x.Fill(gr->Min.x,gr->Max.x);
 	y.Fill(gr->Min.y,gr->Max.y);
-	mgl_beltc_xy(gr,&x,&y,z,c,sch,0);
+	mgl_belt_xy(gr,&x,&y,z,sch,0);
 }
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_belt_xy_(uintptr_t *gr, uintptr_t *x, uintptr_t *y, uintptr_t *a, const char *sch, const char *opt,int l,int lo)
@@ -501,16 +496,6 @@ void MGL_EXPORT mgl_belt_(uintptr_t *gr, uintptr_t *a, const char *sch, const ch
 {	char *s=new char[l+1];	memcpy(s,sch,l);	s[l]=0;
 	char *o=new char[lo+1];	memcpy(o,opt,lo);	o[lo]=0;
 	mgl_belt(_GR_, _DA_(a), s, o);	delete []o;	delete []s;	}
-//-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_beltc_xy_(uintptr_t *gr, uintptr_t *x, uintptr_t *y, uintptr_t *a, uintptr_t *c, const char *sch, const char *opt,int l,int lo)
-{	char *s=new char[l+1];	memcpy(s,sch,l);	s[l]=0;
-	char *o=new char[lo+1];		memcpy(o,opt,lo);	o[lo]=0;
-	mgl_beltc_xy(_GR_, _DA_(x), _DA_(y), _DA_(a), _DA_(c), s, o);	delete []o;	delete []s;	}
-//-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_beltc_(uintptr_t *gr, uintptr_t *a, uintptr_t *c, const char *sch, const char *opt,int l,int lo)
-{	char *s=new char[l+1];	memcpy(s,sch,l);	s[l]=0;
-	char *o=new char[lo+1];	memcpy(o,opt,lo);	o[lo]=0;
-	mgl_beltc(_GR_, _DA_(a), _DA_(c), s, o);	delete []o;	delete []s;	}
 //-----------------------------------------------------------------------------
 //
 //	Dens series
@@ -574,7 +559,7 @@ void MGL_EXPORT mgl_stfa_(uintptr_t *gr, uintptr_t *re, uintptr_t *im, int *dn, 
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_boxs_xy(HMGL gr, HCDT x, HCDT y, HCDT z, const char *sch, const char *opt)
 {
-	long n=z->GetNx(),m=z->GetNy();
+	long i,j,k,n=z->GetNx(),m=z->GetNy();
 	if(mgl_check_dim2(gr,x,y,z,0,"Boxs",true))	return;
 
 	gr->SaveState(opt);
@@ -590,10 +575,10 @@ void MGL_EXPORT mgl_boxs_xy(HMGL gr, HCDT x, HCDT y, HCDT z, const char *sch, co
 	mglPoint p1,p2,p3,p4,q,s,t(wire||full?NAN:0,0,1),xx,yy;
 	mreal zz,z1,z2,x1,y1,x2,y2,x3,y3,c,z0=gr->GetOrgZ('x');
 	long k1,k2,k3,k4,k5,k6,k7,k8;
-	for(long k=0;k<z->GetNz();k++)
+	for(k=0;k<z->GetNz();k++)
 	{
 		if(gr->NeedStop())	break;
-		for(long i=0;i<n;i+=dx)	for(long j=0;j<m;j+=dy)
+		for(i=0;i<n;i+=dx)	for(j=0;j<m;j+=dy)
 		{
 			zz = z->v(i,j,k);		c  = gr->GetC(ss,zz);
 			xx = GetX(x,i,j,k);		yy = GetY(y,i,j,k);
@@ -679,10 +664,10 @@ void MGL_EXPORT mgl_boxs_(uintptr_t *gr, uintptr_t *a, const char *sch, const ch
 //	Tile series
 //
 //-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_tile_xyc(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT c, const char *sch, const char *opt)
+void MGL_EXPORT mgl_tile_xy(HMGL gr, HCDT x, HCDT y, HCDT z, const char *sch, const char *opt)
 {
 	long n=z->GetNx(),m=z->GetNy();
-	if(mgl_check_dim2(gr,x,y,z,c,"Tile",true))	return;
+	if(mgl_check_dim2(gr,x,y,z,0,"Tile",true))	return;
 
 	gr->SaveState(opt);
 	static int cgid=1;	gr->StartGroup("Tile",cgid++);
@@ -691,67 +676,30 @@ void MGL_EXPORT mgl_tile_xyc(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT c, const char
 
 	long ss = gr->AddTexture(sch);
 	gr->Reserve(4*n*m*z->GetNz());
-	bool alongX = mglchr(sch,'x');
-	bool alongY = mglchr(mglchr(sch,':'),'y');
 
 	mglPoint s(0,0,1);
 	for(long k=0;k<z->GetNz();k++)
 	{
 		if(gr->NeedStop())	break;
-		if(alongX)	for(long j=0;j<m;j+=dx)	for(long i=0;i<n;i+=dy)
+		for(long j=0;j<m;j+=dx)	for(long i=0;i<n;i+=dy)
 		{
-			mreal zz = z->v(i,j,k), cc = gr->GetC(ss,c->v(i,j,k));
+			mreal zz = z->v(i,j,k), c = gr->GetC(ss,zz);
 			mreal xx = GetX(x,i,j,k).x, yy = GetY(y,i,j,k).x;
-			long k1 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
-			zz = i<lx-dx ? z->v(i+dx,j,k):NAN;
-			yy = i<lx-dx ? GetY(y,i+dx,j,k).x:NAN;
-			long k2 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
-			zz = j<ly-dy ? z->v(i,j+dy,k):NAN;
-			yy = j<ly-dy ? GetY(y,i,j+dy,k).x:NAN;
-			long k3 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
-			zz = i<lx-dx && j<ly-dy ? z->v(i+dx,j+dy,k):NAN;
-			yy = i<lx-dx && j<ly-dy ? GetY(y,i+dx,j+dy,k).x:NAN;
-			long k4 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
-			gr->quad_plot(k1,k2,k3,k4);
-		}
-		else if(alongY)	for(long j=0;j<m;j+=dx)	for(long i=0;i<n;i+=dy)
-		{
-			mreal zz = z->v(i,j,k), cc = gr->GetC(ss,c->v(i,j,k));
-			mreal xx = GetX(x,i,j,k).x, yy = GetY(y,i,j,k).x;
-			long k1 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
-			xx = i<lx-dx ? GetX(x,i+dx,j,k).x:NAN;
-			zz = i<lx-dx ? z->v(i+dx,j,k):NAN;
-			long k2 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
-			xx = j<ly-dy ? GetX(x,i,j+dy,k).x:NAN;
-			zz = j<ly-dy ? z->v(i,j+dy,k):NAN;
-			long k3 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
-			xx = i<lx-dx && j<ly-dy ? GetX(x,i+dx,j+dy,k).x:NAN;
-			zz = i<lx-dx && j<ly-dy ? z->v(i+dx,j+dy,k):NAN;
-			long k4 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
-			gr->quad_plot(k1,k2,k3,k4);
-		}
-		else	for(long j=0;j<m;j+=dx)	for(long i=0;i<n;i+=dy)
-		{
-			mreal zz = z->v(i,j,k), cc = gr->GetC(ss,c->v(i,j,k));
-			mreal xx = GetX(x,i,j,k).x, yy = GetY(y,i,j,k).x;
-			long k1 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
+			long k1 = gr->AddPnt(mglPoint(xx,yy,zz),c,s);
 			xx = i<lx-dx ? GetX(x,i+dx,j,k).x:NAN;
 			yy = i<lx-dx ? GetY(y,i+dx,j,k).x:NAN;
-			long k2 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
+			long k2 = gr->AddPnt(mglPoint(xx,yy,zz),c,s);
 			xx = j<ly-dy ? GetX(x,i,j+dy,k).x:NAN;
 			yy = j<ly-dy ? GetY(y,i,j+dy,k).x:NAN;
-			long k3 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
+			long k3 = gr->AddPnt(mglPoint(xx,yy,zz),c,s);
 			xx = i<lx-dx && j<ly-dy ? GetX(x,i+dx,j+dy,k).x:NAN;
 			yy = i<lx-dx && j<ly-dy ? GetY(y,i+dx,j+dy,k).x:NAN;
-			long k4 = gr->AddPnt(mglPoint(xx,yy,zz),cc,s);
+			long k4 = gr->AddPnt(mglPoint(xx,yy,zz),c,s);
 			gr->quad_plot(k1,k2,k3,k4);
 		}
 	}
 	gr->EndGroup();
 }
-//-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_tile_xy(HMGL gr, HCDT x, HCDT y, HCDT z, const char *sch, const char *opt)
-{	mgl_tile_xyc(gr,x,y,z,z,sch,opt);	}
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_tile(HMGL gr, HCDT z, const char *sch, const char *opt)
 {
@@ -759,20 +707,15 @@ void MGL_EXPORT mgl_tile(HMGL gr, HCDT z, const char *sch, const char *opt)
 	mglDataV x(z->GetNx()+1), y(z->GetNy()+1);
 	x.Fill(gr->Min.x,gr->Max.x);
 	y.Fill(gr->Min.y,gr->Max.y);
-	mgl_tile_xyc(gr,&x,&y,z,z,sch,0);
+	mgl_tile_xy(gr,&x,&y,z,sch,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_tile_xyc_(uintptr_t *gr, uintptr_t *x, uintptr_t *y, uintptr_t *z, uintptr_t *c, const char *sch, const char *opt,int l,int lo)
+void MGL_EXPORT mgl_tile_xy_(uintptr_t *gr, uintptr_t *x, uintptr_t *y, uintptr_t *a, const char *sch, const char *opt,int l,int lo)
 {	char *s=new char[l+1];	memcpy(s,sch,l);	s[l]=0;
 	char *o=new char[lo+1];		memcpy(o,opt,lo);	o[lo]=0;
-	mgl_tile_xyc(_GR_, _DA_(x), _DA_(y), _DA_(z), _DA_(c), s, o);	delete []o;	delete []s;	}
+	mgl_tile_xy(_GR_, _DA_(x), _DA_(y), _DA_(a), s, o);	delete []o;	delete []s;	}
 //-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_tile_xy_(uintptr_t *gr, uintptr_t *x, uintptr_t *y, uintptr_t *z, const char *sch, const char *opt,int l,int lo)
-{	char *s=new char[l+1];	memcpy(s,sch,l);	s[l]=0;
-	char *o=new char[lo+1];		memcpy(o,opt,lo);	o[lo]=0;
-	mgl_tile_xy(_GR_, _DA_(x), _DA_(y), _DA_(z), s, o);	delete []o;	delete []s;	}
-	//-----------------------------------------------------------------------------
-	void MGL_EXPORT mgl_tile_(uintptr_t *gr, uintptr_t *a, const char *sch, const char *opt,int l,int lo)
+void MGL_EXPORT mgl_tile_(uintptr_t *gr, uintptr_t *a, const char *sch, const char *opt,int l,int lo)
 {	char *s=new char[l+1];	memcpy(s,sch,l);	s[l]=0;
 	char *o=new char[lo+1];		memcpy(o,opt,lo);	o[lo]=0;
 	mgl_tile(_GR_, _DA_(a), s, o);	delete []o;	delete []s;	}
@@ -781,84 +724,48 @@ void MGL_EXPORT mgl_tile_xy_(uintptr_t *gr, uintptr_t *x, uintptr_t *y, uintptr_
 //	TileS series
 //
 //-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_tiles_xyc(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT s, HCDT c, const char *sch, const char *opt)
+void MGL_EXPORT mgl_tiles_xy(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT s, const char *sch, const char *opt)
 {
 	long n=z->GetNx(),m=z->GetNy();
 	if(mgl_check_dim2(gr,x,y,z,s,"TileS",true))	return;
-	if(mgl_check_dim2(gr,x,y,z,c,"TileS",true))	return;
 
 	gr->SaveState(opt);
 	static int cgid=1;	gr->StartGroup("TileS",cgid++);
 	long ly = x->GetNy()>=z->GetNy() ? y->GetNy() : y->GetNx(), lx = x->GetNx();
 	int d = gr->MeshNum>0 ? gr->MeshNum+1 : n*m, dx = n>d?n/d:1, dy = m>d?m/d:1;
 
-	long sc = gr->AddTexture(sch);
+	long cc = gr->AddTexture(sch);
 	gr->Reserve(4*n*m*z->GetNz());
-	bool alongX = mglchr(sch,'x');
-	bool alongY = mglchr(mglchr(sch,':'),'y');
 
 	mglPoint t(0,0,1);
 	mreal x1,x2,x3,x4,y1,y2,y3,y4;
 	for(long k=0;k<z->GetNz();k++)
 	{
 		if(gr->NeedStop())	break;
-		if(alongX)	for(long j=0;j<m;j+=dx)	for(long i=0;i<n;i+=dy)
+		for(long j=0;j<m;j+=dx)	for(long i=0;i<n;i+=dy)
 		{
-			mreal xx = GetX(x,i,j,k).x, cc = gr->GetC(sc,c->v(i,j,k));
+			mreal zz = z->v(i,j,k), c = gr->GetC(cc,zz);
 			mreal ss = (1-gr->GetA(s->v(i,j,k)))/2, sm = 1-ss;
-			x1 = z->v(i,j,k);	y1 = GetY(y,i,j,k).x;
-			x2 = x3 = x4 = y2 = y3 = y4 = NAN;
-			if(i<lx-dx)	{	x2 = z->v(i+dx,j,k)-x1;	y2 = GetY(y,i+dx,j,k).x-y1;	}
-			if(j<ly-dy)	{	x4 = z->v(i,j+dy,k)-x1;	y4 = GetY(y,i,j+dy,k).x-y1;	}
-			if(i<lx-dx && j<ly-dy)
-			{	x3 = z->v(i+dx,j+dy,k)-x2-x4-x1;	y3 = GetY(y,i+dx,j+dy,k).x-y2-y4-y1;	}
 
-			long k1 = gr->AddPnt(mglPoint(xx, y1+y2*ss+y4*ss+y3*ss*ss, x1+x2*ss+x4*ss+x3*ss*ss),cc,t);
-			long k2 = gr->AddPnt(mglPoint(xx, y1+y2*sm+y4*ss+y3*ss*sm, x1+x2*sm+x4*ss+x3*ss*sm),cc,t);
-			long k3 = gr->AddPnt(mglPoint(xx, y1+y2*ss+y4*sm+y3*ss*sm, x1+x2*ss+x4*sm+x3*ss*sm),cc,t);
-			long k4 = gr->AddPnt(mglPoint(xx, y1+y2*sm+y4*sm+y3*sm*sm, x1+x2*sm+x4*sm+x3*sm*sm),cc,t);
-			gr->quad_plot(k1,k2,k3,k4);
-		}
-		else if(alongY)	for(long j=0;j<m;j+=dx)	for(long i=0;i<n;i+=dy)
-		{
-			mreal yy = GetY(y,i,j,k).x, cc = gr->GetC(sc,c->v(i,j,k));
-			mreal ss = (1-gr->GetA(s->v(i,j,k)))/2, sm = 1-ss;
-			x1 = GetX(x,i,j,k).x;	y1 = z->v(i,j,k);
-			x2 = x3 = x4 = y2 = y3 = y4 = NAN;
-			if(i<lx-dx)	{	x2 = GetX(x,i+dx,j,k).x-x1;	y2 = z->v(i+dx,j,k)-y1;	}
-			if(j<ly-dy)	{	x4 = GetX(x,i,j+dy,k).x-x1;	y4 = z->v(i,j+dy,k)-y1;	}
-			if(i<lx-dx && j<ly-dy)
-			{	x3 = GetX(x,i+dx,j+dy,k).x-x2-x4-x1;	y3 = z->v(i+dx,j+dy,k)-y2-y4-y1;	}
-
-			long k1 = gr->AddPnt(mglPoint(x1+x2*ss+x4*ss+x3*ss*ss, yy, y1+y2*ss+y4*ss+y3*ss*ss),cc,t);
-			long k2 = gr->AddPnt(mglPoint(x1+x2*sm+x4*ss+x3*ss*sm, yy, y1+y2*sm+y4*ss+y3*ss*sm),cc,t);
-			long k3 = gr->AddPnt(mglPoint(x1+x2*ss+x4*sm+x3*ss*sm, yy, y1+y2*ss+y4*sm+y3*ss*sm),cc,t);
-			long k4 = gr->AddPnt(mglPoint(x1+x2*sm+x4*sm+x3*sm*sm, yy, y1+y2*sm+y4*sm+y3*sm*sm),cc,t);
-			gr->quad_plot(k1,k2,k3,k4);
-		}
-		else	for(long j=0;j<m;j+=dx)	for(long i=0;i<n;i+=dy)
-		{
-			mreal zz = z->v(i,j,k), cc = gr->GetC(sc,c->v(i,j,k));
-			mreal ss = (1-gr->GetA(s->v(i,j,k)))/2, sm = 1-ss;
 			x1 = GetX(x,i,j,k).x;	y1 = GetY(y,i,j,k).x;
 			x2 = x3 = x4 = y2 = y3 = y4 = NAN;
-			if(i<lx-dx)	{	x2 = GetX(x,i+dx,j,k).x-x1;	y2 = GetY(y,i+dx,j,k).x-y1;	}
-			if(j<ly-dy)	{	x4 = GetX(x,i,j+dy,k).x-x1;	y4 = GetY(y,i,j+dy,k).x-y1;	}
+			if(i<lx-dx)
+			{	x2 = GetX(x,i+dx,j,k).x-x1;	y2 = GetY(y,i+dx,j,k).x-y1;	}
+			if(j<ly-dy)
+			{	x4 = GetX(x,i,j+dy,k).x-x1;	y4 = GetY(y,i,j+dy,k).x-y1;	}
 			if(i<lx-dx && j<ly-dy)
-			{	x3 = GetX(x,i+dx,j+dy,k).x-x2-x4-x1;	y3 = GetY(y,i+dx,j+dy,k).x-y2-y4-y1;	}
+			{	x3 = GetX(x,i+dx,j+dy,k).x-x2-x4-x1;
+				y3 = GetY(y,i+dx,j+dy,k).x-y2-y4-y1;	}
 
-			long k1 = gr->AddPnt(mglPoint(x1+x2*ss+x4*ss+x3*ss*ss, y1+y2*ss+y4*ss+y3*ss*ss, zz),cc,t);
-			long k2 = gr->AddPnt(mglPoint(x1+x2*sm+x4*ss+x3*ss*sm, y1+y2*sm+y4*ss+y3*ss*sm, zz),cc,t);
-			long k3 = gr->AddPnt(mglPoint(x1+x2*ss+x4*sm+x3*ss*sm, y1+y2*ss+y4*sm+y3*ss*sm, zz),cc,t);
-			long k4 = gr->AddPnt(mglPoint(x1+x2*sm+x4*sm+x3*sm*sm, y1+y2*sm+y4*sm+y3*sm*sm, zz),cc,t);
+			long k1 = gr->AddPnt(mglPoint(x1+x2*ss+x4*ss+x3*ss*ss, y1+y2*ss+y4*ss+y3*ss*ss, zz),c,t);
+			long k2 = gr->AddPnt(mglPoint(x1+x2*sm+x4*ss+x3*ss*sm, y1+y2*sm+y4*ss+y3*ss*sm, zz),c,t);
+			long k3 = gr->AddPnt(mglPoint(x1+x2*ss+x4*sm+x3*ss*sm, y1+y2*ss+y4*sm+y3*ss*sm, zz),c,t);
+			long k4 = gr->AddPnt(mglPoint(x1+x2*sm+x4*sm+x3*sm*sm, y1+y2*sm+y4*sm+y3*sm*sm, zz),c,t);
 			gr->quad_plot(k1,k2,k3,k4);
 		}
 	}
 	gr->EndGroup();
 }
-//-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_tiles_xy(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT s, const char *sch, const char *opt)
-{	mgl_tiles_xyc(gr,x,y,z,s,z,sch,opt);	}
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_tiles(HMGL gr, HCDT z, HCDT s, const char *sch, const char *opt)
 {
@@ -866,20 +773,15 @@ void MGL_EXPORT mgl_tiles(HMGL gr, HCDT z, HCDT s, const char *sch, const char *
 	mglDataV x(z->GetNx()+1), y(z->GetNy()+1);
 	x.Fill(gr->Min.x,gr->Max.x);
 	y.Fill(gr->Min.y,gr->Max.y);
-	mgl_tiles_xyc(gr,&x,&y,z,s,z,sch,0);
+	mgl_tiles_xy(gr,&x,&y,z,s,sch,0);
 }
 //-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_tiles_xyc_(uintptr_t *gr, uintptr_t *x, uintptr_t *y, uintptr_t *z, uintptr_t *r, uintptr_t *c, const char *sch, const char *opt,int l,int lo)
+void MGL_EXPORT mgl_tiles_xy_(uintptr_t *gr, uintptr_t *x, uintptr_t *y, uintptr_t *a, uintptr_t *r, const char *sch, const char *opt,int l,int lo)
 {	char *s=new char[l+1];	memcpy(s,sch,l);	s[l]=0;
 	char *o=new char[lo+1];		memcpy(o,opt,lo);	o[lo]=0;
-	mgl_tiles_xyc(_GR_, _DA_(x), _DA_(y), _DA_(z), _DA_(r), _DA_(c), s, o);	delete []o;	delete []s;	}
+	mgl_tiles_xy(_GR_, _DA_(x), _DA_(y), _DA_(a), _DA_(r), s, o);	delete []o;	delete []s;	}
 //-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_tiles_xy_(uintptr_t *gr, uintptr_t *x, uintptr_t *y, uintptr_t *z, uintptr_t *r, const char *sch, const char *opt,int l,int lo)
-{	char *s=new char[l+1];	memcpy(s,sch,l);	s[l]=0;
-	char *o=new char[lo+1];		memcpy(o,opt,lo);	o[lo]=0;
-	mgl_tiles_xy(_GR_, _DA_(x), _DA_(y), _DA_(z), _DA_(r), s, o);	delete []o;	delete []s;	}
-	//-----------------------------------------------------------------------------
-	void MGL_EXPORT mgl_tiles_(uintptr_t *gr, uintptr_t *a, uintptr_t *r, const char *sch, const char *opt,int l,int lo)
+void MGL_EXPORT mgl_tiles_(uintptr_t *gr, uintptr_t *a, uintptr_t *r, const char *sch, const char *opt,int l,int lo)
 {	char *s=new char[l+1];	memcpy(s,sch,l);	s[l]=0;
 	char *o=new char[lo+1];		memcpy(o,opt,lo);	o[lo]=0;
 	mgl_tiles(_GR_, _DA_(a), _DA_(r), s, o);	delete []o;	delete []s;	}
@@ -926,10 +828,8 @@ void MGL_EXPORT mgl_map_xy(HMGL gr, HCDT x, HCDT y, HCDT ax, HCDT ay, const char
 			xx = (x->v(i,j) - gr->Min.x)/(gr->Max.x - gr->Min.x);
 			yy = (y->v(i,j) - gr->Min.y)/(gr->Max.y - gr->Min.y);
 		}
-		if(xx<0)	xx=0;
-		if(xx>=1)	xx=1/MGL_FEPSILON;
-		if(yy<0)	yy=0;
-		if(yy>=1)	yy=1/MGL_FEPSILON;
+		if(xx<0)	xx=0;	if(xx>=1)	xx=1/MGL_FEPSILON;
+		if(yy<0)	yy=0;	if(yy>=1)	yy=1/MGL_FEPSILON;
 		pos[i+n*j] = gr->AddPnt(mglPoint(ax->v(i,j), ay->v(i,j), xdx),gr->GetC(ss,xx,false),t,yy);
 	}
 	if(sch && mglchr(sch,'.'))

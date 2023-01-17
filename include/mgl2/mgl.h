@@ -34,9 +34,8 @@ class MGL_EXPORT mglGraph
 protected:
 	HMGL gr;
 public:
-	HMPR pr;	///< Pointer to associated MGL parser
 	mglGraph(int kind=0, int width=600, int height=400)
-	{	pr = NULL;
+	{
 		if(kind==-1)	gr=NULL;
 #if MGL_HAVE_OPENGL
 		else if(kind==1)	gr=mgl_create_graph_gl();
@@ -48,7 +47,7 @@ public:
 		else	gr=mgl_create_graph(width, height);
 	}
 	mglGraph(HMGL graph)
-	{	pr = NULL;	gr = graph;		mgl_use_graph(gr,1);	}
+	{	gr = graph;		mgl_use_graph(gr,1);	}
 	virtual ~mglGraph()
 	{	if(mgl_use_graph(gr,-1)<1)	mgl_delete_graph(gr);	}
 	/// Get pointer to internal HMGL object
@@ -119,7 +118,7 @@ public:
 	inline void CutOff(const char *EqC)		{	mgl_set_cutoff(gr, EqC);	}
 
 	/// Set default font size
-	inline void SetFontSize(double size)	{	mgl_set_font_size(gr, size);	}
+	inline void SetFontSize(double size)	{	mgl_set_font_size(gr, size);}
 	/// Set default font style and color
 	inline void SetFontDef(const char *fnt)	{	mgl_set_font_def(gr, fnt);	}
 	/// Set FontSize by size in pt and picture DPI (default is 16 pt for dpi=72)
@@ -139,9 +138,6 @@ public:
 	inline void SetRotatedText(bool rotated)	{	mgl_set_rotated_text(gr, rotated);	}
 	/// Set default font for all new HMGL and mglGraph objects
 	static inline void SetDefFont(const char *name, const char *path=NULL)	{	mgl_def_font(name,path);	}
-	/// Add user-defined glyph for symbol and set its optional id
-	inline void DefineSymbol(char id, const mglDataA &x, const mglDataA &y)
-	{	mgl_define_symbol(gr, id, &x, &y);	}
 
 	/// Set default palette
 	inline void SetPalette(const char *colors)	{	mgl_set_palette(gr, colors);	}
@@ -288,15 +284,15 @@ public:
 	 *  '#' for using whole region. */
 	inline void SubPlot(int nx,int ny,int m,const char *style="<>_^", double dx=0, double dy=0)
 	{	mgl_subplot_d(gr, nx, ny, m, style, dx, dy);	}
-	/// Put further plotting in rectangle of dx*dy cells starting from m-th cell of nx*ny grid of the image and shift it by distance {sx,sy}.
+	/// Put further plotting in rectangle of dx*dy cells starting from m-th cell of nx*ny grid of the image.
 	/** String \a style may contain:
 	 *  '<' for reserving space at left
 	 *  '>' for reserving space at right
 	 *  '^' for reserving space at top
 	 *  '_' for reserving space at bottom
 	 *  '#' for using whole region. */
-	inline void MultiPlot(int nx,int ny,int m, int dx, int dy, const char *style="<>_^", double sx=0, double sy=0)
-	{	mgl_multiplot_d(gr, nx, ny, m, dx, dy, style, sx, sy);	}
+	inline void MultiPlot(int nx,int ny,int m, int dx, int dy, const char *style="<>_^")
+	{	mgl_multiplot(gr, nx, ny, m, dx, dy, style);	}
 	/// Put further plotting in a region [x1,x2]*[y1,y2] of the image or subplot (x1,x2,y1,y2 in range [0, 1]).
 	inline void InPlot(double x1,double x2,double y1,double y2, bool rel=true)
 	{	if(rel)	mgl_relplot(gr, x1, x2, y1, y2);
@@ -373,16 +369,11 @@ public:
 	/// Set drawing region for Quality&4
 	inline void SetDrawReg(long nx=1, long ny=1, long m=0)	{	mgl_set_draw_reg(gr,nx,ny,m);	}
 	/// Start group of objects
-	inline void StartGroup(const char *name)	{	mgl_start_group(gr, name);	}
+	inline void StartGroup(const char *name)		{	mgl_start_group(gr, name);	}
 	/// End group of objects
 	inline void EndGroup()	{	mgl_end_group(gr);	}
 	/// Highlight objects with given id
 	inline void Highlight(int id)	{	mgl_highlight(gr, id);	}
-	/// Set boundary box for export graphics into 2D file formats.
-	/** If x2<0 (y2<0) then full width (height) will be used.
-	 *  If x1<0 or y1<0 or x1>=x2|Width or y1>=y2|Height then cropping will be disabled. */
-	inline void SetBBox(int x1=0, int y1=0, int x2=-1, int y2=-1)
-	{	mgl_set_bbox(gr,x1,y1,x2,y2);	}
 
 	/// Show current image
 	inline void ShowImage(const char *viewer, bool keep=0)
@@ -605,18 +596,6 @@ public:
 	inline void Bifurcation(double dx, const char *func, const char *stl="", const char *opt="")
 	{	mgl_bifurcation_str(gr,dx,func,stl,opt);	}
 
-	/// Draws Iris plots for determining cross-dependences of data arrays
-	/** NOTE: using the same ranges and empty ids will not draw axis. This will add data to existing Iris plot.
-	 * 	Option value set the size of data labels ids, separated by ';'.*/
-	inline void Iris(mglDataA &dats, const char *ids, const char *stl="", const char *opt="")
-	{	mgl_iris_1(gr,&dats,ids,stl,opt);	}
-	inline void Iris(mglDataA &dats, const wchar_t *ids, const char *stl="", const char *opt="")
-	{	mgl_irisw_1(gr,&dats,ids,stl,opt);	}
-	inline void Iris(mglDataA &dats, mglDataA &ranges, const char *ids, const char *stl="", const char *opt="")
-	{	mgl_iris(gr,&dats,&ranges,ids,stl,opt);	}
-	inline void Iris(mglDataA &dats, mglDataA &ranges, const wchar_t *ids, const char *stl="", const char *opt="")
-	{	mgl_irisw(gr,&dats,&ranges,ids,stl,opt);	}
-
 	/// Draws the face between points with color stl (include interpolation up to 4 colors).
 	inline void Face(mglPoint p1, mglPoint p2, mglPoint p3, mglPoint p4, const char *stl="r")
 	{	mgl_face(gr, p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, p3.x, p3.y, p3.z, p4.x, p4.y, p4.z, stl);	}
@@ -669,8 +648,8 @@ public:
 	inline void Polygon(mglPoint p1, mglPoint p2, int n, const char *stl="r")
 	{	mgl_polygon(gr, p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, n,stl);	}
 	/// Draws the arc around axis pr with center at p0 and starting from p1, by color stl and angle a (in degrees)
-	inline void Arc(mglPoint p0, mglPoint pa, mglPoint p1, double a, const char *stl="r")
-	{	mgl_arc_ext(gr, p0.x,p0.y,p0.z, pa.x,pa.y,pa.z, p1.x,p1.y,p1.z, a,stl);	}
+	inline void Arc(mglPoint p0, mglPoint pr, mglPoint p1, double a, const char *stl="r")
+	{	mgl_arc_ext(gr, p0.x,p0.y,p0.z, pr.x,pr.y,pr.z, p1.x,p1.y,p1.z, a,stl);	}
 	/// Draws the arc around axis 'z' with center at p0 and starting from p1, by color stl and angle a (in degrees)
 	inline void Arc(mglPoint p0, mglPoint p1, double a, const char *stl="r")
 	{	mgl_arc_ext(gr, p0.x,p0.y,p0.z, 0,0,1, p1.x,p1.y,p0.z, a,stl);	}
@@ -679,13 +658,6 @@ public:
 	{	mgl_logo(gr, w, h, rgba, smooth, opt);	}
 	inline void Logo(const char *fname, bool smooth=false, const char *opt="")
 	{	mgl_logo_file(gr, fname, smooth, opt);	}
-
-	/// Draw user-defined symbol in position p
-	inline void Symbol(mglPoint p, char id, const char *how="", double size=-1)
-	{	mgl_symbol(gr, p.x, p.y, p.z, id, how, size);	}
-	/// Draw user-defined symbol in position p along direction d
-	inline void Symbol(mglPoint p, mglPoint d, char id, const char *how="", double size=-1)
-	{	mgl_symbol_dir(gr, p.x, p.y, p.z, d.x, d.y, d.z, id, how, size);	}
 
 	/// Print text in position p with specified font
 	inline void Putsw(mglPoint p,const wchar_t *text,const char *font=":C",double size=-1)
@@ -1283,14 +1255,6 @@ public:
 	/** Style 'x' draw belts in x-direction. */
 	inline void Belt(const mglDataA &z, const char *stl="", const char *opt="")
 	{	mgl_belt(gr, &z, stl, opt);	}
-	/// Draw belts for 2d data specified parametrically with color proportional to c
-	/** Style 'x' draw belts in x-direction. */
-	inline void BeltC(const mglDataA &x, const mglDataA &y, const mglDataA &z, const mglDataA &c, const char *stl="", const char *opt="")
-	{	mgl_beltc_xy(gr, &x, &y, &z, &c, stl, opt);	}
-	/// Draw belts for 2d data with color proportional to c
-	/** Style 'x' draw belts in x-direction. */
-	inline void BeltC(const mglDataA &z, const mglDataA &c, const char *stl="", const char *opt="")
-	{	mgl_beltc(gr, &z, &c, stl, opt);	}
 
 	/// Draw surface for 2d data specified parametrically with color proportional to z
 	/** Style ‘#’ draw grid lines. Style ‘.’ produce plot by dots.*/
@@ -1308,9 +1272,6 @@ public:
 	inline void Grid(const mglDataA &z, const char *stl="", const char *opt="")
 	{	mgl_grid(gr, &z, stl, opt);	}
 
-	/// Draw vertical tiles with manual colors c for 2d data specified parametrically
-	inline void Tile(const mglDataA &x, const mglDataA &y, const mglDataA &z, const mglDataA &c, const char *stl="", const char *opt="")
-	{	mgl_tile_xyc(gr, &x, &y, &z, &c, stl, opt);	}
 	/// Draw vertical tiles for 2d data specified parametrically
 	inline void Tile(const mglDataA &x, const mglDataA &y, const mglDataA &z, const char *stl="", const char *opt="")
 	{	mgl_tile_xy(gr, &x, &y, &z, stl, opt);	}
@@ -1335,19 +1296,6 @@ public:
 	/** Style ‘#’ draw filled boxes. */
 	inline void Boxs(const mglDataA &z, const char *stl="", const char *opt="")
 	{	mgl_boxs(gr, &z, stl, opt);	}
-
-	/// Draw contour lines on parametric surface at manual levels for 2d data specified parametrically
-	/** Style ‘f’ to draw solid contours.
-	 * Style 't'/'T' draw contour labels below/above contours.*/
-	inline void ContP(const mglDataA &v, const mglDataA &x, const mglDataA &y, const mglDataA &z, const mglDataA &a, const char *sch="", const char *opt="")
-	{	mgl_contp_val(gr, &v, &x, &y, &z, &a, sch, opt);	}
-	/// Draw contour lines on parametric surface at manual levels for 2d data specified parametrically
-	/** Style ‘f’ to draw solid contours.
-	 * Style ‘t’/‘T’ draw contour labels below/above contours.
-	 * Option "value" set the number of contour levels (default is 7). */
-	inline void ContP(const mglDataA &x, const mglDataA &y, const mglDataA &z, const mglDataA &a, const char *sch="", const char *opt="")
-	{	mgl_contp(gr, &x, &y, &z, &a, sch, opt);	}
-
 
 	/// Draw contour lines at manual levels for 2d data specified parametrically
 	/** Style ‘_’ to draw contours at bottom of axis box.
@@ -1569,9 +1517,6 @@ public:
 	inline void Beam(double val, const mglDataA &tr, const mglDataA &g1, const mglDataA &g2, const mglDataA &a, double r, const char *stl=NULL, int flag=0)
 	{	mgl_beam_val(gr,val,&tr,&g1,&g2,&a,r,stl,flag);	}
 
-	/// Draw vertical tiles with variable size r and manual colors c for 2d data specified parametrically
-	inline void TileS(const mglDataA &x, const mglDataA &y, const mglDataA &z, const mglDataA &r, const mglDataA &c, const char *stl="", const char *opt="")
-	{	mgl_tiles_xyc(gr, &x, &y, &z, &r, &c, stl, opt);	}
 	/// Draw vertical tiles with variable size r for 2d data specified parametrically
 	inline void TileS(const mglDataA &x, const mglDataA &y, const mglDataA &z, const mglDataA &r, const char *stl="", const char *opt="")
 	{	mgl_tiles_xy(gr, &x, &y, &z, &r, stl, opt);	}
@@ -2199,8 +2144,6 @@ public:
 class MGL_EXPORT mglParse
 {
 	HMPR pr;
-	mglParse &operator=(mglParse &p)
-	{	pr = p.pr;	mgl_use_parser(pr,1);	return p;	}
 public:
 	mglParse(HMPR p)		{	pr = p;		mgl_use_parser(pr,1);	}
 	mglParse(mglParse &p)	{	pr = p.pr;	mgl_use_parser(pr,1);	}
@@ -2239,7 +2182,7 @@ public:
 	/// Return description of MGL command
 	inline const char *CmdDesc(const char *name)
 	{	return mgl_parser_cmd_desc(pr, name);	}
-	/// Get name of command with number n
+	/// Get name of command with nmber n
 	inline const char *GetCmdName(long n)
 	{	return mgl_parser_cmd_name(pr,n);	}
 	/// Get number of defined commands
@@ -2253,9 +2196,6 @@ public:
 	{	mgl_rk_step(pr, eqs, vars, dt);	}
 	inline void RK_Step(const wchar_t *eqs, const wchar_t *vars, mreal dt=1)
 	{	mgl_rk_step_w(pr, eqs, vars, dt);	}
-	// Open all data arrays from HDF file and assign it as variables of parser p
-	inline void OpenHDF(const char *fname)
-	{	mgl_parser_openhdf(pr, fname);	}
 
 	/// Set value for parameter $N
 	inline void AddParam(int id, const char *str)
@@ -2275,10 +2215,7 @@ public:
 	/// Set variant of argument(s) separated by '?' to be used in further commands
 	inline void SetVariant(int var=0)
 	{	mgl_parser_variant(pr, var);	}
-	/// Set starting object ID
-	inline void	StartID(int id=0)
-	{	mgl_parser_start_id(pr, id);	}
-
+	
 	/// Return result of formula evaluation
 	inline mglData Calc(const char *formula)
 	{	return mglData(true,mgl_parser_calc(pr,formula)); 	}
@@ -2315,14 +2252,6 @@ public:
 	inline void DeleteVar(const wchar_t *name)	{	mgl_parser_del_varw(pr, name);		}
 	/// Delete all data variables
 	void DeleteAll()	{	mgl_parser_del_all(pr);	}
-
-	/// Get constant with given id. Can be NULL if not found.
-	/// NOTE !!! You must not delete obtained data arrays !!!
-	inline mglNum *GetConst(unsigned long id)
-	{	return mgl_parser_get_const(pr,id);	}
-	/// Get number of constants
-	inline long GetNumConst()
-	{	return mgl_parser_num_const(pr);	}
 };
 //-----------------------------------------------------------------------------
 #endif

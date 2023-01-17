@@ -25,6 +25,8 @@
 #define MGL_ERR_LOG		1
 #define MGL_ERR_ARC		2
 #define MGL_ERR_SQRT	3
+/// size of var array
+const int MGL_VS = 'z'-'a'+1;
 //-----------------------------------------------------------------------------
 /// Class for evaluating formula specified by the string
 class MGL_EXPORT mglFormula					// îáúåêò äëÿ ââîäà è âû÷èñëåíèÿ ôîðìóë

@@ -61,7 +61,7 @@ void mglFromStr(HMDT d,char *buf,long NX,long NY,long NZ)
 {
 	if(NX<1 || NY <1 || NZ<1)	return;
 	mgl_data_create(d, NX,NY,NZ);
-	const std::string loc = setlocale(LC_NUMERIC, "C");
+	const std::string loc = setlocale(LC_NUMERIC, NULL);	setlocale(LC_NUMERIC, "C");
 	std::vector<char *> lines;
 	std::vector<std::vector<mreal> > numbs;
 	lines.push_back(buf);
@@ -74,17 +74,27 @@ void mglFromStr(HMDT d,char *buf,long NX,long NY,long NZ)
 	{
 		char *b = lines[k];
 		long nb = strlen(b);
-		for(long j=0;j<nb;j++)
+		long i=0, j=0;
+		while(j<nb)
 		{
-			while(j<nb && b[j]<=' ')	j++;	// skip first spaces
+			while(j<nb && b[j]<=' ')	j++;
 			if(j>=nb)	break;
-			if(b[j]=='#')
+			while(b[j]=='#')		// skip comment
 			{
-				if(j<nb-1 && b[j+1]=='#')	for(long i=j+2;i<nb;i++)
-					if(b[i]>='a' && b[i]<='z')	d->id.push_back(b[i]);
-				break;
+				if(i>0 || b[j+1]!='#')	// this is columns id
+					while(j<nb && !isn(b[j]))	j++;
+				else	// NOTE I suppose that only single line contain column ids
+				{
+					while(j<nb && !isn(b[j]))
+					{
+						if(b[j]>='a' && b[j]<='z')
+							d->id.push_back(b[j]);
+						j++;
+					}
+				}
+				while(j<nb && b[j]<=' ')	j++;
 			}
-			const char *s=b+j;
+			char *s=b+j;
 			while(j<nb && b[j]>' ' && b[j]!=',' && b[j]!=';')	j++;
 			b[j]=0;
 			numbs[k].push_back(strstr(s,"NAN")?NAN:atof(s));
@@ -93,7 +103,7 @@ void mglFromStr(HMDT d,char *buf,long NX,long NY,long NZ)
 	long i=0, n=NX*NY*NZ;
 	for(long k=0;k<nl && i<n;k++)
 	{
-		const std::vector<mreal> &vals = numbs[k];
+		std::vector<mreal> &vals = numbs[k];
 		long c = vals.size();
 		if(c>n-i)	c = n-i;
 		memcpy(d->a+i,&(vals[0]),c*sizeof(mreal));
@@ -276,61 +286,24 @@ void MGL_EXPORT mgl_data_set_name_(uintptr_t *d, const char *name,int l)
 void MGL_EXPORT mgl_data_set_func(mglDataA *dat, void (*func)(void *), void *par)
 {	dat->func = func;	dat->o = par;	}
 //-----------------------------------------------------------------------------
-/// Get section separated by symbol ch. This is analog of QString::section().
-std::vector<std::string> MGL_EXPORT mgl_str_args(const std::string &str, char ch)
-{
-	std::vector<size_t> pos;	pos.push_back(0);
-	for(size_t p=0; p != std::string::npos;)
-	{	p=str.find(ch,p+1);	pos.push_back(p?p+1:0);	}
-	std::vector<std::string> res;
-	for(size_t i=0;i<pos.size()-1;i++)
-		res.push_back(str.substr(pos[i],pos[i+1]-pos[i]-1));
-	return res;
-}
-//-----------------------------------------------------------------------------
-/// Get section separated by symbol ch. This is analog of QString::section().
-std::string MGL_EXPORT mgl_str_arg(const std::string &str, char ch, int n1, int n2)
-{
-	std::vector<size_t> pos;	pos.push_back(0);
-	for(size_t p=0; p != std::string::npos;)
-	{	p=str.find(ch,p+1);	pos.push_back(p?p+1:0);	}
-	std::string res;
-	if(n2<0)	n2=n1;
-	if(n1<0 || n1>=pos.size()-1 || n2<n1)	return res;
-	if(n2>=pos.size())	n2=pos.size()-1;
-	res = str.substr(pos[n1],pos[n2+1]-pos[n1]-1);
-	if(res.size()==1 && res[0]==ch)	res.clear();
-	return res;
-}
-//-----------------------------------------------------------------------------
-/// Get string from number.
-std::string MGL_EXPORT mgl_str_num(double val)
-{	char buf[32];	snprintf(buf,32,"%g",val);	return std::string(buf);	}
-std::string MGL_EXPORT mgl_str_num(dual val)
-{
-	char buf[64];
-	double re = real(val), im = imag(val);
-	if(re==0 && im>0)	snprintf(buf,64,"i%g",im);
-	else if(re && im<0)	snprintf(buf,64,"-i%g",-im);
-	else if(im>0)	snprintf(buf,64,"%g+i%g",re,im);
-	else if(im<0)	snprintf(buf,64,"%g-i%g",re,-im);
-	else	snprintf(buf,64,"%g",re);
-	return std::string(buf);
-}
-//-----------------------------------------------------------------------------
 std::string MGL_EXPORT mgl_data_to_string(HCDT d, long ns)
 {
 	long nx=d->GetNx(), ny=d->GetNy(), nz=d->GetNz();
-	const std::string loc = setlocale(LC_NUMERIC, "C");
-	std::string out;
+	const std::string loc = setlocale(LC_NUMERIC, NULL);	setlocale(LC_NUMERIC, "C");
+	std::string out;	char buf[512];
 	if(ns<0 || (ns>=nz && nz>1))	for(long k=0;k<nz;k++)
 	{	// save whole data
 		const mglData *dr = dynamic_cast<const mglData *>(d);
-		if(dr && !dr->id.empty())	out += "## "+dr->id+'\n';
+		if(dr && !dr->id.empty())
+		{	snprintf(buf,512,"## %s\n",dr->id.c_str());	out += buf;	}
+		const mglDataC *dc = dynamic_cast<const mglDataC *>(d);
+		if(dc && !dc->id.empty())
+		{	snprintf(buf,512,"## %s\n",dc->id.c_str());	out += buf;	}
 		for(long i=0;i<ny;i++)
 		{
-			for(long j=0;j<nx-1;j++)	out += mgl_str_num(d->v(j,i,k))+'\t';
-			out += mgl_str_num(d->v(nx-1,i,k))+'\n';
+			for(long j=0;j<nx-1;j++)
+			{	snprintf(buf,512,"%g\t",d->v(j,i,k));	out += buf;	}
+			snprintf(buf,512,"%g\n",d->v(nx-1,i,k));	out += buf;
 		}
 		out += "\n";
 	}
@@ -338,10 +311,12 @@ std::string MGL_EXPORT mgl_data_to_string(HCDT d, long ns)
 	{	// save selected slice
 		if(nz>1)	for(long i=0;i<ny;i++)
 		{
-			for(long j=0;j<nx-1;j++)	out += mgl_str_num(d->v(j,i,ns))+'\t';
-			out += mgl_str_num(d->v(nx-1,i,ns))+'\n';
+			for(long j=0;j<nx-1;j++)
+			{	snprintf(buf,512,"%g\t",d->v(j,i,ns));	out += buf;	}
+			snprintf(buf,512,"%g\n",d->v(nx-1,i,ns));	out += buf;
 		}
-		else if(ns<ny)	for(long j=0;j<nx;j++)	out += mgl_str_num(d->v(j,ns))+'\t';
+		else if(ns<ny)	for(long j=0;j<nx;j++)
+		{	snprintf(buf,512,"%g\t",d->v(j,ns));	out += buf;	}
 	}
 	setlocale(LC_NUMERIC, loc.c_str());
 	return out;
@@ -363,7 +338,6 @@ MGL_NO_EXPORT char *mgl_read_gz(gzFile fp)
 	{
 		if(m<size)	{	buf[size*n+m]=0;	break;	}
 		n++;		buf=(char*)realloc(buf,size*(n+1));
-		memset(buf+size*n,0,size);
 	}
 	return buf;
 }
@@ -375,25 +349,26 @@ int MGL_EXPORT mgl_data_read(HMDT d, const char *fname)
 	if(!fp)
 	{
 		if(!d->a)	mgl_data_create(d, 1,1,1);
-		return	0;
+		return	false;
 	}
 	char *buf = mgl_read_gz(fp);
 	long nb = strlen(buf);	gzclose(fp);
 
 	bool first=false;
+	char ch;
 	for(i=nb-1;i>=0;i--)	if(buf[i]>' ')	break;
 	buf[i+1]=0;	nb = i+1;		// remove tailing spaces
 	for(i=0;i<nb-1 && !isn(buf[i]);i++)	// determine nx
 	{
 		while(buf[i]=='#')	{	while(!isn(buf[i]) && i<nb)	i++;	}
-		char ch = buf[i];
+		ch = buf[i];
 		if(ch>' ' && !first)	first=true;
 		if(first && (ch==' ' || ch=='\t' || ch==',' || ch==';') && buf[i+1]>' ') k++;
 	}
 	first = false;
 	for(i=0;i<nb-1;i++)					// determine ny
 	{
-		char ch = buf[i];
+		ch = buf[i];
 		if(ch=='#')	while(!isn(buf[i]) && i<nb)	i++;
 		if(isn(ch))
 		{
@@ -405,17 +380,19 @@ int MGL_EXPORT mgl_data_read(HMDT d, const char *fname)
 	}
 	if(first)	for(i=0;i<nb-1;i++)		// determine nz
 	{
-		char ch = buf[i];
+		ch = buf[i];
 		if(ch=='#')	while(!isn(buf[i]) && i<nb)	i++;
+//		if(ch=='#')	com = true;	// comment
 		if(isn(ch))
 		{
+//			if(com)	{	com=false;	continue;	}
 			while(buf[i+1]==' ' || buf[i+1]=='\t') i++;
 			if(isn(buf[i+1]))	l++;
 		}
 	}
 	else	for(i=0;i<nb-1;i++)	if(buf[i]=='\f')	l++;
 	mglFromStr(d,buf,k,m,l);
-	free(buf);	return 1;
+	free(buf);	return true;
 }
 int MGL_EXPORT mgl_data_read_(uintptr_t *d, const char *fname,int l)
 {	char *s=new char[l+1];		memcpy(s,fname,l);	s[l]=0;
@@ -441,7 +418,7 @@ int MGL_EXPORT mgl_data_scan_file(HMDT d,const char *fname, const char *templ)
 	if(!fp)
 	{
 		if(!d->a)	mgl_data_create(d, 1,1,1);
-		return	0;
+		return	false;
 	}
 	s = mgl_read_gz(fp);	gzclose(fp);
 	size_t len = strs[0].length();
@@ -459,7 +436,7 @@ int MGL_EXPORT mgl_data_scan_file(HMDT d,const char *fname, const char *templ)
 	if(ny<1)
 	{
 		if(!d->a)	mgl_data_create(d, 1,1,1);
-		return	0;
+		return	false;
 	}
 	d->Create(nx,ny);
 	for(size_t j=0;j<ny;j++)
@@ -473,7 +450,7 @@ int MGL_EXPORT mgl_data_scan_file(HMDT d,const char *fname, const char *templ)
 			d->a[i+nx*j] = atof(p);
 		}
 	}
-	free(s);	return 1;
+	free(s);	return true;
 }
 int MGL_EXPORT mgl_data_scan_file_(uintptr_t *d,const char *fname, const char *templ,int l,int m)
 {	char *s=new char[l+1];		memcpy(s,fname,l);	s[l]=0;
@@ -503,13 +480,13 @@ void MGL_EXPORT mgl_data_link_(uintptr_t *d, mreal *A, int *nx,int *ny,int *nz)
 //-----------------------------------------------------------------------------
 int MGL_EXPORT mgl_data_read_dim(HMDT d, const char *fname,long mx,long my,long mz)
 {
-	if(mx<=0 || my<=0 || mz<=0)	return 0;
+	if(mx<=0 || my<=0 || mz<=0)	return false;
 	gzFile fp = gzopen(fname,"r");
-	if(!fp)	return 0;
+	if(!fp)	return false;
 	char *buf = mgl_read_gz(fp);
 	gzclose(fp);
 	mglFromStr(d,buf,mx,my,mz);
-	free(buf);	return 1;
+	free(buf);	return true;
 }
 int MGL_EXPORT mgl_data_read_dim_(uintptr_t *d, const char *fname,int *mx,int *my,int *mz,int l)
 {	char *s=new char[l+1];	memcpy(s,fname,l);	s[l]=0;
@@ -517,9 +494,9 @@ int MGL_EXPORT mgl_data_read_dim_(uintptr_t *d, const char *fname,int *mx,int *m
 //-----------------------------------------------------------------------------
 int MGL_EXPORT mgl_data_read_mat(HMDT d, const char *fname, long dim)
 {
-	if(dim<=0 || dim>3)	return 0;
+	if(dim<=0 || dim>3)	return false;
 	gzFile fp = gzopen(fname,"r");
-	if(!fp)	return 0;
+	if(!fp)	return false;
 	long nx=1, ny=1, nz=1;
 	char *buf = mgl_read_gz(fp);
 	long nb = strlen(buf);	gzclose(fp);
@@ -530,27 +507,25 @@ int MGL_EXPORT mgl_data_read_mat(HMDT d, const char *fname, long dim)
 	if(dim==1)
 	{
 		sscanf(buf+j,"%ld",&nx);
-		while(j<nb && buf[j]!='\n')	j++;
-		j++;
+		while(j<nb && buf[j]!='\n')	j++;	j++;
 //		while(buf[j]>' ')	j++;
 	}
 	else if(dim==2)
 	{
 		sscanf(buf+j,"%ld%ld",&nx,&ny);
-		while(j<nb && buf[j]!='\n')	j++;
-		j++;
+		while(j<nb && buf[j]!='\n')	j++;	j++;
 		char *b=buf+j;
-		long l=0;
-		for(long i=0;b[i];i++)
+		long i,l;
+		for(i=l=0;b[i];i++)
 		{
 			while(b[i]=='#')	{	while(!isn(b[i]) && b[i])	i++;	}
 			if(b[i]=='\n')	l++;
 		}
 		if(l==nx*ny || l==nx*ny+1)	// try to read 3d data (i.e. columns of matrix nx*ny)
 		{
-			nz=ny;	ny=nx;	nx=1;	l=0;
+			nz=ny;	ny=nx;	nx=1;
 			bool first = false;
-			for(long i=0;b[i] && !isn(b[i]);i++)	// determine nx
+			for(i=l=0;b[i] && !isn(b[i]);i++)	// determine nx
 			{
 				while(b[i]=='#')	{	while(!isn(b[i]) && b[i])	i++;	}
 				char ch = b[i];
@@ -562,8 +537,7 @@ int MGL_EXPORT mgl_data_read_mat(HMDT d, const char *fname, long dim)
 	else if(dim==3)
 	{
 		sscanf(buf+j,"%ld%ld%ld",&nx,&ny,&nz);
-		while(j<nb && buf[j]!='\n')	j++;
-		j++;
+		while(j<nb && buf[j]!='\n')	j++;	j++;
 /*		while(buf[j]>' ' && j<nb)	j++;
 		while(buf[j]<=' ' && j<nb)	j++;
 		while(buf[j]>' ' && j<nb)	j++;
@@ -571,7 +545,7 @@ int MGL_EXPORT mgl_data_read_mat(HMDT d, const char *fname, long dim)
 		while(buf[j]>' ' && j<nb)	j++;*/
 	}
 	mglFromStr(d,buf+j,nx,ny,nz);
-	free(buf);	return 1;
+	free(buf);	return true;
 }
 int MGL_EXPORT mgl_data_read_mat_(uintptr_t *d, const char *fname,int *dim,int l)
 {	char *s=new char[l+1];		memcpy(s,fname,l);	s[l]=0;
@@ -583,10 +557,10 @@ mreal MGL_EXPORT mgl_data_max(HCDT d)
 	long nn=d->GetNN();
 #pragma omp parallel
 	{
-		mreal m=-INFINITY;
+		mreal m=-INFINITY, v;
 #pragma omp for nowait
 		for(long i=0;i<nn;i++)
-		{	mreal v = d->vthr(i);	m = m<v ? v:m;	}
+		{	v = d->vthr(i);	m = m<v ? v:m;	}
 #pragma omp critical(max_dat)
 		{	m1 = m1>m ? m1:m;	}
 	}
@@ -600,10 +574,10 @@ mreal MGL_EXPORT mgl_data_min(HCDT d)
 	long nn=d->GetNN();
 #pragma omp parallel
 	{
-		mreal m=INFINITY;
+		mreal m=INFINITY, v;
 #pragma omp for nowait
 		for(long i=0;i<nn;i++)
-		{	mreal v = d->vthr(i);	m = m>v ? v:m;	}
+		{	v = d->vthr(i);	m = m>v ? v:m;	}
 #pragma omp critical(min_dat)
 		{	m1 = m1<m ? m1:m;	}
 	}
@@ -617,10 +591,10 @@ mreal MGL_EXPORT mgl_data_neg_max(HCDT d)
 	long nn=d->GetNN();
 #pragma omp parallel
 	{
-		mreal m=0;
+		mreal m=0, v;
 #pragma omp for nowait
 		for(long i=0;i<nn;i++)
-		{	mreal v = d->vthr(i);	m = m<v && v<0 ? v:m;	}
+		{	v = d->vthr(i);	m = m<v && v<0 ? v:m;	}
 #pragma omp critical(nmax_dat)
 		{	m1 = m1>m ? m1:m;	}
 	}
@@ -634,10 +608,10 @@ mreal MGL_EXPORT mgl_data_pos_min(HCDT d)
 	long nn=d->GetNN();
 #pragma omp parallel
 	{
-		mreal m=INFINITY;
+		mreal m=INFINITY, v;
 #pragma omp for nowait
 		for(long i=0;i<nn;i++)
-		{	mreal v = d->vthr(i);	m = m>v && v>0 ? v:m;	}
+		{	v = d->vthr(i);	m = m>v && v>0 ? v:m;	}
 #pragma omp critical(pmin_dat)
 		{	m1 = m1<m ? m1:m;	}
 	}
@@ -651,12 +625,12 @@ mreal MGL_EXPORT mgl_data_max_int(HCDT d, long *i, long *j, long *k)
 	long nx=d->GetNx(), ny=d->GetNy(), nn=d->GetNN();
 #pragma omp parallel
 	{
-		mreal m=-INFINITY;
+		mreal m=-INFINITY, v;
 		long im=-1,jm=-1,km=-1;
 #pragma omp for nowait
 		for(long ii=0;ii<nn;ii++)
 		{
-			mreal v = d->vthr(ii);
+			v = d->vthr(ii);
 			if(m < v)
 			{	m=v;	im=ii%nx;	jm=(ii/nx)%ny;	km=ii/(nx*ny);   }
 		}
@@ -675,12 +649,12 @@ mreal MGL_EXPORT mgl_data_min_int(HCDT d, long *i, long *j, long *k)
 	long nx=d->GetNx(), ny=d->GetNy(), nn=d->GetNN();
 #pragma omp parallel
 	{
-		mreal m=INFINITY;
+		mreal m=INFINITY, v;
 		long im=-1,jm=-1,km=-1;
 #pragma omp for nowait
 		for(long ii=0;ii<nn;ii++)
 		{
-			mreal v = d->vthr(ii);
+			v = d->vthr(ii);
 			if(m > v)
 			{	m=v;	im=ii%nx;	jm=(ii/nx)%ny;	km=ii/(nx*ny);   }
 		}
@@ -692,44 +666,6 @@ mreal MGL_EXPORT mgl_data_min_int(HCDT d, long *i, long *j, long *k)
 mreal MGL_EXPORT mgl_data_min_int_(uintptr_t *d, int *i, int *j, int *k)
 {	long ii,jj,kk;	mreal res=mgl_data_min_int(_DT_,&ii,&jj,&kk);
 	*i=ii;	*j=jj;	*k=kk;	return res;	}
-//-----------------------------------------------------------------------------
-long MGL_EXPORT mgl_data_max_first(HCDT d, char dir, long from, long *p1, long *p2)
-{
-	long n=d->GetNx(), n1=d->GetNy(), n2=d->GetNz(), d1=n, d2=n*n1, dd=1;
-	if(dir=='y')	{	n=n1;	n1=dd=d1;	d1=1;	}
-	if(dir=='z')	{	n=n2;	n2=n1;	n1=d1;	d1=1;	dd=d2;	d2=n2;	}
-	bool find=false;
-	if(from>=0)
-	{
-		for(long i=from+1;i<n-1;i++)
-		{
-#pragma omp parallel for collapse(2)
-			for(long i1=0;i1<n1;i1++)	for(long i2=0;i2<n2;i2++)
-			{
-				long ii=i*dd+i1*d1+i2*d2;
-				if(d->vthr(ii)>=d->vthr(ii+dd) && d->vthr(ii)>=d->vthr(ii-dd))
-				{	find=true;	if(p1)	*p1=i1;	if(p2)	*p2=i2;	}
-			}
-			if(find)	return i;
-		}
-	}
-	else
-	{
-		for(long i=n+from-1;i>0;i--)
-		{
-			for(long i1=0;i1<n1;i1++)	for(long i2=0;i2<n2;i2++)
-			{
-				long ii=i*dd+i1*d1+i2*d2;
-				if(d->vthr(ii)>=d->vthr(ii+dd) && d->vthr(ii)>=d->vthr(ii-dd))
-				{	find=true;	if(p1)	*p1=i1;	if(p2)	*p2=i2;	}
-			}
-			if(find)	return i;
-		}
-	}
-	return -1;
-}
-long MGL_EXPORT mgl_data_max_first_(uintptr_t *d, const char *dir, long *from, long *p1, long *p2,int)
-{	return mgl_data_max_first(_DT_,*dir,*from,p1,p2);	}
 //-----------------------------------------------------------------------------
 mreal MGL_EXPORT mgl_data_max_real(HCDT d, mreal *x, mreal *y, mreal *z)
 {
@@ -859,12 +795,9 @@ void MGL_EXPORT mgl_data_squeeze(HMDT d, long rx,long ry,long rz,long smooth)
 	mreal *b;
 
 	// simple checking
-	if(rx>=nx)	rx=nx-1;
-	if(rx<1)	rx=1;
-	if(ry>=ny)	ry=ny-1;
-	if(ry<1)	ry=1;
-	if(rz>=nz)	rz=nz-1;
-	if(rz<1)	rz=1;
+	if(rx>=nx)	rx=nx-1;	if(rx<1)	rx=1;
+	if(ry>=ny)	ry=ny-1;	if(ry<1)	ry=1;
+	if(rz>=nz)	rz=nz-1;	if(rz<1)	rz=1;
 	// new sizes
 	kx = 1+(nx-1)/rx;	ky = 1+(ny-1)/ry;	kz = 1+(nz-1)/rz;
 	b = new mreal[kx*ky*kz];
@@ -938,7 +871,8 @@ void MGL_EXPORT mgl_data_transpose(HMDT d, const char *dim)
 {
 	long nx=d->nx, ny=d->ny, nz=d->nz, n;
 	mreal *b=new mreal[nx*ny*nz], *a=d->a;
-	if(!strcmp(dim,"xzy") || !strcmp(dim,"zy"))
+	if(!strcmp(dim,"xyz"))	memcpy(b,a,nx*ny*nz*sizeof(mreal));
+	else if(!strcmp(dim,"xzy") || !strcmp(dim,"zy"))
 	{
 #pragma omp parallel for collapse(3)
 		for(long j=0;j<ny;j++)	for(long k=0;k<nz;k++)	for(long i=0;i<nx;i++)
@@ -973,7 +907,6 @@ void MGL_EXPORT mgl_data_transpose(HMDT d, const char *dim)
 			b[k+nz*(j+ny*i)] = a[i+nx*(j+ny*k)];
 		n=nz;	nz=nx;	nx=n;
 	}
-	else	memcpy(b,a,nx*ny*nz*sizeof(mreal));
 	memcpy(a,b,nx*ny*nz*sizeof(mreal));	delete []b;
 	n=d->nx;	d->nx=nx;	d->ny=ny;	d->nz=nz;
 	if(nx!=n)	d->NewId();
@@ -1046,7 +979,7 @@ void MGL_EXPORT mgl_data_modify_vw_(uintptr_t *d, const char *eq, uintptr_t *v, 
 int MGL_EXPORT mgl_data_read_hdf4(HMDT d,const char *fname,const char *data)
 {
 	int32 sd = SDstart(fname,DFACC_READ), nn, i;
-	if(sd==-1)	return 0;	// is not a HDF4 file
+	if(sd==-1)	return false;	// is not a HDF4 file
 	char name[64];
 	SDfileinfo(sd,&nn,&i);
 	for(i=0;i<nn;i++)
@@ -1078,11 +1011,11 @@ int MGL_EXPORT mgl_data_read_hdf4(HMDT d,const char *fname,const char *data)
 		SDendaccess(sds);
 	}
 	SDend(sd);
-	return 1;
+	return true;
 }
 #else
 int MGL_EXPORT mgl_data_read_hdf4(HMDT ,const char *,const char *)
-{	mgl_set_global_warn(_("HDF4 support was disabled. Please, enable it and rebuild MathGL."));	return 0;	}
+{	mgl_set_global_warn("HDF4 support was disabled. Please, enable it and rebuild MathGL.");	return false;	}
 #endif
 //-----------------------------------------------------------------------------
 #if MGL_HAVE_HDF5
@@ -1115,17 +1048,17 @@ void MGL_EXPORT mgl_data_save_hdf(HCDT dat,const char *fname,const char *data,in
 int MGL_EXPORT mgl_data_read_hdf(HMDT d,const char *fname,const char *data)
 {
 	hid_t hf,hd,hs;
+	hsize_t dims[3];
 	long rank, res = H5Fis_hdf5(fname);
 	if(res<=0)	return mgl_data_read_hdf4(d,fname,data);
 	hf = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
-	if(hf<0)	return 0;
+	if(hf<0)	return false;
 	hd = H5Dopen(hf,data);
-	if(hd<0)	return 0;
+	if(hd<0)	return false;
 	hs = H5Dget_space(hd);
 	rank = H5Sget_simple_extent_ndims(hs);
 	if(rank>0 && rank<=3)
 	{
-		hsize_t dims[3];
 		H5Sget_simple_extent_dims(hs,dims,0);
 		if(rank==1)			{	dims[2]=dims[0];	dims[0]=dims[1]=1;	}
 		else if(rank==2)	{	dims[2]=dims[1];	dims[1]=dims[0];	dims[0]=1;	}
@@ -1137,57 +1070,42 @@ int MGL_EXPORT mgl_data_read_hdf(HMDT d,const char *fname,const char *data)
 		H5Dread(hd, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, d->a);
 #endif
 	}
-	H5Sclose(hs);	H5Dclose(hd);	H5Fclose(hf);	return 1;
+	H5Sclose(hs);	H5Dclose(hd);	H5Fclose(hf);	return true;
 }
 //-----------------------------------------------------------------------------
-MGL_EXPORT const char * const * mgl_datas_hdf_str(const char *fname)
+int MGL_EXPORT mgl_datas_hdf(const char *fname, char *buf, long size)
 {
-	static std::vector<std::string> names;
-	static const char **res=0;
 	hid_t hf,hg,hd,ht;
-	hf = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);	names.clear();
+	if(!buf || size<1)	return 0;
+	buf[0]=0;
+	hf = H5Fopen(fname, H5F_ACC_RDONLY, H5P_DEFAULT);
 	if(!hf)	return 0;
 	hg = H5Gopen(hf,"/");
-	hsize_t num;
+	hsize_t num, i;
 	char name[256];
+	long pos=0,len;
 	H5Gget_num_objs(hg, &num);	// replace by H5G_info_t t; H5Gget_info(hg,&t); num=t.nlinks;
-	for(hsize_t i=0;i<num;i++)
+	for(i=0;i<num;i++)
 	{
 		if(H5Gget_objtype_by_idx(hg, i)!=H5G_DATASET)	continue;
 		H5Gget_objname_by_idx(hg, i, name, 256);	// replace by H5Lget_name_by_idx(hg,".",i,0,0,name,256,0) ?!
 		hd = H5Dopen(hf,name);
 		ht = H5Dget_type(hd);
-		if(H5Tget_class(ht)==H5T_FLOAT || H5Tget_class(ht)==H5T_INTEGER)	names.push_back(name);
+		len = strlen(name);		if(pos+len+2>size)	break;
+		if(H5Tget_class(ht)==H5T_FLOAT || H5Tget_class(ht)==H5T_INTEGER)
+		{	strcat(buf,name);	strcat(buf,"\t");	pos += len+1;	}
 		H5Dclose(hd);	H5Tclose(ht);
 	}
-	H5Gclose(hg);	H5Fclose(hf);	names.push_back("");
-	if(res)	delete []res;
-	size_t nn = names.size();
-	res = new const char*[nn+1];
-	for(size_t i=0;i<nn;i++)	res[i]=names[i].c_str();
-	res[nn]=NULL;	return res;
-}
-
-long MGL_EXPORT mgl_datas_hdf(const char *fname, char *buf, long size)
-{
-	const char * const *res = mgl_datas_hdf_str(fname);
-	if(!res)	return 0;
-	long n=0, len=1;
-	while(res[n][0])	{	len += strlen(res[n])+1;	n++;	}
-	if(len>size)	return -long(len);
-	strcpy(buf,res[0]);
-	for(long i=1;i<n;i++)	{	strcat(buf,"\t");	strcat(buf,res[i]);	}
-	return n;
+	H5Gclose(hg);	H5Fclose(hf);
+	return i;
 }
 #else
 void MGL_EXPORT mgl_data_save_hdf(HCDT ,const char *,const char *,int )
-{	mgl_set_global_warn(_("HDF5 support was disabled. Please, enable it and rebuild MathGL."));	}
-MGL_EXPORT const char * const * mgl_datas_hdf_str(const char *fname)
-{	mgl_set_global_warn(_("HDF5 support was disabled. Please, enable it and rebuild MathGL."));	return 0;}
-long MGL_EXPORT mgl_datas_hdf(const char *, char *, long )
-{	mgl_set_global_warn(_("HDF5 support was disabled. Please, enable it and rebuild MathGL."));	return 0;}
+{	mgl_set_global_warn("HDF5 support was disabled. Please, enable it and rebuild MathGL.");	}
+int MGL_EXPORT mgl_datas_hdf(const char *, char *, long )
+{	mgl_set_global_warn("HDF5 support was disabled. Please, enable it and rebuild MathGL.");	return 0;}
 int MGL_EXPORT mgl_data_read_hdf(HMDT ,const char *,const char *)
-{	mgl_set_global_warn(_("HDF5 support was disabled. Please, enable it and rebuild MathGL."));	return 0;}
+{	mgl_set_global_warn("HDF5 support was disabled. Please, enable it and rebuild MathGL.");	return false;}
 #endif
 //-----------------------------------------------------------------------------
 int MGL_EXPORT mgl_data_read_hdf_(uintptr_t *d, const char *fname, const char *data,int l,int n)
@@ -1198,7 +1116,7 @@ void MGL_EXPORT mgl_data_save_hdf_(uintptr_t *d, const char *fname, const char *
 {	char *s=new char[l+1];		memcpy(s,fname,l);	s[l]=0;
 	char *t=new char[n+1];		memcpy(t,data,n);	t[n]=0;
 	mgl_data_save_hdf(_DT_,s,t,*rewrite);	delete []s;	delete []t;	}
-long MGL_EXPORT mgl_datas_hdf_(const char *fname, char *buf, int l, int size)
+int MGL_EXPORT mgl_datas_hdf_(const char *fname, char *buf, int l, int size)
 {	char *s=new char[l+1];		memcpy(s,fname,l);	s[l]=0;
 	int r = mgl_datas_hdf(s,buf,size);	delete []s;	return r;	}
 //-----------------------------------------------------------------------------
@@ -1250,7 +1168,7 @@ int MGL_EXPORT mgl_data_read_range(HMDT dat, const char *templ, double from, dou
 	//read first file
 	do{	snprintf(fname,n,templ,t);	fname[n-1]=0;	t+= step;	} while(!mgl_data_read(&d,fname) && t<=to);
 
-	if(t>to)	{	delete []fname;	return 0;	}
+	if(t>to)	{	delete []fname;	return false;	}
 	kx = d.nx;	ky = d.ny;	kz = d.nz;
 	b = (mreal *)malloc(kx*ky*kz*sizeof(mreal));
 	memcpy(b,d.a,kx*ky*kz*sizeof(mreal));
@@ -1261,11 +1179,11 @@ int MGL_EXPORT mgl_data_read_range(HMDT dat, const char *templ, double from, dou
 		snprintf(fname,n,templ,t);	fname[n-1]=0;
 		if(mgl_data_read(&d,fname))
 			if(!mgl_add_file(kx,ky,kz,b,&d,as_slice))
-			{	delete []fname;	free(b);	return 0;	}
+			{	delete []fname;	free(b);	return false;	}
 	}
 	dat->Set(b,kx,ky,kz);
 	delete []fname;	free(b);
-	return 1;
+	return true;
 }
 int MGL_EXPORT mgl_data_read_range_(uintptr_t *d, const char *fname, mreal *from, mreal *to, mreal *step, int *as_slice,int l)
 {	char *s=new char[l+1];		memcpy(s,fname,l);	s[l]=0;
@@ -1286,7 +1204,7 @@ int MGL_EXPORT mgl_data_read_all(HMDT dat, const char *templ, int as_slice)
 		if(mgl_data_read(&d,res.gl_pathv[i]))	break;
 
 	if(i>=res.gl_pathc)
-	{	globfree (&res);	return 0;	}
+	{	globfree (&res);	return false;	}
 	kx = d.nx;	ky = d.ny;	kz = d.nz;
 	b = (mreal *)malloc(kx*ky*kz*sizeof(mreal));
 	memcpy(b,d.a,kx*ky*kz*sizeof(mreal));
@@ -1295,14 +1213,14 @@ int MGL_EXPORT mgl_data_read_all(HMDT dat, const char *templ, int as_slice)
 	{
 		if(mgl_data_read(&d,res.gl_pathv[i]))
 			if(!mgl_add_file(kx,ky,kz,b,&d,as_slice))
-			{	globfree (&res);	free(b);	return 0;	}
+			{	globfree (&res);	free(b);	return false;	}
 	}
 	dat->Set(b,kx,ky,kz);
 
 	globfree (&res);	free(b);
-	return 1;
+	return true;
 #else
-	return 0;
+	return false;
 #endif
 }
 int MGL_EXPORT mgl_data_read_all_(uintptr_t *d, const char *fname, int *as_slice,int l)
@@ -1348,63 +1266,4 @@ void MGL_EXPORT mgl_data_limit(HMDT d, mreal v)
 }
 void MGL_EXPORT mgl_data_limit_(uintptr_t *d, mreal *v)
 {	mgl_data_limit(_DT_, *v);	}
-//-----------------------------------------------------------------------------
-/// Read binary data and swap big-endian to little-endian if swap=true
-size_t MGL_EXPORT mgl_fread(FILE *fp, void *vals, size_t size, size_t num, int swap)
-{
-	char *ptr = (char*)vals;
-	size_t r = fread(ptr,size,num,fp);
-	if(r && swap)
-	{
-		char buf[8], ch;
-		if(size==4)	for(size_t i=0;i<r;i++)
-		{
-			memcpy(buf,ptr+i*size,size);
-			ch=buf[0];	buf[0]=buf[3];	buf[3]=ch;
-			ch=buf[1];	buf[1]=buf[2];	buf[2]=ch;
-		}
-		else if(size==2)	for(size_t i=0;i<r;i++)
-		{
-			memcpy(buf,ptr+i*size,size);
-			ch=buf[0];	buf[0]=buf[1];	buf[1]=ch;
-		}
-		else if(size==8)	for(size_t i=0;i<r;i++)
-		{
-			memcpy(buf,ptr+i*size,size);
-			ch=buf[0];	buf[0]=buf[7];	buf[7]=ch;
-			ch=buf[1];	buf[1]=buf[6];	buf[6]=ch;
-			ch=buf[2];	buf[2]=buf[5];	buf[5]=ch;
-			ch=buf[3];	buf[3]=buf[4];	buf[4]=ch;
-		}
-	}
-	return r;
-}
-//-----------------------------------------------------------------------------
-/// Read data array from Tektronix WFM file
-/** Parse Tektronix TDS5000/B, TDS6000/B/C, TDS/CSA7000/B, MSO70000/C, DSA70000/B/C DPO70000/B/C DPO7000/ MSO/DPO5000. */
-int MGL_EXPORT mgl_data_read_wfm(HMDT d,const char *fname, long num, long step/*=1*/, long start/*=0*/)
-{
-/*	if(step<1)	step=1;
-	if(start<0)	start=0;
-	FILE *fp = fopen(fname,"rb");
-	if(!fp)	return 0;	// couldn't open file
-	unsigned short byte_order;
-	fread(&byte_order,2,1,fp);
-	bool byteorder;	// TODO
-*/	return 0;	
-}
-int MGL_EXPORT mgl_data_read_wfm_(uintptr_t *d, const char *fname, long *num, long *step, long *start,int l)
-{	char *s=new char[l+1];	memcpy(s,fname,l);	s[l]=0;
-	int r = mgl_data_read_wfm(_DT_,s,*num,*step,*start);
-	delete []s;	return r;	}
-/// Read data array from Matlab MAT file (parse versions 4 and 5)
-int MGL_EXPORT mgl_data_read_matlab(HMDT d,const char *fname,const char *data)
-{
-	// TODO
-/**/return 0;
-}
-int MGL_EXPORT mgl_data_read_matlab_(uintptr_t *d, const char *fname, const char *data,int l,int n)
-{	char *s=new char[l+1];	memcpy(s,fname,l);	s[l]=0;
-	char *t=new char[n+1];	memcpy(t,data,n);	t[n]=0;
-	int r = mgl_data_read_matlab(_DT_,s,t);	delete []s;	delete []t;	return r;	}
 //-----------------------------------------------------------------------------

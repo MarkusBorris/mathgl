@@ -49,12 +49,14 @@ void MGL_NO_EXPORT mgl_printf(void *fp, bool gz, const char *str, ...);
 void mglTexture::GetRGBAOBJ(unsigned char *f) const
 {
 	const size_t bw = 128; //border width
-	for(size_t i=0;i<256;i++)
+	size_t i,j,i0;
+	mglColor c1,c2,c;
+	for(i=0;i<256;i++)
 	{
-		mglColor c1 = col[2*i], c2 = col[2*i+1], c;
-		for(size_t j=0;j<512;j++)
+		c1 = col[2*i];  c2 = col[2*i+1];
+		for(j=0;j<512;j++)
 		{
-			size_t i0 = 4*(j+512*(255-i));
+			i0 = 4*(j+512*(255-i));
 			if (j<bw)
 				c = c1;
 			else if (j>511-bw)
@@ -66,7 +68,8 @@ void mglTexture::GetRGBAOBJ(unsigned char *f) const
 			f[i0+2] = int(255*c.b);
 			f[i0+3] = int(255*c.a);
 		}
-	}
+  }
+	
 }
 
 //-----------------------------------------------------------------------------
@@ -79,7 +82,7 @@ struct ObjUV
   u(U), v(V) {}
   mreal u;
   mreal v;
-
+  
   void Set(mreal U, mreal V)
   { u = U; v = V; }
 
@@ -110,11 +113,11 @@ struct ObjUVs {
   ObjUVs(FILE *f) : fp(f) {}
 
   size_t addTextureCoords(mreal ta, mreal c, size_t ntxt)
-	{
+	{    
     const mreal gap = 1./512;
     const mreal u = 0.25+0.5*(ta*(1-2*gap)+gap);
     const mreal v = ((c-floor(c))*(1-2*gap) + gap + floor(c))/ntxt;
-
+		
     const ObjUV point(u, v);
     std::map<ObjUV,size_t>::iterator pPoint = texturecoords.find(point);
     if(pPoint!=texturecoords.end())
@@ -142,14 +145,14 @@ class ObjXYZ
   x(0), y(0), z(0) {}
   ObjXYZ(mreal fx, mreal fy, mreal fz) :
   x(fx), y(fy), z(fz) {}
-
+  
   void Set(mreal fx, mreal fy, mreal fz)
   { x = fx; y = fy; z = fz; }
   mreal Dot(const ObjXYZ & sPt) const
   { return(x*sPt.x)+(y*sPt.y)+(z*sPt.z); }
   mreal LengthSquared()
   { return(x*x+y*y+z*z); }
-
+  
   friend ObjXYZ operator + (const ObjXYZ& a, const ObjXYZ& b)
   { return ObjXYZ(a.x+b.x,a.y+b.y,a.z+b.z); }
   friend ObjXYZ operator - (const ObjXYZ& a)
@@ -164,12 +167,12 @@ class ObjXYZ
   { return ObjXYZ(a.x/d,a.y/d,a.z/d); }
   friend ObjXYZ operator * (const ObjXYZ& a, const ObjXYZ& b)
   { return ObjXYZ((a.y*b.z)-(a.z*b.y), (a.z*b.x)-(a.x*b.z), (a.x*b.y)-(a.y*b.x)); }
-
+    
   mreal Length()
   {
     return sqrt(x*x+y*y+z*z);
   }
-
+  
   bool Normalize()
   {
     mreal fLength=Length();
@@ -180,7 +183,7 @@ class ObjXYZ
     z *= factor;
     return true;
   }
-
+  
   bool operator==(const ObjXYZ &v) const
   {
     return x==v.x && y==v.y && z==v.z;
@@ -208,11 +211,11 @@ struct ObjXYZs {
 	std::map<ObjXYZ,size_t> vertexcoords;
   FILE* const fp;
   ObjXYZs(FILE *f) : fp(f) {}
-
+  
 	size_t addVertexCoords(mreal x, mreal y, mreal z)
 	{
 		const ObjXYZ point(x,y,z);
-
+    
 		std::map<ObjXYZ,size_t>::iterator pPoint = vertexcoords.find(point);
 		if(pPoint!=vertexcoords.end())
 			return pPoint->second;
@@ -225,7 +228,7 @@ struct ObjXYZs {
 			return point_index;
 		}
 	}
-
+  
 };
 
 struct ObjTriangle {
@@ -254,11 +257,11 @@ struct ObjGroup {
   FILE* const fp;
   ObjXYZs &vertexcoords;
   ObjGroup(FILE *f,ObjXYZs& v) : commoncolor(NC), samecolor(true), fp(f), vertexcoords(v) {}
-
+  
 //  const HMGL gr;
-
+  
 //  ObjGroup(const HMGL g) : samecolor(true),	gr(g) {}
-
+  
   void addSegment(size_t m, size_t p1, size_t p2)
   {
     lines[m].push_back(ObjLine(p1,p2));
@@ -281,7 +284,7 @@ struct ObjGroup {
     }
     delete []p;
   }
-
+  
   void addPoint(size_t m, size_t p)
   {
     points[m].push_back(p);
@@ -297,7 +300,7 @@ struct ObjGroup {
   void addColourInfo(const mglPnt& p)
 	{
 		const mglColor color(p.r,p.g,p.b,p.a);
-
+    
     if (samecolor) {
       if (commoncolor == NC) {
         commoncolor = color;
@@ -356,7 +359,7 @@ struct ObjMaterials {
 	colormap materialmap;
   FILE* const fp;
   ObjMaterials(FILE *f) : fp(f) {}
-
+  
 	size_t addColor(const mglColor& color)
 	{
 		colormap::iterator pc = materialmap.find(color);
@@ -395,16 +398,16 @@ size_t MGL_LOCAL_CONST power_of_two(size_t input)
 
 void MGL_EXPORT mgl_write_obj(HMGL gr, const char *fname,const char *descr, int use_png)
 {
-	mglCanvas *gg = dynamic_cast<mglCanvas *>(gr);
-	if(!gg || gr->GetPrmNum()==0)	return;	// nothing to do
-
+	if(gr->GetPrmNum()==0)	return;	// nothing to do
+  
+	size_t i,j;
 	{
 		long mmin=0,mmax=0,m;
-		for(size_t i=0;i<gr->Grp.size();i++)	// prepare array of indirect indexing
+		for(i=0;i<gr->Grp.size();i++)	// prepare array of indirect indexing
 		{	m = gr->Grp[i].Id;	if(m<mmin) mmin=m;	if(m>mmax) mmax=m;	}
 		long *ng = new long[mmax-mmin+1];
-		for(size_t i=0;i<gr->Grp.size();i++)	ng[gr->Grp[i].Id-mmin] = i;
-		for(size_t i=0;i<size_t(gr->GetPrmNum());i++)	// collect data for groups
+		for(i=0;i<gr->Grp.size();i++)	ng[gr->Grp[i].Id-mmin] = i;
+		for(i=0;i<size_t(gr->GetPrmNum());i++)	// collect data for groups
 		// it is rather expensive (extra 4b per primitive) but need for export to 3D
 		{
 			m = gr->GetPrm(i,false).id-mmin;
@@ -412,7 +415,7 @@ void MGL_EXPORT mgl_write_obj(HMGL gr, const char *fname,const char *descr, int 
 		}
 		delete []ng;
 	}
-
+  
 	const size_t len=strlen(fname);
 	const size_t ntxt=gr->GetTxtNum();
 	const size_t Ntxt=power_of_two(ntxt);
@@ -424,533 +427,533 @@ void MGL_EXPORT mgl_write_obj(HMGL gr, const char *fname,const char *descr, int 
 	ObjUVs texturecoords(fp);
 	std::vector<size_t> tcs(pntnum); // texture coord ids
 
-	// center point
-	mglPnt p0;
-	const mreal width  = gg->GetWidth();
-	const mreal height = gg->GetHeight();
+  // center point
+  mglPnt p0;
+	const mreal width  = dynamic_cast<mglCanvas *>(gr)->GetWidth();
+	const mreal height = dynamic_cast<mglCanvas *>(gr)->GetHeight();
 	const mreal depth  = sqrt(width*height);
-
+  
 	p0.x = width/2.;
 	p0.y = height/2.;
 	p0.z = (1.f-sqrt(width*height)/(2*depth))*depth;
 
 	// vertices definition
 	fprintf(fp,"# Created by MathGL library\n# Title: %s\n",(descr && *descr) ? descr : fname);
-	for(size_t i=0;i<pntnum;i++)
+	for(i=0;i<pntnum;i++)
 	{
 		const mglPnt &pp = gr->GetPnt(i);
-		vcs[i] = vertexcoords.addVertexCoords(pp.x-p0.x, pp.y-p0.y, pp.z-p0.z);
-		tcs[i] = texturecoords.addTextureCoords(pp.ta, pp.c, Ntxt);
+    vcs[i] = vertexcoords.addVertexCoords(pp.x-p0.x, pp.y-p0.y, pp.z-p0.z);
+    tcs[i] = texturecoords.addTextureCoords(pp.ta, pp.c, Ntxt);
 	}
-
+  
   // prepare MTL file
 	tname[len-4]='.';	tname[len-3]='m';	tname[len-2]='t';	tname[len-1]='l';
 	FILE *fpmat=fopen(tname,"wt");
 	tname[len-4]='\0';
-	fprintf(fpmat,"newmtl Material\n");
+  fprintf(fpmat,"newmtl Material\n");
 	fprintf(fpmat,"Ka 0.0 0.0 0.0\n");
 	fprintf(fpmat,"Kd 1.0 1.0 1.0\n");
 	fprintf(fpmat,"Ks 0.0 0.0 0.0\n");
 	fprintf(fpmat,"d 1.0\nillum 2\n");
 	if(use_png)
-		fprintf(fpmat,"map_Kd %s_txt.png\n",tname);
+    fprintf(fpmat,"map_Kd %s_txt.png\n",tname);
 	else
-		fprintf(fpmat,"map_Kd %s_txt.tga\n",tname);
+    fprintf(fpmat,"map_Kd %s_txt.tga\n",tname);
 	if(use_png)
-		strcat(tname,"_txt.png");
+    strcat(tname,"_txt.png");
 	else
 		strcat(tname,"_txt.tga");
 	// prepare texture file (TGA or PNG)
 	const size_t txtwidth = 512;
 	unsigned char *buf = new unsigned char[4*256*txtwidth*Ntxt];
 	unsigned char **pbuf= (unsigned char **)malloc(256*Ntxt*sizeof(unsigned char *));
-	for(size_t i=0;i<256*Ntxt;i++)	pbuf[i] = buf+4*txtwidth*i;
-	for(size_t i=0;i<ntxt;i++)	gr->GetTxt(i).GetRGBAOBJ(buf+(Ntxt-1-i)*256*txtwidth*4);
-	for(size_t i=ntxt;i<Ntxt;i++)
-	{
-		unsigned char *f=buf+(Ntxt-1-i)*256*txtwidth*4;
-		const mglColor& c=BC;
-		for(size_t k=0;k<256;k++)
-		{
-		for(size_t l=0;l<txtwidth;l++)
-		{
-			*f++ = int(255*c.r);
-			*f++ = int(255*c.g);
-			*f++ = int(255*c.b);
-			*f++ = int(255*c.a);
-		}
-		}
-	}
+	for(i=0;i<256*Ntxt;i++)	pbuf[i] = buf+4*txtwidth*i;
+	for(i=0;i<ntxt;i++)	gr->GetTxt(i).GetRGBAOBJ(buf+(Ntxt-1-i)*256*txtwidth*4);
+	for(i=ntxt;i<Ntxt;i++)
+  {
+    unsigned char *f=buf+(Ntxt-1-i)*256*txtwidth*4;
+    const mglColor& c=BC;
+    for(size_t k=0;k<256;k++)
+    {
+      for(size_t l=0;l<txtwidth;l++)
+      {
+        *f++ = int(255*c.r);
+        *f++ = int(255*c.g);
+        *f++ = int(255*c.b);
+        *f++ = int(255*c.a);
+      }
+    }
+  }
 	if(use_png)
-		mgl_pnga_save(tname,txtwidth,256*Ntxt,pbuf);
+    mgl_pnga_save(tname,txtwidth,256*Ntxt,pbuf);
 	else
 		mgl_tga_save(tname,txtwidth,256*Ntxt,pbuf);
 	free(pbuf);
 	delete []buf;
-
-	ObjMaterials materials(fpmat);
-
+  
+  ObjMaterials materials(fpmat);
+  
 	// primitive definition in groups
-
+  
 	tname[len-4]='\0';
 	fprintf(fp,"# Primitives Definitions\nmtllib %s.mtl\n",tname);
-	for(size_t i=0;i<gr->Grp.size();i++)
+	for(i=0;i<gr->Grp.size();i++)
 	{
 		std::vector<long> &p = gr->Grp[i].p;
-		ObjGroup grp(fp, vertexcoords);
-		for(size_t j=0;j<p.size();j++)
+    ObjGroup grp(fp, vertexcoords);
+		for(j=0;j<p.size();j++)
 		{
 			const mglPrim &q = gr->GetPrm(p[j],false);
 
-			long n1=q.n1,n2=q.n2,n3=q.n3,n4=q.n4;
-			switch(q.type)
-			{
-				case 0:
-				if (gr->GetPnt(q.n1).a > mgl_min_a) {
-				const mglPnt p = gr->GetPnt(q.n1) - p0;
-				const mreal size = q.s;
-				const char type = q.n4;
-				mreal ss=size;
-				const mglColor c(p.r, p.g, p.b, p.a);
+      long n1=q.n1,n2=q.n2,n3=q.n3,n4=q.n4;
+      switch(q.type)
+      {
+        case 0:
+        if (gr->GetPnt(q.n1).a > mgl_min_a) {
+          const mglPnt p = gr->GetPnt(q.n1) - p0;
+          const mreal size = q.s;
+          const char type = q.n4;
+          mreal ss=size;
+          const mglColor c(p.r, p.g, p.b, p.a);
+          
+          if(!strchr("xsSoO",type))	ss *= 1.1;
+          if(type=='.' || ss==0)
+          {
+            const size_t m = materials.addColor(c);
+            grp.addPoint(m, vcs[n1]);
+          }
+          else
+           switch(type)
+           {
+              case 'P':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P[5][3] =
+                {
+                  { p.x-ss,p.y-ss,p.z },
+                  { p.x+ss,p.y-ss,p.z },
+                  { p.x+ss,p.y+ss,p.z },
+                  { p.x-ss,p.y+ss,p.z },
+                  { p.x-ss,p.y-ss,p.z }
+                };
+                grp.addLines(m, 5, P);
+              }
+              case '+':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P1[2][3] =
+                {
+                  { p.x-ss,p.y,p.z },
+                  { p.x+ss,p.y,p.z }
+                };
+                grp.addLines(m, 2, P1);
+                const mreal P2[2][3] =
+                {
+                  { p.x,p.y-ss,p.z },
+                  { p.x,p.y+ss,p.z }
+                };
+                grp.addLines(m, 2, P2);
+              }
+                break;
+              case 'X':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P[5][3] =
+                {
+                  { p.x-ss,p.y-ss,p.z },
+                  { p.x+ss,p.y-ss,p.z },
+                  { p.x+ss,p.y+ss,p.z },
+                  { p.x-ss,p.y+ss,p.z },
+                  { p.x-ss,p.y-ss,p.z }
+                };
+                grp.addLines(m, 5, P);
+                const mreal P1[2][3] =
+                {
+                  { p.x-ss,p.y-ss,p.z },
+                  { p.x+ss,p.y+ss,p.z }
+                };
+                grp.addLines(m, 2, P1);
+                const mreal P2[2][3] =
+                {
+                  { p.x+ss,p.y-ss,p.z },
+                  { p.x-ss,p.y+ss,p.z }
+                };
+                grp.addLines(m, 2, P2);
+              }
+                break;
+              case 'x':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P1[2][3] =
+                {
+                  { p.x-ss,p.y-ss,p.z },
+                  { p.x+ss,p.y+ss,p.z }
+                };
+                grp.addLines(m, 2, P1);
+                const mreal P2[2][3] =
+                {
+                  { p.x+ss,p.y-ss,p.z },
+                  { p.x-ss,p.y+ss,p.z }
+                };
+                grp.addLines(m, 2, P2);
+              }
+                break;
+              case 'S':
+              {
+                const size_t ti = tcs[n1]; grp.addColourInfo(p);
+                
+                const size_t pi1 = vertexcoords.addVertexCoords(p.x-ss,p.y-ss,p.z);
+                const size_t pi2 = vertexcoords.addVertexCoords(p.x+ss,p.y-ss,p.z);
+                const size_t pi3 = vertexcoords.addVertexCoords(p.x-ss,p.y+ss,p.z);
+                const size_t pi4 = vertexcoords.addVertexCoords(p.x+ss,p.y+ss,p.z);
+                
+                grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
+                grp.addTriangle(pi4, ti, pi3, ti, pi2, ti);
+              }
+                break;
+              case 's':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P[5][3] =
+                {
+                  { p.x-ss,p.y-ss,p.z },
+                  { p.x+ss,p.y-ss,p.z },
+                  { p.x+ss,p.y+ss,p.z },
+                  { p.x-ss,p.y+ss,p.z },
+                  { p.x-ss,p.y-ss,p.z }
+                };
+                grp.addLines(m, 5, P);
+              }
+                break;
+              case 'D':
+              {
+                const size_t ti = tcs[n1]; grp.addColourInfo(p);
+                
+                const size_t pi1 = vertexcoords.addVertexCoords(p.x,p.y-ss,p.z);
+                const size_t pi2 = vertexcoords.addVertexCoords(p.x+ss,p.y,p.z);
+                const size_t pi3 = vertexcoords.addVertexCoords(p.x-ss,p.y,p.z);
+                const size_t pi4 = vertexcoords.addVertexCoords(p.x,p.y+ss,p.z);
+                
+                grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
+                grp.addTriangle(pi4, ti, pi3, ti, pi2, ti);
+              }
+                break;
+              case 'd':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P[5][3] =
+                {
+                  { p.x,p.y-ss,p.z },
+                  { p.x+ss,p.y,p.z },
+                  { p.x,p.y+ss,p.z },
+                  { p.x-ss,p.y,p.z },
+                  { p.x,p.y-ss,p.z }
+                };
+                grp.addLines(m, 5, P);
+              }
+                break;
+              case 'Y':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P1[3][3] =
+                {
+                  { p.x,			 p.y-ss,		p.z },
+                  { p.x,			 p.y,			 p.z },
+                  { p.x+0.8*ss,p.y+0.6*ss,p.z }
+                };
+                grp.addLines(m, 3, P1);
+                const mreal P2[2][3] =
+                {
+                  { p.x,			 p.y,			 p.z },
+                  { p.x-0.8*ss,p.y+0.6*ss,p.z }
+                };
+                grp.addLines(m, 2, P2);
+              }
+                break;
+              case '*':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P1[2][3] =
+                {
+                  { p.x-ss,p.y,p.z },
+                  { p.x+ss,p.y,p.z }
+                };
+                grp.addLines(m, 2, P1);
+                const mreal P2[2][3] =
+                {
+                  { p.x-0.6*ss,p.y-0.8*ss,p.z },
+                  { p.x+0.6*ss,p.y+0.8*ss,p.z }
+                };
+                grp.addLines(m, 2, P2);
+                const mreal P3[2][3] =
+                {
+                  { p.x-0.6*ss,p.y+0.8*ss,p.z },
+                  { p.x+0.6*ss,p.y-0.8*ss,p.z }
+                };
+                grp.addLines(m, 2, P3);
+                
+              }
+                break;
+              case 'T':
+              {
+                const size_t ti = tcs[n1]; grp.addColourInfo(p);
+                
+                const size_t pi1 = vertexcoords.addVertexCoords(p.x-ss,p.y-ss/2,p.z);
+                const size_t pi2 = vertexcoords.addVertexCoords(p.x+ss,p.y-ss/2,p.z);
+                const size_t pi3 = vertexcoords.addVertexCoords(p.x,p.y+ss,p.z);
+                
+                grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
+              }
+                break;
+              case '^':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P[4][3] =
+                {
+                  { p.x-ss,p.y-ss/2,p.z },
+                  { p.x+ss,p.y-ss/2,p.z },
+                  { p.x,	 p.y+ss,	p.z },
+                  { p.x-ss,p.y-ss/2,p.z }
+                };
+                grp.addLines(m, 4, P);
+              }
+                break;
+              case 'V':
+              {
+                const size_t ti = tcs[n1]; grp.addColourInfo(p);
+                
+                const size_t pi1 = vertexcoords.addVertexCoords(p.x-ss,p.y+ss/2,p.z);
+                const size_t pi2 = vertexcoords.addVertexCoords(p.x,p.y-ss,p.z);
+                const size_t pi3 = vertexcoords.addVertexCoords(p.x+ss,p.y+ss/2,p.z);
+                
+                grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
+              }
+                break;
+              case 'v':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P[4][3] =
+                {
+                  { p.x-ss,p.y+ss/2,p.z },
+                  { p.x+ss,p.y+ss/2,p.z },
+                  { p.x,	 p.y-ss,	p.z },
+                  { p.x-ss,p.y+ss/2,p.z }
+                };
+                grp.addLines(m, 4, P);
+              }
+                break;
+              case 'L':
+              {
+                const size_t ti = tcs[n1]; grp.addColourInfo(p);
+                
+                const size_t pi1 = vertexcoords.addVertexCoords(p.x+ss/2,p.y+ss,p.z);
+                const size_t pi2 = vertexcoords.addVertexCoords(p.x-ss,	p.y,	 p.z);
+                const size_t pi3 = vertexcoords.addVertexCoords(p.x+ss/2,p.y-ss,p.z);
+                
+                grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
+              }
+                break;
+              case '<':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P[4][3] =
+                {
+                  { p.x+ss/2,p.y+ss,p.z },
+                  { p.x+ss/2,p.y-ss,p.z },
+                  { p.x-ss,	p.y,	 p.z },
+                  { p.x+ss/2,p.y+ss,p.z }
+                };
+                grp.addLines(m, 4, P);
+              }
+                break;
+              case 'R':
+              {
+                const size_t ti = tcs[n1]; grp.addColourInfo(p);
+                
+                const size_t pi1 = vertexcoords.addVertexCoords(p.x-ss/2,p.y+ss,p.z);
+                const size_t pi2 = vertexcoords.addVertexCoords(p.x-ss/2,p.y-ss,p.z);
+                const size_t pi3 = vertexcoords.addVertexCoords(p.x+ss,	p.y,	 p.z);
+                
+                grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
+              }
+                break;
+              case '>':
+              {
+                const size_t m = materials.addColor(c);
+                const mreal P[4][3] =
+                {
+                  { p.x-ss/2,p.y+ss,p.z },
+                  { p.x-ss/2,p.y-ss,p.z },
+                  { p.x+ss,	p.y,	 p.z },
+                  { p.x-ss/2,p.y+ss,p.z }
+                };
+                grp.addLines(m, 4, P);
+              }
+                break;
+              case 'O':
+              {
+                const size_t ti = tcs[n1]; grp.addColourInfo(p);
+                
+                const size_t cpi=vertexcoords.addVertexCoords(p.x, p.y, p.z);
+                size_t pnti[21];
+                for(size_t k=0;k<=20;k++)
+                  pnti[k]=vertexcoords.addVertexCoords(p.x+ss*cos(k*M_PI/10),p.y+ss*sin(k*M_PI/10),p.z);
+                for(size_t k=0;k<20;k++) {
+                  grp.addTriangle(pnti[k], ti, pnti[k+1], ti, cpi, ti);
+                }
+              }
+                break;
+              case 'C':
+              {
+                const size_t m = materials.addColor(c);
+                grp.addPoint(m, vcs[n1]);
+              }
+              case 'o':
+              {
+                const size_t m = materials.addColor(c);
+                mreal P[21][3];
+                for(size_t k=0;k<=20;k++) {
+                  P[k][0] = p.x+ss*cos(k*M_PI/10);
+                  P[k][1] = p.y+ss*sin(k*M_PI/10);
+                  P[k][2] = p.z;
+                }
+                grp.addLines(m, 21, P);
+              }
+                break;
+            } 
+        }
+          break;
+        case 1:
+        if (gr->GetPnt(q.n1).a > mgl_min_a || gr->GetPnt(q.n2).a > mgl_min_a) {
+          const mglPnt& p1 = gr->GetPnt(q.n1);
+          const mglPnt& p2 = gr->GetPnt(q.n2);
+          const size_t m = materials.addColor((p1.r+p2.r)/2, (p1.g+p2.g)/2, (p1.b+p2.b)/2, (p1.a+p2.a)/2);
+          grp.addSegment(m, vcs[n1], vcs[n2]);
+        }
+          break;
+        case 2:
+        if (gr->GetPnt(q.n1).a > mgl_min_a || gr->GetPnt(q.n2).a > mgl_min_a || gr->GetPnt(q.n3).a > mgl_min_a) {
+          grp.addTriangle(vcs[n1],tcs[n1], vcs[n2],tcs[n2], vcs[n3],tcs[n3]);
+          grp.addColourInfo(gr->GetPnt(n1));
+          grp.addColourInfo(gr->GetPnt(n2));
+          grp.addColourInfo(gr->GetPnt(n3));
+        }
+          break;
+        case 3:
+        if (gr->GetPnt(q.n1).a > mgl_min_a || gr->GetPnt(q.n2).a > mgl_min_a || gr->GetPnt(q.n3).a > mgl_min_a || gr->GetPnt(q.n4).a > mgl_min_a) {
+          grp.addTriangle(vcs[n1],tcs[n1], vcs[n2],tcs[n2], vcs[n3],tcs[n3]);
+          grp.addTriangle(vcs[n2],tcs[n2], vcs[n4],tcs[n4], vcs[n3],tcs[n3]);
+          grp.addColourInfo(gr->GetPnt(n1));
+          grp.addColourInfo(gr->GetPnt(n2));
+          grp.addColourInfo(gr->GetPnt(n3));
+          grp.addColourInfo(gr->GetPnt(n4));
+        }
+          break;
+        case 4:
+        {
+          const mglPnt p = gr->GetPnt(q.n1) - p0;
 
-				if(!strchr("xsSoO",type))	ss *= 1.1;
-				if(type=='.' || ss==0)
-				{
-					const size_t m = materials.addColor(c);
-					grp.addPoint(m, vcs[n1]);
-				}
-				else
-				switch(type)
-				{
-					case 'P':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P[5][3] =
-						{
-						{ p.x-ss,p.y-ss,p.z },
-						{ p.x+ss,p.y-ss,p.z },
-						{ p.x+ss,p.y+ss,p.z },
-						{ p.x-ss,p.y+ss,p.z },
-						{ p.x-ss,p.y-ss,p.z }
-						};
-						grp.addLines(m, 5, P);
-					}
-					case '+':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P1[2][3] =
-						{
-						{ p.x-ss,p.y,p.z },
-						{ p.x+ss,p.y,p.z }
-						};
-						grp.addLines(m, 2, P1);
-						const mreal P2[2][3] =
-						{
-						{ p.x,p.y-ss,p.z },
-						{ p.x,p.y+ss,p.z }
-						};
-						grp.addLines(m, 2, P2);
-					}
-						break;
-					case 'X':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P[5][3] =
-						{
-						{ p.x-ss,p.y-ss,p.z },
-						{ p.x+ss,p.y-ss,p.z },
-						{ p.x+ss,p.y+ss,p.z },
-						{ p.x-ss,p.y+ss,p.z },
-						{ p.x-ss,p.y-ss,p.z }
-						};
-						grp.addLines(m, 5, P);
-						const mreal P1[2][3] =
-						{
-						{ p.x-ss,p.y-ss,p.z },
-						{ p.x+ss,p.y+ss,p.z }
-						};
-						grp.addLines(m, 2, P1);
-						const mreal P2[2][3] =
-						{
-						{ p.x+ss,p.y-ss,p.z },
-						{ p.x-ss,p.y+ss,p.z }
-						};
-						grp.addLines(m, 2, P2);
-					}
-						break;
-					case 'x':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P1[2][3] =
-						{
-						{ p.x-ss,p.y-ss,p.z },
-						{ p.x+ss,p.y+ss,p.z }
-						};
-						grp.addLines(m, 2, P1);
-						const mreal P2[2][3] =
-						{
-						{ p.x+ss,p.y-ss,p.z },
-						{ p.x-ss,p.y+ss,p.z }
-						};
-						grp.addLines(m, 2, P2);
-					}
-						break;
-					case 'S':
-					{
-						const size_t ti = tcs[n1]; grp.addColourInfo(p);
+          const mreal f = q.p/2, dx=p.u/2, dy=p.v/2;
+          const mreal c=q.s*cos(q.w*M_PI/180), s=-q.s*sin(q.w*M_PI/180);
+          const double b[4] = {c,-s, s,c};
+          long ik,il=0;
+          
+          const mglGlyph &g = gr->GetGlf(q.n4);
+          const mreal dd = 0.004;
+          if(q.n3&8)
+          {
+            const size_t p_4 = vertexcoords.addVertexCoords(p.x+b[0]*dx+b[1]*(dy-dd),p.y+b[2]*dx+b[3]*(dy-dd),p.z);
+            const size_t p_3 = vertexcoords.addVertexCoords(p.x+b[0]*dx+b[1]*(dy+dd),p.y+b[2]*dx+b[3]*(dy+dd),p.z);
+            const size_t p_2 = vertexcoords.addVertexCoords(p.x+b[0]*(dx+f)+b[1]*(dy-dd),p.y+b[2]*dx+b[3]*(dy-dd),p.z);
+            const size_t p_1 = vertexcoords.addVertexCoords(p.x+b[0]*(dx+f)+b[1]*(dy+dd),p.y+b[2]*dx+b[3]*(dy+dd),p.z);
+            
+            if(!(q.n3&4))	// glyph_line(p,f,true, d);
+            {
+              const size_t ti = tcs[n1]; grp.addColourInfo(p);
+              grp.addMonoTriangle(ti, p_1, p_3, p_2);
+              grp.addMonoTriangle(ti, p_4, p_2, p_3);
+            }
+            else	// glyph_line(p,f,false, d);
+            {
+              const size_t m = materials.addColor(p.r, p.g, p.b, p.a);
+              grp.addSegment(m, p_1, p_2);
+              grp.addSegment(m, p_3, p_4);
+              grp.addSegment(m, p_1, p_3);
+              grp.addSegment(m, p_2, p_4);
+            }
+          }
+          else
+          {
+            if(!(q.n3&4))	// glyph_fill(p,f,g, d);
+            {
+              for(ik=0;ik<g.nt;ik++)
+              {
+                mreal x,y;
+                x = dx+f*g.trig[6*ik];		y = dy+f*g.trig[6*ik+1];
+                const size_t p_3 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
+                x = dx+f*g.trig[6*ik+2];	y = dy+f*g.trig[6*ik+3];
+                const size_t p_2 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
+                x = dx+f*g.trig[6*ik+4];	y = dy+f*g.trig[6*ik+5];
+                const size_t p_1 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
 
-						const size_t pi1 = vertexcoords.addVertexCoords(p.x-ss,p.y-ss,p.z);
-						const size_t pi2 = vertexcoords.addVertexCoords(p.x+ss,p.y-ss,p.z);
-						const size_t pi3 = vertexcoords.addVertexCoords(p.x-ss,p.y+ss,p.z);
-						const size_t pi4 = vertexcoords.addVertexCoords(p.x+ss,p.y+ss,p.z);
+                const size_t ti = tcs[n1]; grp.addColourInfo(p);
+                grp.addMonoTriangle(ti, p_1, p_3, p_2);
+              }
+            }
+            else	// glyph_wire(p,f,g, d);
+            {
+              const size_t m = materials.addColor(p.r, p.g, p.b, p.a);
+              for(ik=0;ik<g.nl;ik++)
+              {
+                mreal x,y;
+                x = g.line[2*ik];	y = g.line[2*ik+1];
+                if(x==0x3fff && y==0x3fff)	// line breakthrough
+                {	il = ik+1;	continue;	}
+                else if(ik==g.nl-1 || (g.line[2*ik+2]==0x3fff && g.line[2*ik+3]==0x3fff))
+                {	// enclose the circle. May be in future this block should be commented
+                  x = dx+f*g.line[2*ik];		y = dy+f*g.line[2*ik+1];
+                  const size_t p_2 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
+                  x = dx+f*g.line[2*il];		y = dy+f*g.line[2*il+1];
+                  const size_t p_1 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
+                  grp.addSegment(m, p_1, p_2);
+                }
+                else
+                {	// normal line
+                  x = dx+f*g.line[2*ik];		y = dy+f*g.line[2*ik+1];
+                  const size_t p_2 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
+                  x = dx+f*g.line[2*ik+2];	y = dy+f*g.line[2*ik+3];
+                  const size_t p_1 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
+                  grp.addSegment(m, p_1, p_2);
+                }
 
-						grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
-						grp.addTriangle(pi4, ti, pi3, ti, pi2, ti);
-					}
-						break;
-					case 's':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P[5][3] =
-						{
-						{ p.x-ss,p.y-ss,p.z },
-						{ p.x+ss,p.y-ss,p.z },
-						{ p.x+ss,p.y+ss,p.z },
-						{ p.x-ss,p.y+ss,p.z },
-						{ p.x-ss,p.y-ss,p.z }
-						};
-						grp.addLines(m, 5, P);
-					}
-						break;
-					case 'D':
-					{
-						const size_t ti = tcs[n1]; grp.addColourInfo(p);
+              }
+            }
+          }
 
-						const size_t pi1 = vertexcoords.addVertexCoords(p.x,p.y-ss,p.z);
-						const size_t pi2 = vertexcoords.addVertexCoords(p.x+ss,p.y,p.z);
-						const size_t pi3 = vertexcoords.addVertexCoords(p.x-ss,p.y,p.z);
-						const size_t pi4 = vertexcoords.addVertexCoords(p.x,p.y+ss,p.z);
-
-						grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
-						grp.addTriangle(pi4, ti, pi3, ti, pi2, ti);
-					}
-						break;
-					case 'd':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P[5][3] =
-						{
-						{ p.x,p.y-ss,p.z },
-						{ p.x+ss,p.y,p.z },
-						{ p.x,p.y+ss,p.z },
-						{ p.x-ss,p.y,p.z },
-						{ p.x,p.y-ss,p.z }
-						};
-						grp.addLines(m, 5, P);
-					}
-						break;
-					case 'Y':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P1[3][3] =
-						{
-						{ p.x,			 p.y-ss,		p.z },
-						{ p.x,			 p.y,			 p.z },
-						{ p.x+0.8*ss,p.y+0.6*ss,p.z }
-						};
-						grp.addLines(m, 3, P1);
-						const mreal P2[2][3] =
-						{
-						{ p.x,			 p.y,			 p.z },
-						{ p.x-0.8*ss,p.y+0.6*ss,p.z }
-						};
-						grp.addLines(m, 2, P2);
-					}
-						break;
-					case '*':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P1[2][3] =
-						{
-						{ p.x-ss,p.y,p.z },
-						{ p.x+ss,p.y,p.z }
-						};
-						grp.addLines(m, 2, P1);
-						const mreal P2[2][3] =
-						{
-						{ p.x-0.6*ss,p.y-0.8*ss,p.z },
-						{ p.x+0.6*ss,p.y+0.8*ss,p.z }
-						};
-						grp.addLines(m, 2, P2);
-						const mreal P3[2][3] =
-						{
-						{ p.x-0.6*ss,p.y+0.8*ss,p.z },
-						{ p.x+0.6*ss,p.y-0.8*ss,p.z }
-						};
-						grp.addLines(m, 2, P3);
-
-					}
-						break;
-					case 'T':
-					{
-						const size_t ti = tcs[n1]; grp.addColourInfo(p);
-
-						const size_t pi1 = vertexcoords.addVertexCoords(p.x-ss,p.y-ss/2,p.z);
-						const size_t pi2 = vertexcoords.addVertexCoords(p.x+ss,p.y-ss/2,p.z);
-						const size_t pi3 = vertexcoords.addVertexCoords(p.x,p.y+ss,p.z);
-
-						grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
-					}
-						break;
-					case '^':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P[4][3] =
-						{
-						{ p.x-ss,p.y-ss/2,p.z },
-						{ p.x+ss,p.y-ss/2,p.z },
-						{ p.x,	 p.y+ss,	p.z },
-						{ p.x-ss,p.y-ss/2,p.z }
-						};
-						grp.addLines(m, 4, P);
-					}
-						break;
-					case 'V':
-					{
-						const size_t ti = tcs[n1]; grp.addColourInfo(p);
-
-						const size_t pi1 = vertexcoords.addVertexCoords(p.x-ss,p.y+ss/2,p.z);
-						const size_t pi2 = vertexcoords.addVertexCoords(p.x,p.y-ss,p.z);
-						const size_t pi3 = vertexcoords.addVertexCoords(p.x+ss,p.y+ss/2,p.z);
-
-						grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
-					}
-						break;
-					case 'v':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P[4][3] =
-						{
-						{ p.x-ss,p.y+ss/2,p.z },
-						{ p.x+ss,p.y+ss/2,p.z },
-						{ p.x,	 p.y-ss,	p.z },
-						{ p.x-ss,p.y+ss/2,p.z }
-						};
-						grp.addLines(m, 4, P);
-					}
-						break;
-					case 'L':
-					{
-						const size_t ti = tcs[n1]; grp.addColourInfo(p);
-
-						const size_t pi1 = vertexcoords.addVertexCoords(p.x+ss/2,p.y+ss,p.z);
-						const size_t pi2 = vertexcoords.addVertexCoords(p.x-ss,	p.y,	 p.z);
-						const size_t pi3 = vertexcoords.addVertexCoords(p.x+ss/2,p.y-ss,p.z);
-
-						grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
-					}
-						break;
-					case '<':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P[4][3] =
-						{
-						{ p.x+ss/2,p.y+ss,p.z },
-						{ p.x+ss/2,p.y-ss,p.z },
-						{ p.x-ss,	p.y,	 p.z },
-						{ p.x+ss/2,p.y+ss,p.z }
-						};
-						grp.addLines(m, 4, P);
-					}
-						break;
-					case 'R':
-					{
-						const size_t ti = tcs[n1]; grp.addColourInfo(p);
-
-						const size_t pi1 = vertexcoords.addVertexCoords(p.x-ss/2,p.y+ss,p.z);
-						const size_t pi2 = vertexcoords.addVertexCoords(p.x-ss/2,p.y-ss,p.z);
-						const size_t pi3 = vertexcoords.addVertexCoords(p.x+ss,	p.y,	 p.z);
-
-						grp.addTriangle(pi1, ti, pi2, ti, pi3, ti);
-					}
-						break;
-					case '>':
-					{
-						const size_t m = materials.addColor(c);
-						const mreal P[4][3] =
-						{
-						{ p.x-ss/2,p.y+ss,p.z },
-						{ p.x-ss/2,p.y-ss,p.z },
-						{ p.x+ss,	p.y,	 p.z },
-						{ p.x-ss/2,p.y+ss,p.z }
-						};
-						grp.addLines(m, 4, P);
-					}
-						break;
-					case 'O':
-					{
-						const size_t ti = tcs[n1]; grp.addColourInfo(p);
-
-						const size_t cpi=vertexcoords.addVertexCoords(p.x, p.y, p.z);
-						size_t pnti[21];
-						for(size_t k=0;k<=20;k++)
-						pnti[k]=vertexcoords.addVertexCoords(p.x+ss*cos(k*M_PI/10),p.y+ss*sin(k*M_PI/10),p.z);
-						for(size_t k=0;k<20;k++) {
-						grp.addTriangle(pnti[k], ti, pnti[k+1], ti, cpi, ti);
-						}
-					}
-						break;
-					case 'C':
-					{
-						const size_t m = materials.addColor(c);
-						grp.addPoint(m, vcs[n1]);
-					}
-					case 'o':
-					{
-						const size_t m = materials.addColor(c);
-						mreal P[21][3];
-						for(size_t k=0;k<=20;k++) {
-						P[k][0] = p.x+ss*cos(k*M_PI/10);
-						P[k][1] = p.y+ss*sin(k*M_PI/10);
-						P[k][2] = p.z;
-						}
-						grp.addLines(m, 21, P);
-					}
-						break;
-					}
-				}
-				break;
-				case 1:
-				if (gr->GetPnt(q.n1).a > mgl_min_a || gr->GetPnt(q.n2).a > mgl_min_a) {
-				const mglPnt& p1 = gr->GetPnt(q.n1);
-				const mglPnt& p2 = gr->GetPnt(q.n2);
-				const size_t m = materials.addColor((p1.r+p2.r)/2, (p1.g+p2.g)/2, (p1.b+p2.b)/2, (p1.a+p2.a)/2);
-				grp.addSegment(m, vcs[n1], vcs[n2]);
-				}
-				break;
-				case 2:
-				if (gr->GetPnt(q.n1).a > mgl_min_a || gr->GetPnt(q.n2).a > mgl_min_a || gr->GetPnt(q.n3).a > mgl_min_a) {
-				grp.addTriangle(vcs[n1],tcs[n1], vcs[n2],tcs[n2], vcs[n3],tcs[n3]);
-				grp.addColourInfo(gr->GetPnt(n1));
-				grp.addColourInfo(gr->GetPnt(n2));
-				grp.addColourInfo(gr->GetPnt(n3));
-				}
-				break;
-				case 3:
-				if (gr->GetPnt(q.n1).a > mgl_min_a || gr->GetPnt(q.n2).a > mgl_min_a || gr->GetPnt(q.n3).a > mgl_min_a || gr->GetPnt(q.n4).a > mgl_min_a) {
-				grp.addTriangle(vcs[n1],tcs[n1], vcs[n2],tcs[n2], vcs[n3],tcs[n3]);
-				grp.addTriangle(vcs[n2],tcs[n2], vcs[n4],tcs[n4], vcs[n3],tcs[n3]);
-				grp.addColourInfo(gr->GetPnt(n1));
-				grp.addColourInfo(gr->GetPnt(n2));
-				grp.addColourInfo(gr->GetPnt(n3));
-				grp.addColourInfo(gr->GetPnt(n4));
-				}
-				break;
-				case 4:
-				{
-				const mglPnt p = gr->GetPnt(q.n1) - p0;
-
-				const mreal f = q.p/2, dx=p.u/2, dy=p.v/2;
-				const mreal c=q.s*cos(q.w*M_PI/180), s=-q.s*sin(q.w*M_PI/180);
-				const double b[4] = {c,-s, s,c};
-				long ik,il=0;
-
-				const mglGlyph &g = gr->GetGlf(q.n4);
-				const mreal dd = 0.004;
-				if(q.n3&8)
-				{
-					const size_t p_4 = vertexcoords.addVertexCoords(p.x+b[0]*dx+b[1]*(dy-dd),p.y+b[2]*dx+b[3]*(dy-dd),p.z);
-					const size_t p_3 = vertexcoords.addVertexCoords(p.x+b[0]*dx+b[1]*(dy+dd),p.y+b[2]*dx+b[3]*(dy+dd),p.z);
-					const size_t p_2 = vertexcoords.addVertexCoords(p.x+b[0]*(dx+f)+b[1]*(dy-dd),p.y+b[2]*dx+b[3]*(dy-dd),p.z);
-					const size_t p_1 = vertexcoords.addVertexCoords(p.x+b[0]*(dx+f)+b[1]*(dy+dd),p.y+b[2]*dx+b[3]*(dy+dd),p.z);
-
-					if(!(q.n3&4))	// glyph_line(p,f,true, d);
-					{
-					const size_t ti = tcs[n1]; grp.addColourInfo(p);
-					grp.addMonoTriangle(ti, p_1, p_3, p_2);
-					grp.addMonoTriangle(ti, p_4, p_2, p_3);
-					}
-					else	// glyph_line(p,f,false, d);
-					{
-					const size_t m = materials.addColor(p.r, p.g, p.b, p.a);
-					grp.addSegment(m, p_1, p_2);
-					grp.addSegment(m, p_3, p_4);
-					grp.addSegment(m, p_1, p_3);
-					grp.addSegment(m, p_2, p_4);
-					}
-				}
-				else
-				{
-					if(!(q.n3&4))	// glyph_fill(p,f,g, d);
-					{
-					for(ik=0;ik<g.nt;ik++)
-					{
-						mreal x,y;
-						x = dx+f*g.trig[6*ik];		y = dy+f*g.trig[6*ik+1];
-						const size_t p_3 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
-						x = dx+f*g.trig[6*ik+2];	y = dy+f*g.trig[6*ik+3];
-						const size_t p_2 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
-						x = dx+f*g.trig[6*ik+4];	y = dy+f*g.trig[6*ik+5];
-						const size_t p_1 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
-
-						const size_t ti = tcs[n1]; grp.addColourInfo(p);
-						grp.addMonoTriangle(ti, p_1, p_3, p_2);
-					}
-					}
-					else	// glyph_wire(p,f,g, d);
-					{
-					const size_t m = materials.addColor(p.r, p.g, p.b, p.a);
-					for(ik=0;ik<g.nl;ik++)
-					{
-						mreal x,y;
-						x = g.line[2*ik];	y = g.line[2*ik+1];
-						if(x==0x3fff && y==0x3fff)	// line breakthrough
-						{	il = ik+1;	continue;	}
-						else if(ik==g.nl-1 || (g.line[2*ik+2]==0x3fff && g.line[2*ik+3]==0x3fff))
-						{	// enclose the circle. May be in future this block should be commented
-						x = dx+f*g.line[2*ik];		y = dy+f*g.line[2*ik+1];
-						const size_t p_2 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
-						x = dx+f*g.line[2*il];		y = dy+f*g.line[2*il+1];
-						const size_t p_1 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
-						grp.addSegment(m, p_1, p_2);
-						}
-						else
-						{	// normal line
-						x = dx+f*g.line[2*ik];		y = dy+f*g.line[2*ik+1];
-						const size_t p_2 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
-						x = dx+f*g.line[2*ik+2];	y = dy+f*g.line[2*ik+3];
-						const size_t p_1 = vertexcoords.addVertexCoords(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
-						grp.addSegment(m, p_1, p_2);
-						}
-
-					}
-					}
-				}
-
-				}
-				break;
-			}
+        }
+          break;
+      }
 		}
-		if (!grp.triangles.empty() || !grp.lines.empty() || !grp.points.empty())
-		fprintf(fp,"g %s\n",gr->Grp[i].Lbl.c_str());
+    if (!grp.triangles.empty() || !grp.lines.empty() || !grp.points.empty())
+      fprintf(fp,"g %s\n",gr->Grp[i].Lbl.c_str());
 
-		if (!grp.triangles.empty()) {
-		if (grp.samecolor) {
-			fprintf(fp,"usemtl Material%" PRIuS "\n", materials.addColor(grp.commoncolor));
-			grp.writeTriangles();
-		} else {
-			fprintf(fp,"usemtl Material\n");
-			grp.writeTexturedTriangles();
-		}
-		}
-		grp.writeLines();
-		grp.writePoints();
-
+    if (!grp.triangles.empty()) {
+      if (grp.samecolor) {
+        fprintf(fp,"usemtl Material%" PRIuS "\n", materials.addColor(grp.commoncolor));
+        grp.writeTriangles();
+      } else {
+        fprintf(fp,"usemtl Material\n");
+        grp.writeTexturedTriangles();
+      }
+    }
+    grp.writeLines();
+    grp.writePoints();
+    
 		gr->Grp[i].p.clear();	// we don't need indexes anymore
 	}
 	fclose(fp);
 	fclose(fpmat);
-	delete []tname;
+  delete []tname;
 }
 
 void MGL_EXPORT mgl_write_obj_(uintptr_t *gr, const char *fname,const char *descr, int *use_png,int l,int n)

@@ -143,7 +143,6 @@ using mglDataA::Momentum;
 		mgl_data_create(this,n,1,1);
 		va_list vl;	va_start(vl,n);
 		for(long i=0;i<n;i++)	a[i] = va_arg(vl,double);
-		va_end(vl);
 	}
 
 	/// Create or recreate the array with specified size and fill it by zero
@@ -164,18 +163,15 @@ using mglDataA::Momentum;
 	/// Crop the data
 	inline void Crop(long n1, long n2,char dir='x')
 	{	mgl_data_crop(this,n1,n2,dir);	}
-	/// Crop the data to be most optimal for FFT (i.e. to closest value of 2^n*3^m*5^l)
-	inline void Crop(const char *how="235x")
-	{	mgl_data_crop_opt(this, how);	}
 	/// Insert data rows/columns/slices
 	inline void Insert(char dir, long at=0, long num=1)
 	{	mgl_data_insert(this,dir,at,num);	}
 	/// Delete data rows/columns/slices
 	inline void Delete(char dir, long at=0, long num=1)
 	{	mgl_data_delete(this,dir,at,num);	}
-	/// Remove rows with duplicate values in column clmn
-	inline void Clean(long clmn)
-	{	mgl_data_clean(this,clmn);	}
+	/// Remove rows with duplicate values in column id
+	inline void Clean(long id)
+	{	mgl_data_clean(this,id);	}
 	/// Join with another data array
 	inline void Join(const mglDataA &d)
 	{	mgl_data_join(this,&d);	}
@@ -280,13 +276,6 @@ using mglDataA::Momentum;
 	{	return mglData(true,mgl_data_subdata_ext(this,&xx,&yy,0));	}
 	inline mglData SubData(const mglDataA &xx) const
 	{	return mglData(true,mgl_data_subdata_ext(this,&xx,0,0));	}
-	/// Get data from sections ids, separated by value val along specified direction.
-	/** If section id is negative then reverse order is used (i.e. -1 give last section). */
-	inline mglData Section(const mglDataA &ids, char dir='y', mreal val=NAN) const
-	{	return mglData(true,mgl_data_section(this,&ids,dir,val));	}
-	inline mglData Section(long id, char dir='y', mreal val=NAN) const
-	{	return mglData(true,mgl_data_section_val(this,id,dir,val));	}
-
 	/// Get trace of the data array
 	inline mglData Trace() const
 	{	return mglData(true,mgl_data_trace(this));	}
@@ -319,19 +308,14 @@ using mglDataA::Momentum;
 	inline mglData Evaluate(const mglData &idat, const mglData &jdat, const mglData &kdat, bool norm=true) const
 	{	return mglData(true,mgl_data_evaluate(this,&idat,&jdat,&kdat,norm));	}
 	/// Find roots for set of nonlinear equations defined by textual formula
-	inline mglData Roots(const char *eq, char var='x') const
-	{	return mglData(true,mgl_data_roots(eq, this, var));	}
+	inline mglData Roots(const char *func, char var='x') const
+	{	return mglData(true,mgl_data_roots(func, this, var));	}
 	/// Find correlation with another data arrays
 	inline mglData Correl(const mglDataA &dat, const char *dir) const
 	{	return mglData(true,mgl_data_correl(this,&dat,dir));	}
 	/// Find auto correlation function
 	inline mglData AutoCorrel(const char *dir) const
 	{	return mglData(true,mgl_data_correl(this,this,dir));	}
-	/// Get curves, separated by NAN, for maximal values of array d as function of x coordinate.
-	/** Noises below lvl amplitude are ignored.
-	 * Parameter dy \in [0,ny] set the "attraction" distance of points to curve. */
-	inline mglData Detect(mreal lvl, mreal dj, mreal di=0, mreal min_len=0) const
-	{	return mglData(true,mgl_data_detect(this,lvl,dj,di,min_len));	}
 
 	/// Cumulative summation the data in given direction or directions
 	inline void CumSum(const char *dir)	{	mgl_data_cumsum(this,dir);	}
@@ -339,9 +323,6 @@ using mglDataA::Momentum;
 	inline void Integral(const char *dir)	{	mgl_data_integral(this,dir);	}
 	/// Differentiate the data in given direction or directions
 	inline void Diff(const char *dir)	{	mgl_data_diff(this,dir);	}
-	/// Differentiate the parametrically specified data along direction v1
-	inline void Diff(const mglDataA &v1)
-	{	mgl_data_diff_par(this,&v1,0,0);	}
 	/// Differentiate the parametrically specified data along direction v1 with v2=const
 	inline void Diff(const mglDataA &v1, const mglDataA &v2)
 	{	mgl_data_diff_par(this,&v1,&v2,0);	}
@@ -359,12 +340,6 @@ using mglDataA::Momentum;
 	inline void Mirror(const char *dir)		{	mgl_data_mirror(this,dir);	}
 	/// Sort rows (or slices) by values of specified column
 	inline void Sort(long idx, long idy=-1)	{	mgl_data_sort(this,idx,idy);	}
-	/// Return dilated array of 0 or 1 for data values larger val
-	inline void Dilate(mreal val=1, long step=1)
-	{	mgl_data_dilate(this, val, step);	}
-	/// Return eroded array of 0 or 1 for data values larger val
-	inline void Erode(mreal val=1, long step=1)
-	{	mgl_data_erode(this, val, step);	}
 
 	/// Set as the data envelop
 	inline void Envelop(char dir='x')
@@ -397,12 +372,7 @@ using mglDataA::Momentum;
 	inline void SinFFT(const char *dir)	{	mgl_data_sinfft(this,dir);	}
 	/// Apply Cos-Fourier transform
 	inline void CosFFT(const char *dir)	{	mgl_data_cosfft(this,dir);	}
-	/// Fill data by coordinates/momenta samples for Hankel ('h') or Fourier ('f') transform
-	/** Parameter \a how may contain:
-	 * ‘x‘,‘y‘,‘z‘ for direction (only one will be used),
-	 * ‘k‘ for momenta samples,
-	 * ‘h‘ for Hankel samples,
-	 * ‘f‘ for Cartesian/Fourier samples (default). */
+	/// Fill data by 'x'/'k' samples for Hankel ('h') or Fourier ('f') transform
 	inline void FillSample(const char *how)
 	{	mgl_data_fill_sample(this,how);	}
 	/// Apply wavelet transform
@@ -542,9 +512,9 @@ inline mglData mglQO3d(const char *ham, const mglDataA &ini_re, const mglDataA &
 /// Finds ray with starting point r0, p0 (and prepares ray data for mglQO2d)
 inline mglData mglRay(const char *ham, mglPoint r0, mglPoint p0, mreal dt=0.1, mreal tmax=10)
 {	return mglData(true, mgl_ray_trace(ham, r0.x, r0.y, r0.z, p0.x, p0.y, p0.z, dt, tmax));	}
-/// Saves result of ODE solving for var complex variables with right part func (separated by ';') and initial conditions x0 over time interval [0,tmax] with time step dt
-inline mglData mglODE(const char *func, const char *var, const mglDataA &ini, mreal dt=0.1, mreal tmax=10)
-{	return mglData(true, mgl_ode_solve_str(func,var, &ini, dt, tmax));	}
+/// Saves result of ODE solving (|u|^2) for "Hamiltonian" ham with initial conditions ini
+inline mglData mglODE(const char *df, const char *var, const mglDataA &ini, mreal dt=0.1, mreal tmax=10)
+{	return mglData(true, mgl_ode_solve_str(df,var, &ini, dt, tmax));	}
 //-----------------------------------------------------------------------------
 /// Get array as solution of tridiagonal system of equations a[i]*x[i-1]+b[i]*x[i]+c[i]*x[i+1]=d[i]
 /** String \a how may contain:
@@ -566,12 +536,6 @@ inline mglData mglTriangulation(const mglDataA &x, const mglDataA &y, const mglD
 {	return mglData(true,mgl_triangulation_3d(&x,&y,&z));	}
 inline mglData mglTriangulation(const mglDataA &x, const mglDataA &y)
 {	return mglData(true,mgl_triangulation_2d(&x,&y));	}
-/// Get curves, separated by NAN, for maximal values of array d as function of x coordinate.
-/** Noises below lvl amplitude are ignored.
- * Parameter dy \in [0,ny] set the "attraction" distance of points to curve. */
-inline mglData mglDetect(const mglDataA &d, mreal lvl, mreal dj, mreal di=0, mreal min_len=0)
-{	return mglData(true,mgl_data_detect(&d, lvl, dj, di, min_len));	}
-//-----------------------------------------------------------------------------
 /// Get array which is n-th pairs {x[i],y[i]} for iterated function system (fractal) generated by A
 inline mglData mglIFS2d(const mglDataA &A, long n, long skip=20)
 {	return mglData(true,mgl_data_ifs_2d(&A,n,skip));	}
@@ -581,6 +545,7 @@ inline mglData mglIFS3d(const mglDataA &A, long n, long skip=20)
 /// Get array which is n-th points {x[i],y[i],z[i]} for iterated function system (fractal) defined in *.ifs file 'fname' and named as 'name'
 inline mglData mglIFSfile(const char *fname, const char *name, long n, long skip=20)
 {	return mglData(true,mgl_data_ifs_file(fname,name,n,skip));	}
+/// Get array which is n-th pairs {x[i],y[i]} for flame fractal generated by A with functions F
 /// Get array which is n-th pairs {x[i],y[i]} for Flame fractal generated by A with functions F
 /** NOTE: A.nx must be >= 7 and F.nx >= 2 and F.nz=A.ny.
  * F[0,i,j] denote function id. F[1,i,j] give function weight, F(2:5,i,j) provide function parameters.
@@ -633,7 +598,7 @@ public:
 #endif
 };
 //-----------------------------------------------------------------------------
-/// Class which present equidistantly distributed data
+/// Class which present variable as data array
 class MGL_EXPORT mglDataV : public mglDataA
 {
 	long nx;	///< number of points in 1st dimensions ('x' dimension)
@@ -760,7 +725,7 @@ public:
 	mreal dvz(long ,long =0,long =0) const	{	return dk;	}
 };
 //-----------------------------------------------------------------------------
-/// Class which present function as data array
+/// Class which present variable as data array
 class MGL_EXPORT mglDataF : public mglDataA
 {
 	long nx;	///< number of points in 1st dimensions ('x' dimension)
@@ -813,9 +778,7 @@ public:
 	mreal valueD(mreal i,mreal j=0,mreal k=0, mreal *di=0,mreal *dj=0,mreal *dk=0) const
 	{
 		mreal res=0, x=v1.x+dx*i, y=v1.y+dy*j, z=v1.z+dz*k;
-		if(di)	*di = 0;
-		if(dj)	*dj = 0;
-		if(dk)	*dk = 0;
+		if(di)	*di = 0;	if(dj)	*dj = 0;	if(dk)	*dk = 0;
 		if(dfunc)
 		{
 			res = dfunc(x,y,z, par);
@@ -842,7 +805,7 @@ public:
 	}
 	/// Copy data from other mglDataV variable
 	inline const mglDataF &operator=(const mglDataF &d)
-	{	nx=d.nx;	ny=d.ny;	nz=d.nz;	v1=d.v1;	v2=d.v2;	setD();	mgl_delete_expr(ex);
+	{	nx=d.nx;	ny=d.ny;	nz=d.nz;	v1=d.v1;	v2=d.v2;	setD();
 		str=d.str;	ex = mgl_create_expr(str.c_str());	dfunc=d.dfunc;	par=d.par;	return d;	}
 	/// Get the value in given cell of the data without border checking
 	mreal v(long i,long j=0,long k=0) const
@@ -883,16 +846,14 @@ public:
 	}
 };
 //-----------------------------------------------------------------------------
-/// Class which present column of another data as data array
+/// Class which present variable as data array
 class MGL_EXPORT mglDataT : public mglDataA
 {
 	const mglDataA &dat;
 	long ind;
-	const mglDataT &operator=(const mglDataT &d)	{	return d;	}
 public:
 	mglDataT(const mglDataT &d) : dat(d.dat), ind(d.ind)	{	s = d.s;	}
 	mglDataT(const mglDataA &d, long col=0) : dat(d), ind(col)	{}
-	mglDataT(HCDT d, long col=0) : dat(*d), ind(col)	{}
 #if MGL_HAVE_RVAL
 	mglDataT(mglDataT &&d):dat(d.dat),ind(d.ind)
 	{	s=d.s;	temp=d.temp;	func=d.func;	o=d.o;	d.func=0;	}
@@ -933,16 +894,13 @@ public:
 	{	return 0;	}
 };
 //-----------------------------------------------------------------------------
-/// Class which present row of another data as data array
 class MGL_EXPORT mglDataR : public mglDataA
 {
 	const mglDataA &dat;
 	long ind;
-	const mglDataR &operator=(const mglDataR &d)	{	return d;	}
 public:
 	mglDataR(const mglDataR &d) : dat(d.dat), ind(d.ind)	{	s = d.s;	}
 	mglDataR(const mglDataA &d, long row=0) : dat(d), ind(row)	{}
-	mglDataR(HCDT d, long row=0) : dat(*d), ind(row)	{}
 #if MGL_HAVE_RVAL
 	mglDataR(mglDataR &&d):dat(d.dat),ind(d.ind)
 	{	s=d.s;	temp=d.temp;	func=d.func;	o=d.o;	d.func=0;	}
@@ -983,7 +941,7 @@ public:
 	{	return 0;	}
 };
 //-----------------------------------------------------------------------------
-/// Class which present std::vector as data array
+/// Class for replacement of std::vector
 class MGL_EXPORT mglDataS : public mglDataA
 {
 public:
@@ -1009,14 +967,14 @@ public:
 	{	return mglSpline3s(dat.data(),dat.size(),1,1,x,0,0);	}
 
 	mreal v(long i,long =0,long =0) const		{	return dat[i];	}
-	mreal vthr(long i) const	{	return dat[i];	}
+	mreal vthr(long i) const	{	return dat[i];	};
 	long GetNx() const	{	return dat.size();	}
 	long GetNy() const	{	return 1;	}
 	long GetNz() const	{	return 1;	}
 	mreal dvx(long i,long =0,long =0) const
 	{	return i>0? (i<long(dat.size()-1)? (dat[i+1]-dat[i-1])/2:dat[i]-dat[i-1]) : dat[i+1]-dat[i];	}
-	mreal dvy(long ,long =0,long =0) const	{	return 0;	}
-	mreal dvz(long ,long =0,long =0) const	{	return 0;	}
+	mreal dvy(long ,long =0,long =0) const	{	return 1;	}
+	mreal dvz(long ,long =0,long =0) const	{	return 1;	}
 };
 //-----------------------------------------------------------------------------
 #endif

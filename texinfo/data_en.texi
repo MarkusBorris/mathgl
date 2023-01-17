@@ -163,17 +163,8 @@ Default constructor. Allocates the memory for data array and initializes it by z
 @deftypefnx {Constructor on @code{mglDataC}} {} mglDataC (@code{int} size, @code{const dual *}dat2)
 @deftypefnx {Constructor on @code{mglDataC}} {} mglDataC (@code{int} size, @code{int} cols, @code{const dual *}dat2)
 @end ifclear
-Copy constructor. Allocates the memory for data array and copy values from other array. At this, if parameter @var{eq} or @var{val} is specified then the data will be modified by corresponding formula similarly to @ref{fill}.
+Copy constructor. Allocates the memory for data array and copy values from other array. At this, if parameter @var{eq} is specified then the data will be modified by corresponding formula similarly to @ref{fill}.
 @end deftypefn
-
-@deftypefn {MGL command} {} copy @sc{redat} @sc{imdat} dat2 ['eq'='']
-Allocates the memory for data array and copy real and imaginary values from complex array @var{dat2}.
-@end deftypefn
-
-@deftypefn {MGL command} {} copy 'name'
-Allocates the memory for data array and copy values from other array specified by its name, which can be "invalid" for MGL names (like one read from HDF5 files).
-@end deftypefn
-
 
 @deftypefn {MGL command} {} read @sc{dat} 'fname'
 @ifclear UDAV
@@ -186,14 +177,13 @@ Reads data from tab-separated text file with auto determining sizes of the data.
 @end deftypefn
 
 @deftypefn {MGL command} {} delete dat
-@deftypefnx {MGL command} {} delete 'name'
 @ifclear UDAV
 @deftypefnx {Destructor on @code{mglData}} {} ~mglData ()
 @deftypefnx {C function} @code{void} mgl_delete_data (@code{HMDT} dat)
 @deftypefnx {Destructor on @code{mglDataC}} {} ~mglDataC ()
 @deftypefnx {C function} @code{void} mgl_delete_datac (@code{HADT} dat)
 @end ifclear
-Deletes the data array from memory.
+Deletes the instance of class mglData.
 @end deftypefn
 
 
@@ -291,16 +281,6 @@ Reduces the data size by excluding data elements which indexes are not divisible
 Cuts off edges of the data @var{i}<@var{n1} and @var{i}>@var{n2} if @var{n2}>0 or @var{i}>@code{n[xyz]}-@var{n2} if @var{n2}<=0 along direction @var{dir}.
 @end deftypefn
 
-@deftypefn {MGL command} {} crop dat 'how'
-@ifclear UDAV
-@deftypefnx {Method on @code{mglData}} @code{void} Crop (@code{const char *}how=@code{"235x"})
-@deftypefnx {Method on @code{mglDataC}} @code{void} Crop (@code{const char *}how=@code{"235x"})
-@deftypefnx {C function} @code{void} mgl_data_crop_opt (@code{HMDT} dat, @code{const char *}how)
-@deftypefnx {C function} @code{void} mgl_datac_crop_opt (@code{HADT} dat, @code{const char *}how)
-@end ifclear
-Cuts off far edge of the data to be more optimal for fast Fourier transform. The resulting size will be the closest value of 2^n*3^m*5^l to the original one. The string @var{how} may contain: @samp{x}, @samp{y}, @samp{z} for directions, and @samp{2}, @samp{3}, @samp{5} for using corresponding bases.
-@end deftypefn
-
 @anchor{insert}
 @deftypefn {MGL command} {} insert dat 'dir' @code{[pos=off num=0]}
 @ifclear UDAV
@@ -321,11 +301,6 @@ Insert @var{num} slices along @var{dir}-direction at position @var{pos} and fill
 @deftypefnx {C function} @code{void} mgl_datac_delete (@code{HADT} dat, @code{char} dir, @code{int} pos, @code{char} num)
 @end ifclear
 Delete @var{num} slices along @var{dir}-direction at position @var{pos}.
-@end deftypefn
-
-@deftypefn {MGL command} {} delete dat
-@deftypefnx {MGL command} {} delete 'name'
-Deletes the whole data array.
 @end deftypefn
 
 @anchor{sort}
@@ -486,7 +461,9 @@ Creates new variable with name @var{dat} for one-dimensional array of size @var{
 Equidistantly fills the data values to range [@var{v1}, @var{v2}] in direction @var{dir}=@{@samp{x},@samp{y},@samp{z}@}.
 @end deftypefn
 
-@deftypefn {MGL command} {} fill dat 'eq' [vdat wdat]
+@deftypefn {MGL command} {} fill dat 'eq'
+@deftypefnx {MGL command} {} fill dat 'eq' vdat
+@deftypefnx {MGL command} {} fill dat 'eq' vdat wdat
 @ifclear UDAV
 @deftypefnx {Method on @code{mglData}} @code{void} Fill (@code{HMGL} gr, @code{const char *}eq, @code{const char *}opt=@code{""})
 @deftypefnx {Method on @code{mglData}} @code{void} Fill (@code{HMGL} gr, @code{const char *}eq, @code{const mglDataA &}vdat, @code{const char *}opt=@code{""})
@@ -502,7 +479,8 @@ Fills the value of array according to the formula in string @var{eq}. Formula is
 
 @anchor{modify}
 @deftypefn {MGL command} {} modify dat 'eq' [@code{dim=0}]
-@deftypefnx {MGL command} {} modify dat 'eq' vdat [wdat]
+@deftypefnx {MGL command} {} modify dat 'eq' vdat
+@deftypefnx {MGL command} {} modify dat 'eq' vdat wdat
 @ifclear UDAV
 @deftypefnx {Method on @code{mglData}} @code{void} Modify (@code{const char *}eq, @code{int} dim=@code{0})
 @deftypefnx {Method on @code{mglData}} @code{void} Modify (@code{const char *}eq, @code{const mglDataA &}v)
@@ -541,7 +519,7 @@ Fills the value of array according to the linear interpolation of triangulated s
 
 
 @anchor{put}
-@deftypefn {MGL command} {} put dat @code{val [i=all j=all k=all]}
+@deftypefn {MGL command} {} put dat @code{val [i=: j=: k=:]}
 @ifclear UDAV
 @deftypefnx {Method on @code{mglData}} @code{void} Put (@code{mreal} val, @code{int} i=@code{-1}, @code{int} j=@code{-1}, @code{int} k=@code{-1})
 @deftypefnx {Method on @code{mglDataC}} @code{void} Put (@code{dual} val, @code{int} i=@code{-1}, @code{int} j=@code{-1}, @code{int} k=@code{-1})
@@ -551,7 +529,7 @@ Fills the value of array according to the linear interpolation of triangulated s
 Sets value(s) of array a[@var{i}, @var{j}, @var{k}] = @var{val}. Negative indexes @var{i}, @var{j}, @var{k}=-1 set the value @var{val} to whole range in corresponding direction(s). For example, @code{Put(val,-1,0,-1);} sets a[i,0,j]=@var{val} for i=0...(nx-1), j=0...(nz-1).
 @end deftypefn
 
-@deftypefn {MGL command} {} put dat vdat [@code{i=all j=all k=all}]
+@deftypefn {MGL command} {} put dat vdat [@code{i=: j=: k=:}]
 @ifclear UDAV
 @deftypefnx {Method on @code{mglData}} @code{void} Put (@code{const mglDataA &}v, @code{int} i=@code{-1}, @code{int} j=@code{-1}, @code{int} k=@code{-1})
 @deftypefnx {Method on @code{mglDataC}} @code{void} Put (@code{const mglDataA &}v, @code{int} i=@code{-1}, @code{int} j=@code{-1}, @code{int} k=@code{-1})
@@ -619,7 +597,6 @@ Sets the symbol @var{ids} for data columns. The string should contain one symbol
 
 @anchor{read}
 @deftypefn {MGL command} {} read @sc{dat} 'fname'
-@deftypefnx {MGL command} {} read @sc{redat} @sc{imdat} 'fname'
 @ifclear UDAV
 @deftypefnx {Method on @code{mglData}} @code{bool} Read (@code{const char *}fname)
 @deftypefnx {Method on @code{mglDataC}} @code{bool} Read (@code{const char *}fname)
@@ -630,7 +607,6 @@ Reads data from tab-separated text file with auto determining sizes of the data.
 @end deftypefn
 
 @deftypefn {MGL command} {} read @sc{dat} 'fname' @code{mx [my=1 mz=1]}
-@deftypefnx {MGL command} {} read @sc{redat} @sc{imdat} 'fname' @code{mx [my=1 mz=1]}
 @ifclear UDAV
 @deftypefnx {Method on @code{mglData}} @code{bool} Read (@code{const char *}fname, @code{int} mx, @code{int} my=@code{1}, @code{int} mz=@code{1})
 @deftypefnx {Method on @code{mglDataC}} @code{bool} Read (@code{const char *}fname, @code{int} mx, @code{int} my=@code{1}, @code{int} mz=@code{1})
@@ -726,22 +702,6 @@ Saves data array named @var{dname} to HDF5 file. This function does nothing if H
 Put data names from HDF5 file @var{fname} into @var{buf} as '\t' separated fields. In MGL version the list of data names will be printed as message. This function does nothing if HDF5 was disabled during library compilation.
 @end deftypefn
 
-@anchor{openhdf}
-@deftypefn {MGL command} {} openhdf 'fname'
-@ifclear UDAV
-@deftypefnx {Method on @code{mglParse}} @code{void} OpenHDF (@code{const char *}fname)
-@deftypefnx {C function} @code{void} mgl_parser_openhdf (@code{HMPR} pr, @code{const char *}fname)
-@end ifclear
-Reads all data array from HDF5 file @var{fname} and create MGL variables with names of data names in HDF file. Complex variables will be created if data name starts with @samp{!}.
-@end deftypefn
-
-@ifclear UDAV
-@deftypefn {C function} @code{const char * const *} mgl_datas_hdf_str (@code{HMPR} pr, @code{const char *}fname)
-Put HDF data names as list of strings (last one is ""). The result is valid untill next call of the function.
-@end deftypefn
-@end ifclear
-
-
 @anchor{import}
 @deftypefn {MGL command} {} import @sc{dat} 'fname' 'sch' [@code{v1=0 v2=1}]
 @ifclear UDAV
@@ -782,7 +742,7 @@ Saves data matrix (or @code{ns}-th slice for 3d data) to bitmap file (now suppor
 
 
 @anchor{subdata}
-@deftypefn {MGL command} {} subdata @sc{res} dat @code{xx [yy=all zz=all]}
+@deftypefn {MGL command} {} subdata @sc{res} dat @code{xx [yy=: zz=:]}
 @ifclear UDAV
 @deftypefnx {Method on @code{mglData}} @code{mglData} SubData (@code{mreal} xx, @code{mreal} yy=@code{-1}, @code{mreal} zz=@code{-1}) @code{const}
 @deftypefnx {Method on @code{mglDataC}} @code{mglData} SubData (@code{mreal} xx, @code{mreal} yy=@code{-1}, @code{mreal} zz=@code{-1}) @code{const}
@@ -791,7 +751,7 @@ Saves data matrix (or @code{ns}-th slice for 3d data) to bitmap file (now suppor
 Extracts sub-array data from the original data array keeping fixed positive index. For example @code{SubData(-1,2)} extracts 3d row (indexes are zero based), @code{SubData(4,-1)} extracts 5th column, @code{SubData(-1,-1,3)} extracts 4th slice and so on. If argument(s) are non-integer then linear interpolation between slices is used. In MGL version this command usually is used as inline one @code{dat(xx,yy,zz)}. Function return NULL or create empty data if data cannot be created for given arguments.
 @end deftypefn
 
-@deftypefn {MGL command} {} subdata @sc{res} dat xdat [ydat zdat]
+@deftypefn {MGL command} {} subdata @sc{res} dat xdat [ydat=: zdat=:]
 @ifclear UDAV
 @deftypefnx {Method on @code{mglData}} @code{mglData} SubData (@code{const mglDataA &}xx, @code{const mglDataA &}yy, @code{const mglDataA &}zz) @code{const}
 @deftypefnx {Method on @code{mglDataC}} @code{mglData} SubData (@code{const mglDataA &}xx, @code{const mglDataA &}yy, @code{const mglDataA &}zz) @code{const}
@@ -842,23 +802,6 @@ Resizes the data to new size @var{mx}, @var{my}, @var{mz} from box (part) [@var{
 Gets array which values is result of interpolation of original array for coordinates from other arrays. All dimensions must be the same for data @var{idat}, @var{jdat}, @var{kdat}. Coordinates from @var{idat}, @var{jdat}, @var{kdat} are supposed to be normalized in range [0,1] (if @var{norm}=@code{true}) or in ranges [0,nx], [0,ny], [0,nz] correspondingly. Function return NULL or create empty data if data cannot be created for given arguments.
 @end deftypefn
 
-@anchor{section}
-@deftypefn {MGL command} {} section @sc{res} dat ids ['dir'='y' @code{val=nan}]
-@deftypefnx {MGL command} {} section @sc{res} dat @code{id} ['dir'='y' @code{val=nan}]
-@ifclear UDAV
-@deftypefnx {Method on @code{mglData}} @code{mglData} Section (@code{const mglDataA &}ids, @code{const char *}dir=@code{'y'}, @code{mreal} val=@code{NAN}) @code{const}
-@deftypefnx {Method on @code{mglData}} @code{mglData} Section (@code{long} id, @code{const char *}dir=@code{'y'}, @code{mreal} val=@code{NAN}) @code{const}
-@deftypefnx {Method on @code{mglDataC}} @code{mglData} Section (@code{const mglDataA &}ids, @code{const char *}dir=@code{'y'}, @code{mreal} val=@code{NAN}) @code{const}
-@deftypefnx {Method on @code{mglDataC}} @code{mglData} Section (@code{long} id, @code{const char *}dir=@code{'y'}, @code{mreal} val=@code{NAN}) @code{const}
-@deftypefnx {C function} @code{HMDT} mgl_data_section (@code{HCDT} dat, @code{HCDT} ids, @code{const char *}dir, @code{mreal} val)
-@deftypefnx {C function} @code{HMDT} mgl_data_section_val (@code{HCDT} dat, @code{long} id, @code{const char *}dir, @code{mreal} val)
-@deftypefnx {C function} @code{HADT} mgl_datac_section (@code{HCDT} dat, @code{HCDT} ids, @code{const char *}dir, @code{mreal} val)
-@deftypefnx {C function} @code{HADT} mgl_datac_section_val (@code{HCDT} dat, @code{long} id, @code{const char *}dir, @code{mreal} val)
-@end ifclear
-Gets array which is @var{id}-th section (range of slices separated by value @var{val}) of original array @var{dat}. For @var{id}<0 the reverse order is used (i.e. -1 give last section). If several @var{ids} are provided then output array will be result  of sequential joining of sections.
-@end deftypefn
-
-
 @anchor{solve}
 @deftypefn {MGL command} {} solve @sc{res} dat @code{val} 'dir' [@code{norm=on}]
 @deftypefnx {MGL command} {} solve @sc{res} dat @code{val} 'dir' idat [@code{norm=on}]
@@ -879,15 +822,6 @@ Gets array which values is indexes (roots) along given direction @var{dir}, wher
 @deftypefnx {C function} @code{mreal} mgl_find_root_txt (@code{const char *}func, @code{mreal} ini, @code{char} var)
 @end ifclear
 Find roots of equation 'func'=0 for variable @var{var} with initial guess @var{ini}. Secant method is used for root finding. Function return NULL or create empty data if data cannot be created for given arguments.
-@end deftypefn
-
-@anchor{detect}
-@deftypefn {MGL command} {} detect @sc{res} dat @code{lvl dj [di=0 minlen=0]}
-@ifclear UDAV
-@deftypefnx {Method on @code{mglData}} @code{mglData} Detect (@code{mreal} lvl, @code{mreal} dj, @code{mreal} di=@code{0}, @code{mreal} minlen=@code{0}) @code{const}
-@deftypefnx {C function} @code{HMDT} mgl_data_detect (@code{HCDT} dat, @code{mreal} lvl, @code{mreal} dj, @code{mreal} di, @code{mreal} minlen)
-@end ifclear
-Get curves @{x,y@}, separated by NAN values, for local maximal values of array @var{dat} as function of x-coordinate. Noises below @var{lvl} amplitude are ignored. Parameter @var{dj} (in range [0,ny]) set the "attraction" y-distance of points to the curve. Similarly, @var{di} continue curve in x-direction through gaps smaller than @var{di} points. Curves with minimal length smaller than @var{minlen} will be ignored.
 @end deftypefn
 
 @anchor{hist}
@@ -1069,16 +1003,11 @@ Integrates (like cumulative summation) the data in given direction or directions
 Differentiates the data in given direction or directions.
 @end deftypefn
 
-@deftypefn {MGL command} {} diff dat xdat ydat [zdat]
+@deftypefn {MGL command} {} diff dat xdat ydat [zdat=0]
 @ifclear UDAV
-@deftypefnx {Method on @code{mglData}} @code{void} Diff (@code{const mglDataA &}x)
 @deftypefnx {Method on @code{mglData}} @code{void} Diff (@code{const mglDataA &}x, @code{const mglDataA &}y)
 @deftypefnx {Method on @code{mglData}} @code{void} Diff (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z)
-@deftypefnx {Method on @code{mglDataC}} @code{void} Diff (@code{const mglDataA &}x)
-@deftypefnx {Method on @code{mglDataC}} @code{void} Diff (@code{const mglDataA &}x, @code{const mglDataA &}y)
-@deftypefnx {Method on @code{mglDataC}} @code{void} Diff (@code{const mglDataA &}x, @code{const mglDataA &}y, @code{const mglDataA &}z)
 @deftypefnx {C function} @code{void} mgl_data_diff_par (@code{HMDT} dat, @code{HCDT} x, @code{HCDT}y, @code{HCDT}z)
-@deftypefnx {C function} @code{void} mgl_datac_diff_par (@code{HADT} dat, @code{HCDT} x, @code{HCDT}y, @code{HCDT}z)
 @end ifclear
 Differentiates the data specified parametrically in direction @var{x} with @var{y}, @var{z}=constant. Parametrical differentiation uses the formula (for 2D case): @math{da/dx = (a_j*y_i-a_i*y_j)/(x_j*y_i-x_i*y_j)} where @math{a_i=da/di, a_j=da/dj} denotes usual differentiation along 1st and 2nd dimensions. The similar formula is used for 3D case. Note, that you may change the order of arguments -- for example, if you have 2D data a(i,j) which depend on coordinates @{x(i,j), y(i,j)@} then usual derivative along @samp{x} will be @code{Diff(x,y);} and usual derivative along @samp{y} will be @code{Diff(y,x);}.
 @end deftypefn
@@ -1183,26 +1112,14 @@ Remove value steps (like phase jumps after inverse trigonometric functions) with
 @end deftypefn
 
 @anchor{smooth}
-@deftypefn {MGL command} {} smooth data ['dir'='xyz']
+@deftypefn {MGL command} {} smooth data @code{type} ['dir'='xyz']
 @ifclear UDAV
 @deftypefnx {Method on @code{mglData}} @code{void} Smooth (@code{const char *}dir=@code{"xyz"}, @code{mreal} delta=@code{0})
 @deftypefnx {Method on @code{mglDataC}} @code{void} Smooth (@code{const char *}dir=@code{"xyz"}, @code{mreal} delta=@code{0})
 @deftypefnx {C function} @code{void} mgl_data_smooth (@code{HMDT} dat, @code{const char *}dir, @code{mreal} delta)
 @deftypefnx {C function} @code{void} mgl_datac_smooth (@code{HADT} dat, @code{const char *}dir, @code{mreal} delta)
 @end ifclear
-Smooths the data on specified direction or directions. String @var{dirs} specifies the dimensions which will be smoothed. It may contain characters:
-@itemize @bullet
-@item
-@samp{xyz} for smoothing along x-,y-,z-directions correspondingly,
-@item
-@samp{0} does nothing,
-@item
-@samp{3} for linear averaging over 3 points,
-@item
-@samp{5} for linear averaging over 5 points,
-@item
-@samp{d1}...@samp{d9} for linear averaging over (2*N+1)-th points.
-@end itemize
+Smooths the data on specified direction or directions. String @var{dirs} specifies the dimensions which will be smoothed. It may contain characters: @samp{x} for 1st dimension, @samp{y} for 2nd dimension, @samp{z} for 3d dimension. If string @var{dir} contain: @samp{0} then does nothing, @samp{3} -- linear averaging over 3 points, @samp{5} -- linear averaging over 5 points. If string @var{dir} contain @samp{dN} (where @samp{N} is digit 1,2,...,9) then linear averaging over (2*N+1)-th points is used.
 By default quadratic averaging over 5 points is used.
 @end deftypefn
 
@@ -1241,6 +1158,7 @@ Calculates one step of diffraction by finite-difference method with parameter @v
 @end itemize
 @end deftypefn
 
+
 @anchor{norm}
 @deftypefn {MGL command} {} norm dat @code{v1 v2 [sym=off dim=0]}
 @ifclear UDAV
@@ -1253,10 +1171,10 @@ Normalizes the data to range [@var{v1},@var{v2}]. If flag @var{sym}=@code{true} 
 @anchor{normsl}
 @deftypefn {MGL command} {} normsl dat @code{v1 v2} ['dir'='z' @code{keep=on sym=off}]
 @ifclear UDAV
-@deftypefnx {Method on @code{mglData}} @code{void} NormSl (@code{mreal} v1=@code{0}, @code{mreal} v2=@code{1}, @code{char} dir=@code{'z'}, @code{bool} keep=@code{true}, @code{bool} sym=@code{false})
-@deftypefnx {C function} @code{void} mgl_data_norm_slice (@code{HMDT} dat, @code{mreal} v1, @code{mreal} v2, @code{char} dir, @code{int} keep, @code{int} sym)
+@deftypefnx {Method on @code{mglData}} @code{void} NormSl (@code{mreal} v1=@code{0}, @code{mreal} v2=@code{1}, @code{char} dir=@code{'z'}, @code{bool} keep_en=@code{true}, @code{bool} sym=@code{false})
+@deftypefnx {C function} @code{void} mgl_data_norm_slice (@code{HMDT} dat, @code{mreal} v1, @code{mreal} v2, @code{char} dir, @code{int} keep_en, @code{int} sym)
 @end ifclear
-Normalizes data slice-by-slice along direction @var{dir} the data in slices to range [@var{v1},@var{v2}]. If flag @var{sym}=@code{true} then symmetrical interval [-max(|v1|,|v2|), max(|v1|,|v2|)] is used. If @var{keep} is set then maximal value of k-th slice will be limited by
+Normalizes data slice-by-slice along direction @var{dir} the data in slices to range [@var{v1},@var{v2}]. If flag @var{sym}=@code{true} then symmetrical interval [-max(|v1|,|v2|), max(|v1|,|v2|)] is used. If @var{keep_en} is set then maximal value of k-th slice will be limited by
 @iftex
 @math{\sqrt{\sum a_{ij}(k)/\sum a_{ij}(0)}}.
 @end iftex
@@ -1275,25 +1193,6 @@ Normalizes data slice-by-slice along direction @var{dir} the data in slices to r
 @end ifclear
 Limits the data values to be inside the range [-@var{val},@var{val}], keeping the original sign of the value (phase for complex numbers). This is equivalent to operation @code{a[i] *= abs(a[i])<val?1.:val/abs(a[i]);}.
 @end deftypefn
-
-@anchor{dilate}
-@deftypefn {MGL command} {} dilate dat @code{[val=1 step=1]}
-@ifclear UDAV
-@deftypefnx {Method on @code{mglData}} @code{void} Dilate (@code{mreal} val=@code{1}, @code{long} step=@code{1})
-@deftypefnx {C function} @code{void} mgl_data_dilate (@code{HMDT} dat, @code{mreal} val, @code{long} step)
-@end ifclear
-Return dilated by @var{step} cells array of 0 or 1 for data values larger @var{val}. @c TODO @sref{Dilate and erode sample}
-@end deftypefn
-
-@anchor{erode}
-@deftypefn {MGL command} {} erode dat @code{[val=1 step=1]}
-@ifclear UDAV
-@deftypefnx {Method on @code{mglData}} @code{void} Erode (@code{mreal} val=@code{1}, @code{long} step=@code{1})
-@deftypefnx {C function} @code{void} mgl_data_erode (@code{HMDT} dat, @code{mreal} val, @code{long} step)
-@end ifclear
-Return eroded by @var{step} cells array of 0 or 1 for data values larger @var{val}. @c TODO @sref{Dilate and erode sample}
-@end deftypefn
-
 
 @c ------------------------------------------------------------------
 @external{}
@@ -1463,23 +1362,6 @@ Gets approximated (interpolated) position of minimum to variables @var{x}, @var{
 @deftypefnx {C function} @code{mreal} mgl_data_max_real (@code{HCDT} dat, @code{mreal} *x, @code{mreal} *y, @code{mreal} *z)
 @end ifclear
 Gets approximated (interpolated) position of maximum to variables @var{x}, @var{y}, @var{z} and returns the maximal value.
-@end deftypefn
-
-
-@anchor{.mxf} @anchor{.myf} @anchor{.mzf}
-@anchor{.mxl} @anchor{.myl} @anchor{.mzl}
-@deftypefn {MGL suffix} {(dat)} .mxf
-@deftypefnx {MGL suffix} {(dat)} .myf
-@deftypefnx {MGL suffix} {(dat)} .mzf
-@deftypefnx {MGL suffix} {(dat)} .mxl
-@deftypefnx {MGL suffix} {(dat)} .myl
-@deftypefnx {MGL suffix} {(dat)} .mzl
-@ifclear UDAV
-@deftypefnx {Method on @code{mglDataA}} @code{long} Maximal (@code{char} dir, @code{long} from) @code{const}
-@deftypefnx {Method on @code{mglDataA}} @code{long} Maximal (@code{char} dir, @code{long} from, @code{long} &p1, @code{long} &p2) @code{const}
-@deftypefnx {C function} @code{mreal} mgl_data_max_firstl (@code{HCDT} dat, @code{char} dir, @code{long} from, @code{long} *p1, @code{long} *p2)
-@end ifclear
-Get first starting @var{from} give position (or last one if @var{from}<0) maximum along direction @var{dir}, and save its orthogonal coordinates in @var{p1}, @var{p2}.
 @end deftypefn
 
 
@@ -1677,11 +1559,9 @@ The same as previous but with specified amplitude @var{ampl} and phase @var{phas
 @deftypefnx {MGL command} {} fourier complexDat 'dir'
 @ifclear UDAV
 @deftypefnx {Global function} @code{void} mglFourier @code{const mglDataA &}re, @code{const mglDataA &}im, @code{const char *}dir)
-@deftypefnx {Method on @code{mglDataC}} @code{void} FFT (@code{const char *}dir)
 @deftypefnx {C function} @code{void} mgl_data_fourier @code{HCDT} re, @code{HCDT} im, @code{const char *}dir)
-@deftypefnx {C function} @code{void} mgl_datac_fft (@code{HADT} dat, @code{const char *}dir)
 @end ifclear
-Does Fourier transform of complex data @var{re}+i*@var{im} in directions @var{dir}. Result is placed back into @var{re} and @var{im} data arrays. If @var{dir} contain @samp{i} then inverse Fourier is used.
+Does Fourier transform of complex data @var{re}+i*@var{im} in directions @var{dir}. Result is placed back into @var{re} and @var{im} data arrays.
 @end deftypefn
 
 @anchor{stfad}
@@ -1724,20 +1604,8 @@ Data dimensions of arrays @var{A}, @var{B}, @var{C} should be equal. Also their 
 @deftypefnx {C function} @code{HMDT} mgl_pde_solve (@code{HMGL} gr, @code{const char *}ham, @code{HCDT} ini_re, @code{HCDT} ini_im, @code{mreal} dz, @code{mreal} k0, @code{const char *}opt)
 @deftypefnx {C function} @code{HADT} mgl_pde_solve_c (@code{HMGL} gr, @code{const char *}ham, @code{HCDT} ini_re, @code{HCDT} ini_im, @code{mreal} dz, @code{mreal} k0, @code{const char *}opt)
 @end ifclear
-Solves equation du/dz = i*k0*@var{ham}(p,q,x,y,z,|u|)[u], where p=-i/k0*d/dx, q=-i/k0*d/dy are pseudo-differential operators. Parameters @var{ini_re}, @var{ini_im} specify real and imaginary part of initial field distribution. Parameters @var{Min}, @var{Max} set the bounding box for the solution. Note, that really this ranges are increased by factor 3/2 for purpose of reducing reflection from boundaries. Parameter @var{dz} set the step along evolutionary coordinate z. At this moment, simplified form of function @var{ham} is supported -- all ``mixed'' terms (like @samp{x*p}->x*d/dx) are excluded. For example, in 2D case this function is effectively @math{ham = f(p,z) + g(x,z,u)}. However commutable combinations (like @samp{x*q}->x*d/dy) are allowed. Here variable @samp{u} is used for field amplitude |u|. This allow one solve nonlinear problems -- for example, for nonlinear Shrodinger equation you may set @code{ham="p^2 + q^2 - u^2"}. You may specify imaginary part for wave absorption, like @code{ham = "p^2 + i*x*(x>0)"}. See also @ref{apde}, @ref{qo2d}, @ref{qo3d}. @sref{PDE solving hints}
+Solves equation du/dz = i*k0*@var{ham}(p,q,x,y,z,|u|)[u], where p=-i/k0*d/dx, q=-i/k0*d/dy are pseudo-differential operators. Parameters @var{ini_re}, @var{ini_im} specify real and imaginary part of initial field distribution. Parameters @var{Min}, @var{Max} set the bounding box for the solution. Note, that really this ranges are increased by factor 3/2 for purpose of reducing reflection from boundaries. Parameter @var{dz} set the step along evolutionary coordinate z. At this moment, simplified form of function @var{ham} is supported -- all ``mixed'' terms (like @samp{x*p}->x*d/dx) are excluded. For example, in 2D case this function is effectively @math{ham = f(p,z) + g(x,z,u)}. However commutable combinations (like @samp{x*q}->x*d/dy) are allowed. Here variable @samp{u} is used for field amplitude |u|. This allow one solve nonlinear problems -- for example, for nonlinear Shrodinger equation you may set @code{ham="p^2 + q^2 - u^2"}. You may specify imaginary part for wave absorption, like @code{ham = "p^2 + i*x*(x>0)"}, but only if dependence on variable @samp{i} is linear (i.e. @math{ham = hre+i*him}). See also @ref{qo2d}, @ref{qo3d}. @sref{PDE solving hints}
 @end deftypefn
-
-@anchor{apde}
-@deftypefn {MGL command} {} apde @sc{res} 'ham' ini_re ini_im [@code{dz=0.1 k0=100}]
-@ifclear UDAV
-@deftypefnx {Global function} @code{mglData} mglAPDE (@code{HMGL} gr, @code{const char *}ham, @code{const mglDataA &}ini_re, @code{const mglDataA &}ini_im, @code{mreal} dz=@code{0.1}, @code{mreal} k0=@code{100}, @code{const char *}opt=@code{""})
-@deftypefnx {Global function} @code{mglDataC} mglAPDEc (@code{HMGL} gr, @code{const char *}ham, @code{const mglDataA &}ini_re, @code{const mglDataA &}ini_im, @code{mreal} dz=@code{0.1}, @code{mreal} k0=@code{100}, @code{const char *}opt=@code{""})
-@deftypefnx {C function} @code{HMDT} mgl_pde_solve_adv (@code{HMGL} gr, @code{const char *}ham, @code{HCDT} ini_re, @code{HCDT} ini_im, @code{mreal} dz, @code{mreal} k0, @code{const char *}opt)
-@deftypefnx {C function} @code{HADT} mgl_pde_solve_adv_c (@code{HMGL} gr, @code{const char *}ham, @code{HCDT} ini_re, @code{HCDT} ini_im, @code{mreal} dz, @code{mreal} k0, @code{const char *}opt)
-@end ifclear
-Solves equation du/dz = i*k0*@var{ham}(p,q,x,y,z,|u|)[u], where p=-i/k0*d/dx, q=-i/k0*d/dy are pseudo-differential operators. Parameters @var{ini_re}, @var{ini_im} specify real and imaginary part of initial field distribution. Parameters @var{Min}, @var{Max} set the bounding box for the solution. Note, that really this ranges are increased by factor 3/2 for purpose of reducing reflection from boundaries. Parameter @var{dz} set the step along evolutionary coordinate z. The advanced and rather slow algorithm is used for taking into account both spatial dispersion and inhomogeneities of media [see A.A. Balakin, E.D. Gospodchikov, A.G. Shalashov, JETP letters v.104, p.690-695 (2016)]. Variable @samp{u} is used for field amplitude |u|. This allow one solve nonlinear problems -- for example, for nonlinear Shrodinger equation you may set @code{ham="p^2 + q^2 - u^2"}. You may specify imaginary part for wave absorption, like @code{ham = "p^2 + i*x*(x>0)"}. See also @ref{pde}. @sref{PDE solving hints}
-@end deftypefn
-
 
 @anchor{ray}
 @deftypefn {MGL command} {} ray @sc{res} 'ham' @code{x0 y0 z0 p0 q0 v0 [dt=0.1 tmax=10]}
@@ -1752,9 +1620,7 @@ Solves GO ray equation like dr/dt = d @var{ham}/dp, dp/dt = -d @var{ham}/dr. Thi
 @deftypefn {MGL command} {} ode @sc{res} 'df' 'var' ini [@code{dt=0.1 tmax=10}]
 @ifclear UDAV
 @deftypefnx {Global function} @code{mglData} mglODE (@code{const char *}df, @code{const char *}var, @code{const mglDataA &}ini, @code{mreal} dt=@code{0.1}, @code{mreal} tmax=@code{10})
-@deftypefnx {Global function} @code{mglDataC} mglODEc (@code{const char *}df, @code{const char *}var, @code{const mglDataA &}ini, @code{mreal} dt=@code{0.1}, @code{mreal} tmax=@code{10})
 @deftypefnx {C function} @code{HMDT} mgl_ode_solve_str (@code{const char *}df, @code{const char *}var, @code{HCDT} ini, @code{mreal} dt, @code{mreal} tmax)
-@deftypefnx {C function} @code{HADT} mgl_ode_solve_str_c (@code{const char *}df, @code{const char *}var, @code{HCDT} ini, @code{mreal} dt, @code{mreal} tmax)
 @deftypefnx {C function} @code{HMDT} mgl_ode_solve (@code{void (*}df@code{)(const mreal *x, mreal *dx, void *par)}, @code{int} n, @code{const mreal *}ini, @code{mreal} dt, @code{mreal} tmax)
 @deftypefnx {C function} @code{HMDT} mgl_ode_solve_ex (@code{void (*}df@code{)(const mreal *x, mreal *dx, void *par)}, @code{int} n, @code{const mreal *}ini, @code{mreal} dt, @code{mreal} tmax, @code{void (*}bord@code{)(mreal *x, const mreal *xprev, void *par)})
 @end ifclear
@@ -1846,7 +1712,7 @@ Computes @var{num} points @{x[i]=res[0,i], y[i]=res[1,i]@} for fractal using ite
 x[i+1] = dat[0,i]*x[i] + dat[1,i]*y[i] + dat[4,i];
 y[i+1] = dat[2,i]*x[i] + dat[3,i]*y[i] + dat[5,i];
 @end verbatim
-Value @code{dat[6,i]} is used as weight factor for i-th row of matrix @var{dat}. At this first @var{skip} iterations will be omitted. Data array @var{dat} must have x-size greater or equal to 7. @sref{Fractal sample}
+Value @code{dat[6,i]} is used as weight factor for i-th row of matrix @var{dat}. At this first @var{skip} iterations will be omitted. Data array @var{dat} must have x-size greater or equal to 7. @sref{IFS sample}
 @end deftypefn
 
 @anchor{ifs3d}
@@ -1859,9 +1725,9 @@ Computes @var{num} points @{x[i]=res[0,i], y[i]=res[1,i], z[i]=res[2,i]@} for fr
 @verbatim
 x[i+1] = dat[0,i]*x[i] + dat[1,i]*y[i] + dat[2,i]*z[i] + dat[9,i];
 y[i+1] = dat[3,i]*x[i] + dat[4,i]*y[i] + dat[5,i]*z[i] + dat[10,i];
-z[i+1] = dat[6,i]*x[i] + dat[7,i]*y[i] + dat[8,i]*z[i] + dat[11,i];
+z[i+1] = dat[6,i]*x[i] + dat[7,i]*y[i] + dat[8,i]*z[i] + dat[10,i];
 @end verbatim
-Value @code{dat[12,i]} is used as weight factor for i-th row of matrix @var{dat}. At this first @var{skip} iterations will be omitted. Data array @var{dat} must have x-size greater or equal to 13. @sref{Fractal sample}
+Value @code{dat[12,i]} is used as weight factor for i-th row of matrix @var{dat}. At this first @var{skip} iterations will be omitted. Data array @var{dat} must have x-size greater or equal to 13. @sref{IFS sample}
 @end deftypefn
 
 @anchor{ifsfile}
@@ -1890,42 +1756,6 @@ IFS file may contain several records. Each record contain the name of fractal (@
   -.20  .20 0 .2 .20 .0 0  0.0 0.30 0 0.8 0 .07
   }
 @end verbatim
-@end deftypefn
-
-@anchor{flame2d}
-@deftypefn {MGL command} {} flame2d @sc{res} dat func @code{num} [@code{skip=20}]
-@ifclear UDAV
-@deftypefnx {Global function} @code{mglData} mglFlame2d (@code{const mglDataA &}dat, @code{const mglDataA &}func, @code{long} num, @code{long} skip=@code{20})
-@deftypefnx {C function} @code{HMDT} mgl_data_flame_2d (@code{HCDT} dat, @code{HCDT} func, @code{long} num, @code{long} skip)
-@end ifclear
-Computes @var{num} points @{x[i]=res[0,i], y[i]=res[1,i]@} for "flame" fractal using iterated function system. Array @var{func} define "flame" function identificator (@var{func}[0,i,j]), its weight (@var{func}[0,i,j]) and arguments (@var{func}[2 ... 5,i,j]). Matrix @var{dat} set linear transformation of coordinates before applying the function. The resulting coordinates are
-@verbatim
-xx = dat[0,i]*x[j] + dat[1,j]*y[i] + dat[4,j];
-yy = dat[2,i]*x[j] + dat[3,j]*y[i] + dat[5,j];
-x[j+1] = sum_i @var{func}[1,i,j]*@var{func}[0,i,j]_x(xx, yy; @var{func}[2,i,j],...,@var{func}[5,i,j]);
-y[j+1] = sum_i @var{func}[1,i,j]*@var{func}[0,i,j]_y(xx, yy; @var{func}[2,i,j],...,@var{func}[5,i,j]);
-@end verbatim
-The possible function ids are: @code{mglFlame2d_linear=0,	mglFlame2d_sinusoidal,	mglFlame2d_spherical,	mglFlame2d_swirl,		mglFlame2d_horseshoe,
-	mglFlame2d_polar,		mglFlame2d_handkerchief,mglFlame2d_heart,		mglFlame2d_disc,		mglFlame2d_spiral,
-	mglFlame2d_hyperbolic,	mglFlame2d_diamond,		mglFlame2d_ex,			mglFlame2d_julia,		mglFlame2d_bent,
-	mglFlame2d_waves,		mglFlame2d_fisheye,		mglFlame2d_popcorn,		mglFlame2d_exponential,	mglFlame2d_power,
-	mglFlame2d_cosine,		mglFlame2d_rings,		mglFlame2d_fan,			mglFlame2d_blob,		mglFlame2d_pdj,
-	mglFlame2d_fan2,		mglFlame2d_rings2,		mglFlame2d_eyefish,		mglFlame2d_bubble,		mglFlame2d_cylinder,
-	mglFlame2d_perspective,	mglFlame2d_noise,		mglFlame2d_juliaN,		mglFlame2d_juliaScope,	mglFlame2d_blur,
-	mglFlame2d_gaussian,	mglFlame2d_radialBlur,	mglFlame2d_pie,			mglFlame2d_ngon,		mglFlame2d_curl,
-	mglFlame2d_rectangles,	mglFlame2d_arch,		mglFlame2d_tangent,		mglFlame2d_square,		mglFlame2d_blade,
-	mglFlame2d_secant,		mglFlame2d_rays,		mglFlame2d_twintrian,	mglFlame2d_cross,		mglFlame2d_disc2,
-	mglFlame2d_supershape,	mglFlame2d_flower,		mglFlame2d_conic,		mglFlame2d_parabola,	mglFlame2d_bent2,
-	mglFlame2d_bipolar,		mglFlame2d_boarders,	mglFlame2d_butterfly,	mglFlame2d_cell,		mglFlame2d_cpow,
-	mglFlame2d_curve,		mglFlame2d_edisc,		mglFlame2d_elliptic,	mglFlame2d_escher,		mglFlame2d_foci,
-	mglFlame2d_lazySusan,	mglFlame2d_loonie,		mglFlame2d_preBlur,		mglFlame2d_modulus,		mglFlame2d_oscope,
-	mglFlame2d_polar2,		mglFlame2d_popcorn2,	mglFlame2d_scry,		mglFlame2d_separation,	mglFlame2d_split,
-	mglFlame2d_splits,		mglFlame2d_stripes,		mglFlame2d_wedge,		mglFlame2d_wedgeJulia,	mglFlame2d_wedgeSph,
-	mglFlame2d_whorl,		mglFlame2d_waves2,		mglFlame2d_exp,			mglFlame2d_log,			mglFlame2d_sin,
-	mglFlame2d_cos,			mglFlame2d_tan,			mglFlame2d_sec,			mglFlame2d_csc,			mglFlame2d_cot,
-	mglFlame2d_sinh,		mglFlame2d_cosh,		mglFlame2d_tanh,		mglFlame2d_sech,		mglFlame2d_csch,
-	mglFlame2d_coth,		mglFlame2d_auger,		mglFlame2d_flux.}
-Value @code{dat[6,i]} is used as weight factor for i-th row of matrix @var{dat}. At this first @var{skip} iterations will be omitted. Sizes of data arrays must be: @var{dat}.nx>=7, @var{func}.nx>=2 and @var{func}.nz=@var{dat}.ny.  @sref{Fractal sample}
 @end deftypefn
 
 
@@ -2052,6 +1882,7 @@ Create variable which reference @var{col}-th column of data @var{d}.
 Set reference to another column of the same data and its name.
 @end deftypefn
 
+
 @heading Class @code{mglDataR}
 represent named reference to row of another data array.
 @deftypefn {Constructor on @code{mglDataR}} @code{} mglDataR (@code{const mglDataR &} d)
@@ -2063,40 +1894,6 @@ Create variable which reference @var{row}-th row of data @var{d}.
 @deftypefn {Method on @code{mglDataR}} @code{void} SetInd (@code{long} row, @code{wchar_t} name)
 @deftypefnx {Method on @code{mglDataR}} @code{void} SetInd (@code{long} row, @code{const wchar_t *} name)
 Set reference to another row of the same data and its name.
-@end deftypefn
-
-@heading Class @code{mglDataW}
-represent FFT frequency as data array.
-@deftypefn {Constructor on @code{mglDataW}} @code{} mglDataW (@code{const mglDataW &} d)
-Copy constructor.
-@end deftypefn
-@deftypefn {Constructor on @code{mglDataW}} @code{} mglDataW (@code{long} xx=@code{1}, @code{long} yy=@code{1}, @code{long} zz=@code{1}, @code{double} dp=@code{0}, @code{char} dir=@code{'x'})
-Set frequency sizes, direction @var{dir} and increment @var{dp}.
-@end deftypefn
-@deftypefn {Method on @code{mglDataR}} @code{void} Freq (@code{double} dp, @code{char} dir=@code{'x'})
-Equidistantly fill the data with step @var{dp} in direction @var{dir}.
-@end deftypefn
-
-
-@heading Class @code{mglDataS}
-incapsulate std::vector and present it as data array.
-@deftypecv {Variable} mglDataS @code{std::vector<mreal>} dat
-Data array itself.
-@end deftypecv
-@deftypefn {Constructor on @code{mglDataS}} @code{} mglDataS (@code{const mglDataS &} d)
-Copy constructor.
-@end deftypefn
-@deftypefn {Constructor on @code{mglDataS}} @code{} mglDataS (@code{const std::vector<mreal> &} d)
-Create copy data from @var{d}.
-@end deftypefn
-@deftypefn {Constructor on @code{mglDataS}} @code{} mglDataS (@code{size_t} s)
-Allocate memory for @var{s} .
-@end deftypefn
-@deftypefn {Method on @code{mglDataS}} @code{void} reserve (@code{size_t} num)
-Reserve space for @var{num} elements.
-@end deftypefn
-@deftypefn {Method on @code{mglDataS}} @code{void} push_back (@code{double} v)
-Appends value @var{v} to the end of data.
 @end deftypefn
 
 @end ifclear

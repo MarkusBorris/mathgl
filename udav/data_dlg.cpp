@@ -30,7 +30,7 @@ extern mglParse parser;
 //-----------------------------------------------------------------------------
 DataDialog::DataDialog(QWidget* parent): QDialog(parent)
 {
-	setWindowTitle(_("UDAV - Insert style/scheme"));
+	setWindowTitle(tr("UDAV - Insert style/scheme"));
 	QHBoxLayout *h;
 	QVBoxLayout *v;
 	QGridLayout *g;
@@ -39,7 +39,7 @@ DataDialog::DataDialog(QWidget* parent): QDialog(parent)
 
 	v = new QVBoxLayout(this);
 	h = new QHBoxLayout();	v->addLayout(h);
-	l = new QLabel(_("Data name"), this);	h->addWidget(l);
+	l = new QLabel(tr("Data name"), this);	h->addWidget(l);
 	name = new QComboBox(this);	h->addWidget(name);
 	
 	g = new QGridLayout();	v->addLayout(g);
@@ -62,10 +62,10 @@ DataDialog::DataDialog(QWidget* parent): QDialog(parent)
 	x1->setValue(-1);	y1->setValue(-1);	z1->setValue(-1);
 	x2->setValue(-1);	y2->setValue(-1);	z2->setValue(-1);
 	
-	l = new QLabel(_("Operation"));	g->addWidget(l, 3, 0);
+	l = new QLabel(tr("Operation"));	g->addWidget(l, 3, 0);
 	oper = new QComboBox(this);		g->addWidget(oper, 3, 1);
-	oper->addItem(_("none"));		oper->addItem(_("sum"));
-	oper->addItem(_("min"));	oper->addItem(_("max"));
+	oper->addItem(tr("none"));		oper->addItem(tr("sum"));
+	oper->addItem(tr("min"));	oper->addItem(tr("max"));
 	l = new QLabel("along", this);	g->addWidget(l, 3, 2);
 	dirs = new QComboBox(this);		g->addWidget(dirs, 3, 3);
 	dirs->addItem("xyz");
@@ -82,14 +82,14 @@ DataDialog::DataDialog(QWidget* parent): QDialog(parent)
 	connect(oper, SIGNAL(currentIndexChanged(int)), this, SLOT(updateRes()));
 	connect(dirs, SIGNAL(currentIndexChanged(int)), this, SLOT(updateRes()));
 
-	sizes = new QLabel(_("Result"));	v->addWidget(sizes);
+	sizes = new QLabel(tr("Result"));	v->addWidget(sizes);
 	res = new QLineEdit(this);		v->addWidget(res);
 	connect(res, SIGNAL(textChanged(QString)), this, SLOT(userRes()));
 	
 	h = new QHBoxLayout();	v->addLayout(h);	h->addStretch(1);
-	b = new QPushButton(_("Cancel"), this);	h->addWidget(b);
+	b = new QPushButton(tr("Cancel"), this);	h->addWidget(b);
 	connect(b, SIGNAL(clicked()),this, SLOT(reject()));
-	b = new QPushButton(_("OK"), this);		h->addWidget(b);
+	b = new QPushButton(tr("OK"), this);		h->addWidget(b);
 	connect(b, SIGNAL(clicked()),this, SLOT(accept()));
 	b->setDefault(true);
 }
@@ -121,7 +121,7 @@ void DataDialog::updateRes()
 	wchar_t *txt=new wchar_t[result.length()+1];
 	result.toWCharArray(txt);	txt[result.length()]=0;
 	mglData dat=parser.Calc(txt);	delete []txt;
-	sizes->setText(_("Result (will have sizes ") + QString::number(dat.nx)+"*"+QString::number(dat.ny)+"*"+QString::number(dat.nz)+")"	);
+	sizes->setText(tr("Result (will have sizes ") + QString::number(dat.nx)+"*"+QString::number(dat.ny)+"*"+QString::number(dat.nz)+")"	);
 	res->setText(result);
 }
 //-----------------------------------------------------------------------------
@@ -140,6 +140,6 @@ void DataDialog::userRes()
 {
 	QString txt = res->text();
 	if(txt != result)
-	{	result = txt;	sizes->setText(_("Result"));	}
+	{	result = txt;	sizes->setText(tr("Result"));	}
 }
 //-----------------------------------------------------------------------------

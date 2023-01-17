@@ -64,15 +64,15 @@ void MGL_EXPORT mgl_create_cpp_font(HMGL gr, const wchar_t *how)
 	for(i=l=n=0;i<s.size();i++)
 	{
 		ch = f->Internal(s[i]);
-		if(ch>=0)	{	l += 2*f->GetNl(0,ch);	n += 6*f->GetNt(0,ch);	}
+		l += 2*f->GetNl(0,ch);
+		n += 6*f->GetNt(0,ch);
 	}
-	printf("const unsigned long mgl_numg=%lu, mgl_cur=%lu;\n",(unsigned long)s.size(),l+n);
-	printf("const float mgl_fact=%g;\n",f->GetFact(0)/mgl_fgen);
+	printf("const long mgl_numg=%lu, mgl_cur=%lu;\n",(unsigned long)s.size(),l+n);
+	printf("float mgl_fact=%g;\n",f->GetFact(0)/mgl_fgen);
 	printf("long mgl_gen_fnt[%lu][6] = {\n", (unsigned long)s.size());
 	for(i=m=0;i<s.size();i++)	// first write symbols descriptions
 	{
 		ch = f->Internal(s[i]);
-		if(ch<0)	continue;
 		int m1 = f->GetNl(0,ch), m2 = f->GetNt(0,ch);
 		printf("\t{0x%x,%d,%d,%lu,%d,%lu},\n",unsigned(s[i]),f->GetWidth(0,ch),m1,m,m2,m+2*m1);
 		m += 2*m1+6*m2;
@@ -82,7 +82,6 @@ void MGL_EXPORT mgl_create_cpp_font(HMGL gr, const wchar_t *how)
 	for(i=0;i<s.size();i++)		// now write data itself
 	{
 		ch = f->Internal(s[i]);
-		if(ch<0)	continue;
 		unsigned m1 = f->GetNl(0,ch), m2 = f->GetNt(0,ch);
 		const short *ln = f->GetLn(0,ch), *tr = f->GetTr(0,ch);
 		for(l=0;l<2*m1;l++)	printf("%d,",ln[l]);
@@ -105,8 +104,8 @@ void MGL_EXPORT mgl_strtrim(char *str)
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_strlwr(char *str)
 {
-	size_t l=strlen(str);
-	for(size_t k=0;k<l;k++)
+	size_t k,l=strlen(str);
+	for(k=0;k<l;k++)
 		str[k] = (str[k]>='A' && str[k]<='Z') ? str[k]+'a'-'A' : str[k];
 }
 //-----------------------------------------------------------------------------
@@ -151,7 +150,7 @@ mglBase::mglBase()
 
 	strcpy(last_style,"__1 {dFFFF}k\0");
 	MinS.Set(-1,-1,-1);	MaxS.Set(1,1,1);
-	fnt = new mglFont;	fnt->gr = this;	PrevState=size_opt=NAN;
+	fnt = new mglFont;	fnt->gr = this;	PrevState=NAN;	size_opt=NAN;
 }
 //-----------------------------------------------------------------------------
 mglBase::~mglBase()
@@ -213,27 +212,27 @@ void mglBase::StartGroup(const char *name, int id)
 	StartAutoGroup(buf);
 }
 //-----------------------------------------------------------------------------
-const char *mglWarn[mglWarnEnd] = {_("data dimension(s) is incompatible"),	//mglWarnDim
-								_("data dimension(s) is too small"),		//mglWarnLow
-								_("minimal data value is negative"),		//mglWarnNeg
-								_("no file or wrong data dimensions"),		//mglWarnFile
-								_("not enough memory"), 					//mglWarnMem
-								_("data values are zero"),					//mglWarnZero
-								_("no legend entries"),					//mglWarnLeg
-								_("slice value is out of range"),			//mglWarnSlc
-								_("number of contours is zero or negative"),//mglWarnCnt
-								_("couldn't open file"),					//mglWarnOpen
-								_("light: ID is out of range"),			//mglWarnLId
-								_("size(s) is zero or negative"),			//mglWarnSize
-								_("format is not supported for that build"),//mglWarnFmt
-								_("axis ranges are incompatible"),			//mglWarnTern
-								_("pointer is NULL"),						//mglWarnNull
-								_("not enough space for plot"),			//mglWarnSpc
-								_("There is wrong argument(s) in script"),	//mglScrArg
-								_("There is wrong command(s) in script"),	//mglScrCmd
-								_("There is too long string(s) in script"),	//mglScrLong
-								_("There is unbalanced ' in script"),		//mglScrStr
-								_("There is changing temporary data in script")};	//mglScrTemp
+const char *mglWarn[mglWarnEnd] = {"data dimension(s) is incompatible",	//mglWarnDim
+								"data dimension(s) is too small",		//mglWarnLow
+								"minimal data value is negative",		//mglWarnNeg
+								"no file or wrong data dimensions",		//mglWarnFile
+								"not enough memory", 					//mglWarnMem
+								"data values are zero",					//mglWarnZero
+								"no legend entries",					//mglWarnLeg
+								"slice value is out of range",			//mglWarnSlc
+								"number of contours is zero or negative",//mglWarnCnt
+								"couldn't open file",					//mglWarnOpen
+								"light: ID is out of range",			//mglWarnLId
+								"size(s) is zero or negative",			//mglWarnSize
+								"format is not supported for that build",//mglWarnFmt
+								"axis ranges are incompatible",			//mglWarnTern
+								"pointer is NULL",						//mglWarnNull
+								"not enough space for plot",			//mglWarnSpc
+								"There is wrong argument(s) in script",	//mglScrArg
+								"There is wrong command(s) in script",	//mglScrCmd
+								"There is too long string(s) in script",	//mglScrLong
+								"There is unbalanced ' in script",		//mglScrStr
+								"There is changing temporary data in script"};	//mglScrTemp
 //-----------------------------------------------------------------------------
 extern bool mglPrintWarn;
 void mglBase::SetWarn(int code, const char *who)
@@ -247,7 +246,7 @@ void mglBase::SetWarn(int code, const char *who)
 	}
 	else if(!code)	Mess="";
 	else if(who && *who)	warn = who;
-	if(mglPrintWarn && !warn.empty())	fprintf(stderr,_("MathGL message - %s\n"),warn.c_str());
+	if(mglPrintWarn && !warn.empty())	fprintf(stderr,"MathGL message - %s\n",warn.c_str());
 	if(code && !warn.empty())	Mess = Mess+(code==-2?"":"\n")+warn;
 	LoadState();
 }
@@ -256,7 +255,7 @@ void mglBase::SetWarn(int code, const char *who)
 //-----------------------------------------------------------------------------
 void mglGlyph::Create(long Nt, long Nl)
 {
-//	if(Nt<0 || Nl<0)	return;
+	if(Nt<0 || Nl<0)	return;
 	nt=Nt;	nl=Nl;
 #pragma omp critical(glf_create)
 	{
@@ -267,7 +266,7 @@ void mglGlyph::Create(long Nt, long Nl)
 	}
 }
 //-----------------------------------------------------------------------------
-bool mglGlyph::operator==(const mglGlyph &g) const
+bool mglGlyph::operator==(const mglGlyph &g)
 {
 	if(nl!=g.nl || nt!=g.nt)	return false;
 	if(trig && memcmp(trig,g.trig,6*nt*sizeof(short)))	return false;
@@ -284,50 +283,11 @@ long mglBase::AddGlyph(int s, long j)
 	memcpy(g.line, fnt->GetLn(s,j), 2*g.nl*sizeof(short));
 	// now let find the similar glyph
 	for(size_t i=0;i<Glf.size();i++)
-		if(g!=Glf[i])	continue;	else	return i;
+		if(!(g==Glf[i]))	continue;	else	return i;
 	// if no one then let add it
 	long k;
 #pragma omp critical(glf)
 	{k=Glf.size();	MGL_PUSH(Glf,g,mutexGlf);}	return k;
-}
-//-----------------------------------------------------------------------------
-long mglBase::AddGlyph(unsigned char id)
-{
-	size_t j=0;
-	for(size_t i=0;i<UserGlf.size();i++)
-		if(UserGlf[i].nt==-id)	j=i+1;
-	if(j==0)	return -1;
-	const mglGlyph &g=UserGlf[j-1];
-	// let find the similar glyph
-	for(size_t i=0;i<Glf.size();i++)
-		if(g!=Glf[i])	continue;	else	return i;
-	// if no one then let add it
-	long k;
-#pragma omp critical(glf)
-	{k=Glf.size();	MGL_PUSH(Glf,g,mutexGlf);}	return k;
-}
-//-----------------------------------------------------------------------------
-void mglBase::DefineGlyph(HCDT x, HCDT y, unsigned char id)
-{
-	long n = x->GetNx();
-	if(y->GetNx()!=n || n<2)	return;
-	mglGlyph g(-id,n);
-	mreal x1=1e10,x2=-1e10,y1=1e10,y2=-1e10;
-	for(long i=0;i<n;i++)
-	{
-		mreal xx = x->v(i), yy = y->v(i);
-		x1=x1>xx?xx:x1;	x2=x2<xx?xx:x2;
-		y1=y1>yy?yy:y1;	y2=y2<yy?yy:y2;
-	}
-	mreal scale = 1;
-	if(fabs(x1)<10 && fabs(x2)<10 && fabs(y1)<10 && fabs(y2)<10)
-		scale=1000;
-	for(long i=0;i<n;i++)
-	{
-		short sx = short(x->v(i)*scale), sy = short(y->v(i)*scale);
-		g.line[2*i] = sx;	g.line[2*i+1] = sy;
-	}
-	UserGlf.push_back(g);
 }
 //-----------------------------------------------------------------------------
 //		Add points to the buffer
@@ -442,10 +402,12 @@ bool mglBase::RecalcCRange()
 	else
 	{
 		FMin.c = INFINITY;	FMax.c = -INFINITY;
+		int i;
+		mreal a;
 		int n=30;
-		for(int i=0;i<=n;i++)
+		for(i=0;i<=n;i++)
 		{
-			mreal a = fa->Calc(0,0,0,Min.c+i*(Max.c-Min.c)/n);
+			a = fa->Calc(0,0,0,Min.c+i*(Max.c-Min.c)/n);
 			if(mgl_isbad(a))	wrong=true;
 			if(a<FMin.c)	FMin.c=a;
 			if(a>FMax.c)	FMax.c=a;
@@ -464,28 +426,30 @@ void mglBase::RecalcBorder()
 	{
 		FMin.Set( INFINITY, INFINITY, INFINITY);
 		FMax.Set(-INFINITY,-INFINITY,-INFINITY);
+		int i,j;
 		int n=30;
-		for(int i=0;i<=n;i++)	for(int j=0;j<=n;j++)	// x range
+		for(i=0;i<=n;i++)	for(j=0;j<=n;j++)	// x range
 		{
 			if(SetFBord(Min.x, Min.y+i*(Max.y-Min.y)/n, Min.z+j*(Max.z-Min.z)/n))	wrong=true;
 			if(SetFBord(Max.x, Min.y+i*(Max.y-Min.y)/n, Min.z+j*(Max.z-Min.z)/n))	wrong=true;
 		}
-		for(int i=0;i<=n;i++)	for(int j=0;j<=n;j++)	// y range
+		for(i=0;i<=n;i++)	for(j=0;j<=n;j++)	// y range
 		{
 			if(SetFBord(Min.x+i*(Max.x-Min.x)/n, Min.y, Min.z+j*(Max.z-Min.z)/n))	wrong=true;
 			if(SetFBord(Min.x+i*(Max.x-Min.x)/n, Max.y, Min.z+j*(Max.z-Min.z)/n))	wrong=true;
 		}
-		for(int i=0;i<=n;i++)	for(int j=0;j<=n;j++)	// x range
+		for(i=0;i<=n;i++)	for(j=0;j<=n;j++)	// x range
 		{
 			if(SetFBord(Min.x+i*(Max.x-Min.x)/n, Min.y+j*(Max.y-Min.y)/n, Min.z))	wrong=true;
 			if(SetFBord(Min.x+i*(Max.x-Min.x)/n, Min.y+j*(Max.y-Min.y)/n, Max.z))	wrong=true;
 		}
+		mreal d;
 		if(!fx)	{	FMin.x = Min.x;	FMax.x = Max.x;	}
-		else	{	mreal d=0.01*(FMax.x-FMin.x);	FMin.x-=d;	FMax.x+=d;	}
+		else	{	d=0.01*(FMax.x-FMin.x);	FMin.x-=d;	FMax.x+=d;	}
 		if(!fy)	{	FMin.y = Min.y;	FMax.y = Max.y;	}
-		else	{	mreal d=0.01*(FMax.y-FMin.y);	FMin.y-=d;	FMax.y+=d;	}
+		else	{	d=0.01*(FMax.y-FMin.y);	FMin.y-=d;	FMax.y+=d;	}
 		if(!fz)	{	FMin.z = Min.z;	FMax.z = Max.z;	}
-		else	{	mreal d=0.01*(FMax.z-FMin.z);	FMin.z-=d;	FMax.z+=d;	}
+		else	{	d=0.01*(FMax.z-FMin.z);	FMin.z-=d;	FMax.z+=d;	}
 	}
 	if(RecalcCRange())	wrong=true;
 	if(wrong)	SetWarn(mglWarnTern, "Curved coordinates");
@@ -838,10 +802,8 @@ void mglBase::Ternary(int t)
 //-----------------------------------------------------------------------------
 void mglBase::SetFunc(const char *EqX,const char *EqY,const char *EqZ,const char *EqA)
 {
-	if(fa)	delete fa;
-	if(fx)	delete fx;
-	if(fy)	delete fy;
-	if(fz)	delete fz;
+	if(fa)	delete fa;	if(fx)	delete fx;
+	if(fy)	delete fy;	if(fz)	delete fz;
 	if(EqX && *EqX && (EqX[0]!='x' || EqX[1]!=0))
 		fx = new mglFormula(EqX);
 	else	fx = 0;
@@ -905,11 +867,8 @@ void mglBase::ClearEq()
 {
 #pragma omp critical(eq)
 	{
-		if(fx)	delete fx;
-		if(fy)	delete fy;
-		if(fz)	delete fz;
-		if(fa)	delete fa;
-		if(fc)	delete fc;
+		if(fx)	delete fx;	if(fy)	delete fy;	if(fz)	delete fz;
+		if(fa)	delete fa;	if(fc)	delete fc;
 		fx = fy = fz = fc = fa = 0;
 	}
 	RecalcBorder();
@@ -948,31 +907,22 @@ void MGL_EXPORT mgl_chrrgb(char p, float c[3])
 		}
 }
 //-----------------------------------------------------------------------------
-size_t MGL_EXPORT mgl_get_num_color(const char *s, int smooth)
-{
-	if(!s || !s[0])	return 0;
-	size_t l=strlen(s), n=0;	long j=0;
-	for(size_t i=0;i<l;i++)		// find number of colors
-	{
-		if(smooth>=0 && s[i]==':' && j<1)	break;
-		if(s[i]=='{' && strchr(MGL_COLORS"x",s[i+1]) && j<1)	n++;
-		if(s[i]=='[' || s[i]=='{')	j++;
-		if(s[i]==']' || s[i]=='}')	j--;
-		if(strchr(MGL_COLORS,s[i]) && j<1)	n++;
-//		if(smooth && s[i]==':')	break;	// NOTE: should use []
-	}
-	return n;
-}
-//-----------------------------------------------------------------------------
 void mglTexture::Set(const char *s, int smooth, mreal alpha)
 {
 	// NOTE: New syntax -- colors are CCCCC or {CNCNCCCN}; options inside []
 	if(!s || !s[0])	return;
-	mgl_strncpy(Sch,s,259);	Smooth=smooth;	Alpha=alpha;
+	strncpy(Sch,s,259);	Smooth=smooth;	Alpha=alpha;
 
-	long l=strlen(s);
+	long i,j=0,m=0,l=strlen(s);
 	bool map = smooth==2 || mglchr(s,'%'), sm = smooth>=0 && !strchr(s,'|');	// Use mapping, smoothed colors
-	n = mgl_get_num_color(s,smooth);
+	for(i=n=0;i<l;i++)		// find number of colors
+	{
+		if(smooth>=0 && s[i]==':' && j<1)	break;
+		if(s[i]=='{' && strchr(MGL_COLORS"x",s[i+1]) && j<1)	n++;
+		if(s[i]=='[' || s[i]=='{')	j++;	if(s[i]==']' || s[i]=='}')	j--;
+		if(strchr(MGL_COLORS,s[i]) && j<1)	n++;
+//		if(smooth && s[i]==':')	break;	// NOTE: should use []
+	}
 	if(!n)
 	{
 		if(strchr(s,'|') && !smooth)	// sharp colors
@@ -984,13 +934,11 @@ void mglTexture::Set(const char *s, int smooth, mreal alpha)
 	bool man=sm;
 	mglColor *c = new mglColor[2*n];		// Colors itself
 	mreal *val = new mreal[n];
-	for(long i=0, m=0, j=n=0;i<l;i++)	// fill colors
+	for(i=j=n=0;i<l;i++)	// fill colors
 	{
 		if(smooth>=0 && s[i]==':' && j<1)	break;
-		if(s[i]=='[')	j++;
-		if(s[i]==']')	j--;
-		if(s[i]=='{')	m++;
-		if(s[i]=='}')	m--;
+		if(s[i]=='[')	j++;	if(s[i]==']')	j--;
+		if(s[i]=='{')	m++;	if(s[i]=='}')	m--;
 		if(strchr(MGL_COLORS,s[i]) && j<1 && (m==0 || s[i-1]=='{'))	// {CN,val} format, where val in [0,1]
 		{
 			if(m>0 && s[i+1]>'0' && s[i+1]<='9')// ext color
@@ -1040,10 +988,10 @@ void mglTexture::Set(const char *s, int smooth, mreal alpha)
 	val[0]=0;	val[n-1]=1;	// boundary have to be [0,1]
 	for(long i=0;i<n;i++) if(val[i]>0 && val[i]<1) 	def.push_back(i);
 	def.push_back(n-1);
-	long i1=0;
-	for(size_t j=0;j<def.size();j++)	for(long i=i1+1;i<def[j];i++)
+	long i1=0,i2;
+	for(size_t j=0;j<def.size();j++)	for(i=i1+1;i<def[j];i++)
 	{
-		i1 = j>0?def[j-1]:0;	long i2 = def[j];
+		i1 = j>0?def[j-1]:0;	i2 = def[j];
 		v1 = val[i1];	v2 = val[i2];
 		v2 = i2-i1>1?(v2-v1)/(i2-i1):0;
 		val[i]=v1+v2*(i-i1);
@@ -1055,9 +1003,9 @@ void mglTexture::Set(const char *s, int smooth, mreal alpha)
 		long j = 2*long(v*i);	//u-=j;
 		col[2*i] = c[j];	col[2*i+1] = c[j+1];
 	}
-	else	for(long i=i1=0;i<256;i++)
+	else	for(i=i1=0;i<256;i++)
 	{
-		mreal u = v*i;	long j = long(u);	//u-=j;
+		mreal u = v*i;	j = long(u);	//u-=j;
 		if(j<n-1)	// advanced scheme using val
 		{
 			for(;i1<n-1 && i>=255*val[i1];i1++);
@@ -1191,8 +1139,7 @@ char mglBase::SetPenPal(const char *p, long *Id, bool pal)
 		size_t l=strlen(p);
 		for(size_t i=0;i<l;i++)
 		{
-			if(p[i]=='{')	m++;
-			if(p[i]=='}')	m--;
+			if(p[i]=='{')	m++;	if(p[i]=='}')	m--;
 			if(m>0 && p[i]=='d')	PDef = strtol(p+i+1,0,16);
 			if(m>0)	continue;
 			s = mglchr(stl,p[i]);
@@ -1208,8 +1155,7 @@ char mglBase::SetPenPal(const char *p, long *Id, bool pal)
 				else	Arrow1 = p[i];
 			}
 		}
-		if(!Arrow1)	Arrow1='_';
-		if(!Arrow2)	Arrow2='_';
+		if(!Arrow1)	Arrow1='_';		if(!Arrow2)	Arrow2='_';
 		if(mglchr(p,'#'))
 		{
 			s = mglchr(mrk,mk);
@@ -1218,13 +1164,11 @@ char mglBase::SetPenPal(const char *p, long *Id, bool pal)
 		}
 		if((s=strstr(p,"{&"))!=0)
 		{	mk = last_style[3] = p[3];	strcpy(last_style+11,s);	}
-		else if(mk && mglchr(p,'&'))
-		{	mk += 128;	last_style[3] = mk;	}
 		last_style[0] = Arrow1;	last_style[1] = Arrow2;
 	}
 	if(pal)
 	{
-		if(p && (s=strstr(p,"{&"))!=0)
+		if((s=strstr(p,"{&"))!=0)
 		{
 			CDef = atof(s+2);
 //			if(Id)	*Id=long(tt)*256+(n+CurrPal-1)%n;
@@ -1232,23 +1176,22 @@ char mglBase::SetPenPal(const char *p, long *Id, bool pal)
 		else
 		{
 			long tt, n;
-			tt = AddTexture(p?p:MGL_DEF_PAL,-1);	n=Txt[tt].n;
+			tt = AddTexture(p,-1);	n=Txt[tt].n;
 			CDef = tt+((n+CurrPal-1)%n+0.5)/n;
 			if(Id)	*Id=long(tt)*256+(n+CurrPal-1)%n;
 			sprintf(last_style+11,"{&%g}",CDef);
 		}
 	}
-	if(Arrow1=='_')	Arrow1=0;
-	if(Arrow2=='_')	Arrow2=0;
+	if(Arrow1=='_')	Arrow1=0;	if(Arrow2=='_')	Arrow2=0;
 	return mk;
 }
 //-----------------------------------------------------------------------------
 // keep this for restore default mask
-MGL_EXPORT uint64_t mgl_mask_def[16]={0x000000FF00000000,	0x080808FF08080808,	0x0000FF00FF000000,	0x0000007700000000,
+uint64_t mgl_mask_def[16]={0x000000FF00000000,	0x080808FF08080808,	0x0000FF00FF000000,	0x0000007700000000,
 							0x0000182424180000,	0x0000183C3C180000,	0x00003C24243C0000,	0x00003C3C3C3C0000,
 							0x0000060990600000,	0x0060584658600000,	0x00061A621A060000,	0x0000005F00000000,
 							0x0008142214080000,	0x00081C3E1C080000,	0x8142241818244281,	0x0000001824420000};
-MGL_EXPORT uint64_t mgl_mask_val[16]={0x000000FF00000000,	0x080808FF08080808,	0x0000FF00FF000000,	0x0000007700000000,
+uint64_t mgl_mask_val[16]={0x000000FF00000000,	0x080808FF08080808,	0x0000FF00FF000000,	0x0000007700000000,
 							0x0000182424180000,	0x0000183C3C180000,	0x00003C24243C0000,	0x00003C3C3C3C0000,
 							0x0000060990600000,	0x0060584658600000,	0x00061A621A060000,	0x0000005F00000000,
 							0x0008142214080000,	0x00081C3E1C080000,	0x8142241818244281,	0x0000001824420000};
@@ -1263,8 +1206,7 @@ void mglBase::SetMask(const char *p)
 		long m=0, l=strlen(p);
 		for(long i=0;i<l;i++)
 		{
-			if(p[i]=='{')	m++;
-			if(p[i]=='}')	m--;
+			if(p[i]=='{')	m++;	if(p[i]=='}')	m--;
 			if(m>0 && p[i]=='s')	mask = strtoull(p+i+1,0,16);
 			if(m>0)	continue;
 			if(p[i]==':')	break;
@@ -1540,6 +1482,8 @@ bool MGL_EXPORT mgl_check_vec3(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT ax, HCDT ay
 	return false;
 }
 //-----------------------------------------------------------------------------
+void mglBase::SetFontDef(const char *font) {	strncpy(FontDef, font, 31);	}
+//-----------------------------------------------------------------------------
 void mglBase::ClearUnused()
 {
 #if MGL_HAVE_PTHREAD
@@ -1557,13 +1501,11 @@ void mglBase::ClearUnused()
 			used[p.n1] = 1;
 			switch(p.type)
 			{
-			case 1:	case 4:	if(p.n2>=0)	used[p.n2] = 1;
-				break;
-			case 2:	if(p.n2>=0 && p.n3>=0)	used[p.n2] = used[p.n3] = 1;
-				break;
+			case 1:	case 4:	if(p.n2>=0)	used[p.n2] = 1;	break;
+			case 2:	if(p.n2>=0 && p.n3>=0)
+				used[p.n2] = used[p.n3] = 1;	break;
 			case 3:	if(p.n2>=0 && p.n3>=0 && p.n4>=0)
-					used[p.n2] = used[p.n3] = used[p.n4] = 1;
-				break;
+				used[p.n2] = used[p.n3] = used[p.n4] = 1;	break;
 			}
 		}
 		// now add proper indexes

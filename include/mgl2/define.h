@@ -59,11 +59,6 @@
 #define MGL_LOCAL_CONST		MGL_NO_EXPORT MGL_FUNC_CONST
 #define MGL_LOCAL_PURE		MGL_NO_EXPORT MGL_FUNC_PURE
 
-#if MGL_HAVE_RVAL	// C++11 don't support register keyword
-#if (!defined(_MSC_VER)) || (defined(_MSC_VER) && (_MSC_VER < 1310))
-#define register
-#endif
-#endif
 
 #endif
 //-----------------------------------------------------------------------------
@@ -72,15 +67,6 @@
 #endif
 
 #ifdef MGL_SRC
-
-#if MGL_USE_GETTEXT
-	#include <libintl.h>
-	#define _(x)	gettext(x)
-#else
-	#define _(x)	(x)
-#endif
-
-
 #if MGL_HAVE_ZLIB
 #include <zlib.h>
 #ifndef Z_BEST_COMPRESSION
@@ -190,6 +176,28 @@ typedef float mreal;
 #define MGL_DEF_VIEWER "evince"
 #endif
 //-----------------------------------------------------------------------------
+#if MGL_HAVE_TYPEOF
+#define mgl_isrange(a,b)	({typeof (a) _a = (a); typeof (b) _b = (b); fabs(_a-_b)>MGL_MIN_VAL && _a-_a==mreal(0.) && _b-_b==mreal(0.);})
+#define mgl_isbad(a)	({typeof (a) _a = (a); _a-_a!=mreal(0.);})
+#define mgl_isfin(a)	({typeof (a) _a = (a); _a-_a==mreal(0.);})
+#define mgl_isnum(a)	({typeof (a) _a = (a); _a==_a;})
+#define mgl_isnan(a)	({typeof (a) _a = (a); _a!=_a;})
+#define mgl_min(a,b)	({typeof (a) _a = (a); typeof (b) _b = (b); _a > _b ? _b : _a;})
+#define mgl_max(a,b)	({typeof (a) _a = (a); typeof (b) _b = (b); _a > _b ? _a : _b;})
+#define mgl_sign(a)		({typeof (a) _a = (a); _a<0 ? -1:1;})
+#define mgl_int(a)		({typeof (a) _a = (a); long(_a+(_a>=0 ? 0.5:-0.5));})
+#else
+#define mgl_isrange(a,b)	(fabs((a)-(b))>MGL_EPSILON && (a)-(a)==mreal(0.) && (b)-(b)==mreal(0.))
+#define mgl_min(a,b)	(((a)>(b)) ? (b) : (a))
+#define mgl_max(a,b)	(((a)>(b)) ? (a) : (b))
+#define mgl_isnan(a)	((a)!=(a))
+#define mgl_isnum(a)	((a)==(a))
+#define mgl_isfin(a)	((a)-(a)==mreal(0.))
+#define mgl_isbad(a)	((a)-(a)!=mreal(0.))
+#define mgl_sign(a)		((a)<0 ? -1:1)
+#define mgl_int(a)		(long(a+((a)>=0 ? 0.5:-0.5)))
+#endif
+//-----------------------------------------------------------------------------
 enum{	// types of predefined curvelinear coordinate systems
 	mglCartesian = 0,	// no transformation
 	mglPolar,
@@ -246,7 +254,7 @@ enum{	// Codes for warnings/messages
 #define MGL_COLORS	"kwrgbcymhWRGBCYMHlenpquLENPQU"
 //-----------------------------------------------------------------------------
 /// Brushes for mask with symbol "-+=;oOsS~<>jdD*^" correspondingly
-extern MGL_EXPORT uint64_t mgl_mask_val[16];
+extern uint64_t mgl_mask_val[16];
 #define MGL_MASK_ID		"-+=;oOsS~<>jdD*^"
 #define MGL_SOLID_MASK	0xffffffffffffffff
 //-----------------------------------------------------------------------------
@@ -273,7 +281,7 @@ extern MGL_EXPORT uint64_t mgl_mask_val[16];
 #define MGL_PREFERVC 		0x040000 	///< Prefer vertex color instead of texture if output format supports
 #define MGL_ONESIDED 		0x080000 	///< Render only front side of surfaces if output format supports (for debugging)
 #define MGL_NO_ORIGIN 		0x100000 	///< Don't draw tick labels at axis origin
-#define MGL_GRAY_MODE 		0x200000 	///< Convert all colors to gray ones
+#define MGL_GRAY_MODE 		0x100000 	///< Convert all colors to gray ones
 //-----------------------------------------------------------------------------
 #if MGL_HAVE_C99_COMPLEX
 #include <complex.h>
@@ -292,22 +300,22 @@ const mdual mgl_I=_Complex_I;
 #include <string>
 #include <vector>
 #if defined(_MSC_VER)
-template class MGL_EXPORT std::allocator<char>;
-template class MGL_EXPORT std::allocator<wchar_t>;
-template struct MGL_EXPORT std::char_traits<char>;
-template struct MGL_EXPORT std::char_traits<wchar_t>;
-template class MGL_EXPORT std::basic_string< char, std::char_traits<char>, std::allocator<char> >;
-template class MGL_EXPORT std::basic_string< wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> >;
-template class MGL_EXPORT std::vector<long>;
-template class MGL_EXPORT std::vector<mreal>;
+//template class MGL_EXPORT std::allocator<char>;
+//template class MGL_EXPORT std::allocator<wchar_t>;
+//template struct MGL_EXPORT std::char_traits<char>;
+//template struct MGL_EXPORT std::char_traits<wchar_t>;
+//template class MGL_EXPORT std::basic_string< char, std::char_traits<char>, std::allocator<char> >;
+//template class MGL_EXPORT std::basic_string< wchar_t, std::char_traits<wchar_t>, std::allocator<wchar_t> >;
+//template class MGL_EXPORT std::vector<long>;
+//template class MGL_EXPORT std::vector<mreal>;
 #endif
 //-----------------------------------------------------------------------------
 extern float mgl_cos[360];	///< contain cosine with step 1 degree
 //-----------------------------------------------------------------------------
 #include <complex>
 #if defined(_MSC_VER)
-template class MGL_EXPORT std::complex<float>;
-template class MGL_EXPORT std::complex<double>;
+//template class MGL_EXPORT std::complex<float>;
+//template class MGL_EXPORT std::complex<double>;
 #endif
 typedef std::complex<mreal> dual;
 typedef std::complex<double> ddual;
@@ -316,22 +324,6 @@ typedef std::complex<double> ddual;
 #define mgl_I dual(0,1)
 #define mgl_abs(x)	abs(x)
 #endif
-//-----------------------------------------------------------------------------
-inline bool mgl_isrange(double a, double b)
-{	return fabs(a-b)>MGL_MIN_VAL && a-a==0. && b-b==0.;	}
-inline bool mgl_isbad(double a)	{	return a-a!=0;	}
-inline bool mgl_isbad(dual a)	{	return a-a!=mreal(0);	}
-inline bool mgl_isfin(double a)	{	return a-a==0;	}
-inline bool mgl_isfin(dual a)	{	return a-a==mreal(0);	}
-inline bool mgl_isnum(double a)	{	return a==a;	}
-inline bool mgl_isnum(dual a)	{	return a==a;	}
-inline bool mgl_isnan(double a)	{	return a!=a;	}
-inline bool mgl_isnan(dual a)	{	return a!=a;	}
-inline int mgl_sign(double a)	{	return a<0?-1:1;	}
-inline long mgl_int(double a)	{	return long(a+(a>=0?0.5:-0.5));	}
-inline double mgl_min(double a, double b)	{	return a>b?b:a;	}
-inline double mgl_max(double a, double b)	{	return a>b?a:b;	}
-inline void mgl_strncpy(char *a, const char *b, size_t s)	{	strncpy(a,b,s);	a[s-1]=0;	}
 //-----------------------------------------------------------------------------
 extern "C" {
 #else
@@ -345,8 +337,6 @@ double MGL_EXPORT_CONST mgl_hypot(double x, double y);
 size_t MGL_EXPORT mgl_wcslen(const wchar_t *str);
 /// Get RGB values for given color id or fill by -1 if no one found
 void MGL_EXPORT mgl_chrrgb(char id, float rgb[3]);
-/// Get number of colors in the string
-size_t MGL_EXPORT mgl_get_num_color(const char *s, int smooth);
 /// Check if string contain color id and return its number
 long MGL_EXPORT mgl_have_color(const char *stl);
 /// Find symbol in string excluding {} and return its position or NULL
@@ -374,11 +364,6 @@ void MGL_EXPORT mgl_set_global_warn_(const char *text,int);
 /// Get text of global warning message(s)
 MGL_EXPORT const char *mgl_get_global_warn();
 int MGL_EXPORT mgl_get_global_warn_(char *out, int len);
-/// Setup gettext usage. NOTE: Russian translation MUST be installed.
-void MGL_EXPORT mgl_textdomain(const char *argv0, const char *locale);
-void MGL_EXPORT mgl_textdomain_(const char *locale, int);
-/// size of var array
-const int MGL_VS = 'z'-'a'+1;
 #ifdef __cplusplus
 }
 #endif

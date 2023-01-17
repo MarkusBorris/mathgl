@@ -236,7 +236,7 @@ Checks if calculations should be paused and pause it. Function is present only i
 @cindex Fl_MathGL
 @cindex widgets
 
-Class is FLTK widget which display MathGL graphics. It is defined in @code{#include <mgl2/Fl_MathGL.h>}.
+Class is FLTK widget which display MathGL graphics. It is defined in @code{#include <mgl2/fltk.h>}.
 
 @fig{fltk, Example of FLTK window with MathGL plot.}
 
@@ -245,10 +245,6 @@ Class is FLTK widget which display MathGL graphics. It is defined in @code{#incl
 @deftypemethodx Fl_MathGL @code{void} set_draw (@code{mglDraw *}draw)
 Sets drawing function as global function or as one from a class @code{mglDraw}. There is support of a list of plots (frames). So as one can prepare a set of frames at first and redraw it fast later (but it requires more memory). Function should return positive number of frames for the list or zero if it will plot directly. Parameter @var{par} contains pointer to data for the plotting function @var{draw}.
 @end deftypemethod
-@deftypemethod Fl_MathGL @code{mglDraw *}get_class ()
-Get pointer to @code{mglDraw} class or @code{NULL} if absent.
-@end deftypemethod
-
 @deftypemethod Fl_MathGL @code{void} update ()
 Update (redraw) plot.
 @end deftypemethod
@@ -282,21 +278,8 @@ Set new grapher instead of built-in one. Note that Fl_MathGL will automatically 
 @deftypemethod Fl_MathGL @code{HMGL} get_graph ()
 Get pointer to grapher.
 @end deftypemethod
-
-@deftypemethod Fl_MathGL @code{void} set_show_warn (@code{bool} val)
-Show window with warnings after script parsing.
-@end deftypemethod
-@deftypemethod Fl_MathGL @code{void} stop (@code{bool} stop=@code{true})
-Ask to stop of script parsing.
-@end deftypemethod
-@deftypemethod Fl_MathGL @code{void} set_handle_key (@code{bool} val)
-Enable/disable key handling as in mglview (default is false).
-@end deftypemethod
-@deftypemethod Fl_MathGL @code{int} get_last_id ()
-Get id of last clicked object.
-@end deftypemethod
-@deftypemethod Fl_MathGL @code{bool} running ()
-Check if script is parsing now or not.
+@deftypemethod Fl_MathGL @code{void} adjust ()
+Adjust image size to fit whole widget.
 @end deftypemethod
 
 @deftypecv {Fl_MathGL option} Fl_MathGL @code{Fl_Valuator *} tet_val

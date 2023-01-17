@@ -883,7 +883,6 @@ Basically, you can put this text after the script. Note, that you need to termin
 * TextMark sample::
 * Label sample::
 * Table sample::
-* Iris sample::
 * Tube sample::
 * Tape sample::
 * Torus sample::
@@ -1312,7 +1311,7 @@ plot ys ' *':label ys 'y=%y'
 
 @c ------------------------------------------------------------------
 @external{}
-@node Table sample, Iris sample, Label sample, 1D samples
+@node Table sample, Tube sample, Label sample, 1D samples
 @subsection Table sample
 @nav{}
 
@@ -1337,23 +1336,7 @@ table 0.5 0.95 ys 'y_1\n{}y_2\n{}y_3' '#';value 0.7
 
 @c ------------------------------------------------------------------
 @external{}
-@node Iris sample, Tube sample, Table sample, 1D samples
-@subsection Iris sample
-@nav{}
-
-Command @ref{iris} draw Iris plot for columns of data array. The sample code is:
-@verbatim
-read a 'iris.dat'
-crop a 0 4 'x':rearrange a a.nx 50
-subplot 1 1 0 '':title 'Iris plot'
-iris a 'sepal\n length;sepal\n width;petal\n length;petal\n width' '. ';value -1.5;size -2
-@end verbatim
-
-@pfig{iris, Example of Iris()}
-
-@c ------------------------------------------------------------------
-@external{}
-@node Tube sample, Tape sample, Iris sample, 1D samples
+@node Tube sample, Tape sample, Table sample, 1D samples
 @subsection Tube sample
 @nav{}
 
@@ -1892,7 +1875,7 @@ Basically, you can put this text after the script. Note, that you need to termin
 * ContF projection sample::
 * TriPlot and QuadPlot::
 * Dots sample::
-* Fractal sample::
+* IFS sample::
 @end menu
 
 @c ------------------------------------------------------------------
@@ -2124,7 +2107,7 @@ tricont t xt yt zt 'B'
 
 @c ------------------------------------------------------------------
 @external{}
-@node Dots sample, Fractal sample, TriPlot and QuadPlot, 3D samples
+@node Dots sample, IFS sample, TriPlot and QuadPlot, 3D samples
 @subsection Dots sample
 @nav{}
 
@@ -2148,8 +2131,8 @@ box:tens x y z x ' .'
 
 @c ------------------------------------------------------------------
 @external{}
-@node Fractal sample, , Dots sample, 3D samples
-@subsection Fractal sample
+@node IFS sample, , Dots sample, 3D samples
+@subsection IFS sample
 @nav{}
 
 Commands @ref{ifs2d} and @ref{ifs3d} generate points for fractals using iterated function system in 2d and 3d cases correspondingly. The sample codes are:
@@ -2175,20 +2158,6 @@ dots f(0) f(1) f(2) 'G#o';size 0.05
 
 @pfig{ifs3d, Example of IFS fractal (3d case).}
 
-
-Command @ref{flame2d} generate points for flame fractals in 2d case. The sample codes are:
-@verbatim
-list A [0.33,0,0,0.33,0,0,0.2] [0.33,0,0,0.33,0.67,0,0.2] [0.33,0,0,0.33,0.33,0.33,0.2]\
-        [0.33,0,0,0.33,0,0.67,0.2] [0.33,0,0,0.33,0.67,0.67,0.2]
-new B 2 3 A.ny '0.3'
-put B 3 0 0 -1
-put B 3 0 1 -1
-put B 3 0 2 -1
-flame2d fx fy A B 1000000
-subplot 1 1 0 '<_':title 'Flame2d sample'
-ranges fx fy:box:axis
-plot fx fy 'r#o ';size 0.05
-@end verbatim
 
 
 
@@ -2394,7 +2363,6 @@ In this section I've included some small hints and advices for the improving of 
 * Stereo image::
 * Reduce memory usage::
 * Saving and scanning file::
-* Mixing bitmap and vector output::
 @end menu
 
 @c ------------------------------------------------------------------
@@ -2889,7 +2857,7 @@ text 0 0.95 'Equation: ik_0\partial_zu + \Delta u + x\cdot u +\
 
 @pfig{pde, Example of PDE solving.}
 
-The next example is example of beam tracing. Beam tracing equation is special kind of PDE equation written in coordinates accompanied to a ray. Generally this is the same parameters and limitation as for PDE solving but the coordinates are defined by the ray and by parameter of grid width @var{w} in direction transverse the ray. So, you don't need to specify the range of coordinates. @strong{BUT} there is limitation. The accompanied coordinates are well defined only for smooth enough rays, i.e. then the ray curvature @math{K} (which is defined as @math{1/K^2 = (|r''|^2 |r'|^2 - (r'', r'')^2)/|r'|^6}) is much large then the grid width: @math{K>>w}. So, you may receive incorrect results if this condition will be broken.
+The last example is example of beam tracing. Beam tracing equation is special kind of PDE equation written in coordinates accompanied to a ray. Generally this is the same parameters and limitation as for PDE solving but the coordinates are defined by the ray and by parameter of grid width @var{w} in direction transverse the ray. So, you don't need to specify the range of coordinates. @strong{BUT} there is limitation. The accompanied coordinates are well defined only for smooth enough rays, i.e. then the ray curvature @math{K} (which is defined as @math{1/K^2 = (|r''|^2 |r'|^2 - (r'', r'')^2)/|r'|^6}) is much large then the grid width: @math{K>>w}. So, you may receive incorrect results if this condition will be broken.
 
 You may use following code for obtaining the same solution as in previous example:
 @verbatim
@@ -2906,27 +2874,6 @@ text 0.7 -0.05 'central ray'
 @end verbatim
 
 @pfig{qo2d, Example of beam tracing.}
-
-Note, the @ref{pde} is fast enough and suitable for many cases routine. However, there is situations then media have both together: strong spatial dispersion and spatial inhomogeneity. In this, case the @ref{pde} will produce incorrect result and you need to use advanced PDE solver @ref{apde}. For example, a wave beam, propagated in plasma, described by Hamiltonian @math{exp(-x^2-p^2)}, will have different solution for using of simplification and advanced PDE solver:
-@verbatim
-ranges -1 1 0 2 0 2
-new ar 256 'exp(-2*(x+0.0)^2)':new ai 256
-
-apde res1 'exp(-x^2-p^2)' ar ai 0.01:transpose res1
-subplot 1 2 0 '_':title 'Advanced PDE solver'
-ranges 0 2 -1 1:crange res1
-dens res1:box                                                                     
-axis:xlabel '\i z':ylabel '\i x'                                                  
-text -0.5 0.2 'i\partial_z\i u = exp(-\i x^2+\partial_x^2)[\i u]' 'y'             
-                                                                                  
-pde res2 'exp(-x^2-p^2)' ar ai 0.01
-subplot 1 2 1 '_':title 'Simplified PDE solver'                                   
-dens res2:box                                                                     
-axis:xlabel '\i z':ylabel '\i x'                                                  
-text -0.5 0.2 'i\partial_z\i u \approx\ exp(-\i x^2)\i u+exp(\partial_x^2)[\i u]' 'y'
-@end verbatim
-
-@pfig{apde, Comparison of simplified and advanced PDE solvers.}
 
 
 @c ------------------------------------------------------------------
@@ -3127,7 +3074,7 @@ next
 
 @c ------------------------------------------------------------------
 @external{}
-@node Saving and scanning file, Mixing bitmap and vector output, Reduce memory usage, Hints
+@node Saving and scanning file, , Reduce memory usage, Hints
 @subsection Scanning file
 @nav{}
 
@@ -3157,31 +3104,6 @@ ranges a(0) a(1):axis:plot a(0) a(1) 'o'
 @end verbatim
 
 Note, I keep only the leading part of template (i.e. @samp{This is test: %g -> %g} instead of @samp{This is test: %g -> %g q}), because there is no important for us information after the second number in the line.
-
-@c ------------------------------------------------------------------
-@external{}
-@node Mixing bitmap and vector output, , Saving and scanning file, Hints
-@subsection Mixing bitmap and vector output
-@nav{}
-
-Sometimes output plots contain surfaces with a lot of points, and some vector primitives (like axis, text, curves, etc.). Using vector output formats (like EPS or SVG) will produce huge files with possible loss of smoothed lighting. Contrary, the bitmap output may cause the roughness of text and curves. Hopefully, MathGL have a possibility to combine bitmap output for surfaces and vector one for other primitives in the same EPS file, by using @ref{rasterize} command. 
-
-The idea is to prepare part of picture with surfaces or other "heavy" plots and produce the background image from them by help of @ref{rasterize} command. Next, we draw everything to be saved in vector form (text, curves, axis and etc.). Note, that you need to clear primitives (use @ref{clf} command) after @ref{rasterize} if you want to disable duplication of surfaces in output files (like EPS). Note, that some of output formats (like 3D ones, and TeX) don't support the background bitmap, and use @ref{clf} for them will cause the loss of part of picture.
-
-The sample code is:
-@verbatim
-# first draw everything to be in bitmap output
-fsurf 'x^2+y^2' '#';value 10
-
-rasterize   # set above plots as bitmap background
-clf         # clear primitives, to exclude them from file
-
-# now draw everything to be in vector output
-axis:box
-
-# and save file
-write 'fname.eps'
-@end verbatim
 
 @c ==================================================================
 

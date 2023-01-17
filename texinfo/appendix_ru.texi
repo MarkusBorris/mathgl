@@ -8,7 +8,7 @@
 
 @strong{Корни}: \sqrt, \sqrt3, \sqrt4
 
-@strong{Дроби}: \frac, \dfrac, \stack, \overset, \underset, \stackr, \stackl
+@strong{Дроби}: \frac, \stack, \overset, \underset, \stackr, \stackl
 
 @strong{Акценты}: \hat, \tilde, \dot, \ddot, \dddot, \ddddot, \acute, \check, \grave, \vec, \bar, \breve
 

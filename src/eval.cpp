@@ -132,7 +132,7 @@ EQ_CL		// Clausen function
 //-----------------------------------------------------------------------------
 int mglFormula::Error=0;
 bool MGL_LOCAL_PURE mglCheck(char *str,int n);
-int MGL_LOCAL_PURE mglFindInText(const char *str, const char *lst);
+int MGL_LOCAL_PURE mglFindInText(char *str,const char *lst);
 //-----------------------------------------------------------------------------
 #if MGL_HAVE_GSL
 MGL_NO_EXPORT gsl_rng *mgl_rng=0;	// NOTE: should be deleted by gsl_rng_free() but I don't know where :(
@@ -155,7 +155,7 @@ void MGL_EXPORT mgl_srnd_(int *seed)	{	mgl_srnd(*seed);	}
 double MGL_EXPORT_CONST mgl_hypot(double x, double y)	{	return hypot(x,y);	}
 //-----------------------------------------------------------------------------
 #if MGL_HAVE_PTHREAD
-extern pthread_mutex_t mutexRnd;
+pthread_mutex_t mutexRnd;
 #endif
 double MGL_EXPORT mgl_rnd()
 {
@@ -276,7 +276,7 @@ mglFormula::mglFormula(const char *string)
 	else
 	{
 		char name[128];
-		mgl_strncpy(name,str,128);	name[127]=name[n]=0;
+		strncpy(name,str,128);	name[127]=name[n]=0;
 		memmove(str,str+n+1,len-n);
 		len=strlen(str);		str[--len]=0;
 		if(!strncmp(name,"jacobi_",7))
@@ -707,8 +707,8 @@ mreal mglFormula::CalcDIn(int id, const mreal *a1) const
 // Check braces correctness
 bool MGL_LOCAL_PURE mglCheck(char *str,int n)
 {
-	long s = 0;
-	for(long i=0;i<n;i++)
+	long s = 0,i;
+	for(i=0;i<n;i++)
 	{
 		if(str[i]=='(')	s++;
 		if(str[i]==')') s--;
@@ -718,10 +718,10 @@ bool MGL_LOCAL_PURE mglCheck(char *str,int n)
 }
 //-----------------------------------------------------------------------------
 // Try to find one of symbols lst in the string str
-int MGL_LOCAL_PURE mglFindInText(const char *str, const char *lst)
+int MGL_LOCAL_PURE mglFindInText(char *str,const char *lst)
 {
-	long l=0,r=0,len=strlen(str);
-	for(long i=len-1;i>=0;i--)
+	long l=0,r=0,i;//,j,len=strlen(lst);
+	for(i=strlen(str)-1;i>=0;i--)
 	{
 		if(str[i]=='(') l++;
 		if(str[i]==')') r++;

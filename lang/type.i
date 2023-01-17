@@ -24,7 +24,6 @@ typedef double mreal;
 typedef float mreal;
 #endif
 //-----------------------------------------------------------------------------
-const mreal All = -1;
 const mreal Pi = M_PI;
 const mreal NaN = NAN;
 const mreal Inf = INFINITY;

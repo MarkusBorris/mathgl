@@ -21,13 +21,8 @@
 #include <getopt.h>
 
 #include "mgl2/mgl.h"
-#if USE_FLTK
-	#include "mgl2/fltk.h"
-	#include <Fl/Fl.H>
-	#include <Fl/Fl_Preferences.H>
-#else
-	#include "mgl2/qt.h"
-#endif
+#include "mgl2/qt.h"
+#include "mgl2/parser.h"
 //-----------------------------------------------------------------------------
 std::wstring str, opt;
 mglParse p(true);
@@ -41,7 +36,6 @@ int show(mglGraph *gr)
 //-----------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL,"");
 	char iname[256]="";
 	mgl_suppress_warn(true);
 	bool gray = false;
@@ -51,6 +45,7 @@ int main(int argc, char **argv)
 		if(ch>='1' && ch<='9')	p.AddParam(ch-'0', optarg);
 		else if(ch=='s')
 		{
+			setlocale(LC_CTYPE, "");
 			FILE *fp = fopen(optarg,"r");
 			if(fp)
 			{
@@ -61,14 +56,13 @@ int main(int argc, char **argv)
 		}
 		else if(ch=='v')	p.SetVariant(atoi(optarg));
 		else if(ch=='g')	gray= atoi(optarg);
-		else if(ch=='L')
-		{	setlocale(LC_ALL, optarg);	setlocale(LC_NUMERIC, "C");	}
+		else if(ch=='L')	setlocale(LC_CTYPE, optarg);
 		else if(ch=='h' || (ch==-1 && optind>=argc))
 		{
-			printf(_("mglview show plot from MGL script or MGLD file.\nCurrent version is 2.%g\n"),MGL_VER2);
-			printf(_("Usage:\tmglview [parameter(s)] scriptfile\n"));
+			printf("mglview show plot from MGL script or MGLD file.\nCurrent version is 2.%g\n",MGL_VER2);
+			printf("Usage:\tmglview [parameter(s)] scriptfile\n");
 			printf(
-				_("\t-1 str       set str as argument $1 for script\n"
+				"\t-1 str       set str as argument $1 for script\n"
 				"\t...          ...\n"
 				"\t-9 str       set str as argument $9 for script\n"
 				"\t-g val       set gray-scale mode (val=0|1)\n"
@@ -76,17 +70,18 @@ int main(int argc, char **argv)
 				"\t-s opt       set MGL script for setting up the plot\n"
 				"\t-L loc       set locale to loc\n"
 				"\t-            get script from standard input\n"
-				"\t-h           print this message\n") );
+				"\t-h           print this message\n" );
 			return 0;
 		}
 		else if(ch==-1 && optind<argc)
-		{	mgl_strncpy(iname, argv[optind][0]=='-'?"":argv[optind],256);	break;	}
+		{	strncpy(iname, argv[optind][0]=='-'?"":argv[optind],256);	break;	}
 	}
 
 	bool mgld=(*iname && iname[strlen(iname)-1]=='d');
 	if(!mgld)
 	{
 		str = opt + L"\n";
+		setlocale(LC_CTYPE, "");
 		FILE *fp = *iname?fopen(iname,"r"):stdin;
 		if(fp)
 		{
@@ -97,24 +92,15 @@ int main(int argc, char **argv)
 		else	{	printf("No file for MGL script\n");	return 0;	}
 	}
 
-#if USE_FLTK
-	mgl_ask_func = mgl_ask_fltk;
-	Fl_Preferences pref(Fl_Preferences::USER,"abalakin","mgllab");
-	static const char *sch[4]={"base","gtk+","plastic","gleam"};
-	int scheme;	pref.get("scheme",scheme,2);
-	Fl::scheme(sch[scheme]);
-	mglFLTK gr(mgld?NULL:show, *iname?iname:"mglview");
-#else
+	mgl_ask_func = mgl_ask_gets;
 	mgl_ask_func = mgl_ask_qt;
 	mglQT gr(mgld?NULL:show, *iname?iname:"mglview");
-#endif
 	if(gray)	gr.Gray(gray);
 
 	if(mgld)
 	{
 		gr.Setup(false);
-		gr.NewFrame();
-		const std::string loc = setlocale(LC_NUMERIC, "C");
+		gr.NewFrame();	setlocale(LC_NUMERIC, "C");
 		if(!opt.empty())
 		{
 			p.Execute(&gr,opt.c_str());
@@ -122,8 +108,8 @@ int main(int argc, char **argv)
 			gr.ImportMGLD(iname,true);
 		}
 		else	gr.ImportMGLD(iname);
-		setlocale(LC_NUMERIC, loc.c_str());
-		gr.EndFrame();	gr.Update();
+		setlocale(LC_NUMERIC, "");	gr.EndFrame();
+		gr.Update();
 	}
 	if(!mglGlobalMess.empty())	printf("%s",mglGlobalMess.c_str());
 	return gr.Run();

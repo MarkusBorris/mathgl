@@ -62,8 +62,8 @@ TextPanel::TextPanel(QWidget *parent) : QWidget(parent)
 	dataOpenDlg = createDataOpenDlg(this);
 	if(!files_dlg)	files_dlg= new FilesDialog;
 
-	int n=parser.GetCmdNum();
-	for(int i=0;i<n;i++) 	words<<QString::fromLatin1(parser.GetCmdName(i));
+	int i,n=parser.GetCmdNum();
+	for(i=0;i<n;i++) 	words<<QString::fromLatin1(parser.GetCmdName(i));
 	vars = words;
 
 	connect(setupDlg, SIGNAL(putText(const QString &)), this, SLOT(animPutText(const QString &)));
@@ -81,7 +81,7 @@ TextPanel::TextPanel(QWidget *parent) : QWidget(parent)
 	QFontMetrics metrics(edit->currentFont());
 	edit->setTabStopWidth(4 * metrics.width(' '));
 
-	menu = new QMenu(_("Edit"),this);
+	menu = new QMenu(tr("Edit"),this);
 	QBoxLayout *v = new QVBoxLayout(this);
 	toolTop(v);	v->addWidget(edit);
 }
@@ -106,7 +106,7 @@ void TextPanel::insNVal()
 	QString sel=edit->textCursor().selectedText();
 	if(sel.isEmpty())
 	{
-		QMessageBox::warning(this,_("UDAV"),_("There is no selection to evaluate."));
+		QMessageBox::warning(this,tr("UDAV"),tr("There is no selection to evaluate."));
 		return;
 	}
 	wchar_t *txt=new wchar_t[sel.length()+1];
@@ -121,7 +121,7 @@ void TextPanel::insPrim()
 	QString str(graph->mgl->primitives);
 	if(str.isEmpty())
 	{
-		QMessageBox::warning(this,_("UDAV"),_("There is manual primitives."));
+		QMessageBox::warning(this,tr("UDAV"),tr("There is manual primitives."));
 		return;
 	}
 	edit->moveCursor(QTextCursor::Start);
@@ -134,7 +134,7 @@ void TextPanel::insFitF()
 	QString str(graph->getFit());
 	if(str.isEmpty())
 	{
-		QMessageBox::warning(this,_("UDAV"),_("There is no fitted formula."));
+		QMessageBox::warning(this,tr("UDAV"),tr("There is no fitted formula."));
 		return;
 	}
 	edit->textCursor().insertText("'"+str+"'");
@@ -142,14 +142,14 @@ void TextPanel::insFitF()
 //-----------------------------------------------------------------------------
 void TextPanel::insFile()
 {
-	QString str = QFileDialog::getOpenFileName(this, _("UDAV - Insert filename"));
+	QString str = QFileDialog::getOpenFileName(this, tr("UDAV - Insert filename"));
 	if(str.isEmpty())	return;
 	edit->textCursor().insertText("'"+str+"'");
 }
 //-----------------------------------------------------------------------------
 void TextPanel::insPath()
 {
-	QString str = QFileDialog::getExistingDirectory(this, _("UDAV - Insert path"));
+	QString str = QFileDialog::getExistingDirectory(this, tr("UDAV - Insert path"));
 	if(str.isEmpty())	return;
 	edit->textCursor().insertText("'"+str+"'");
 }
@@ -171,11 +171,11 @@ void TextPanel::printText()
 	QPrintDialog printDlg(printer, this);
 	if (printDlg.exec() == QDialog::Accepted)
 	{
-		setStatus(_("Printing..."));
+		setStatus(tr("Printing..."));
 		edit->print(printer);
-		setStatus(_("Printing completed"));
+		setStatus(tr("Printing completed"));
 	}
-	else	setStatus(_("Printing aborted"));
+	else	setStatus(tr("Printing aborted"));
 }
 //-----------------------------------------------------------------------------
 void TextPanel::find()
@@ -199,7 +199,7 @@ bool TextPanel::findText(const QString &str, bool cs, bool fw)
 	}
 	bool res = edit->find(stri, f);
 	if(!res)
-		QMessageBox::information(this, _("UDAV - find text"), _("No string occurrence is found"));
+		QMessageBox::information(this, tr("UDAV - find text"), tr("No string occurrence is found"));
 	return res;
 }
 //-----------------------------------------------------------------------------
@@ -322,7 +322,7 @@ void TextPanel::loadHDF5(const QString &fileName)
 			graph->animParseText(edit->toPlainText());
 			setCurrentFile(fileName);
 			delete []buf;
-			setStatus(QString(_("Loaded document %1")).arg(fileName));
+			setStatus(tr("Loaded document %1").arg(fileName));
 			if(mglAutoExecute)	graph->execute();
 		}
 		else if(H5Tget_class(ht)==H5T_FLOAT || H5Tget_class(ht)==H5T_INTEGER)
@@ -362,7 +362,7 @@ void TextPanel::saveHDF5(const QString &fileName)
 	hf = H5Fcreate(fileName.toLocal8Bit().constData(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 	if(hf<0)
 	{
-		setStatus(QString(_("Could not write to %1")).arg(fileName));
+		setStatus(tr("Could not write to %1").arg(fileName));
 		return;
 	}
 	{	// save script
@@ -402,7 +402,7 @@ void TextPanel::saveHDF5(const QString &fileName)
 	}
 	H5Fclose(hf);
 	setCurrentFile(fileName);
-	setStatus(QString(_("File %1 saved")).arg(fileName));
+	setStatus(tr("File %1 saved").arg(fileName));
 	return;
 }
 #else
@@ -428,7 +428,9 @@ void TextPanel::load(const QString &fileName)
 		QFile f(fileName);
 		if(!f.open(QIODevice::ReadOnly))
 		{
-			QMessageBox::warning(this,_("UDAV - open file"), _("Couldn't open file ") + QString("'") + fileName+"'", QMessageBox::Ok,0,0);
+			QMessageBox::warning(this,tr("UDAV - open file"),
+								tr("Couldn't open file ")+"'"+fileName+"'",
+								QMessageBox::Ok,0,0);
 			return;
 		}
 
@@ -464,7 +466,7 @@ void TextPanel::load(const QString &fileName)
 		graph->animParseText(edit->toPlainText());
 		if(narg==0)	setCurrentFile(fileName);
 	}
-	setStatus(_("Loaded document ")+fileName);
+	setStatus(tr("Loaded document ")+fileName);
 	if(mglAutoExecute)	graph->execute();
 }
 //-----------------------------------------------------------------------------
@@ -479,14 +481,14 @@ void TextPanel::save(const QString &fileName)
 	QFile f(fileName);
 	if(!f.open(QIODevice::WriteOnly))
 	{
-		setStatus(QString(_("Could not write to %1")).arg(fileName));
+		setStatus(tr("Could not write to %1").arg(fileName));
 		return;
 	}
 	QTextStream t(&f);
 	t.setAutoDetectUnicode(true);
 	t << text;	f.close();
 	setCurrentFile(fileName);
-	setStatus(QString(_("File %1 saved")).arg(fileName));
+	setStatus(tr("File %1 saved").arg(fileName));
 }
 //-----------------------------------------------------------------------------
 void TextPanel::addSetup()	{	setupDlg->exec();	}
@@ -513,89 +515,89 @@ void TextPanel::toolTop(QBoxLayout *v)
 	t->addWidget(bb);
 
 	// edit menu
-	a = new QAction(QPixmap(":/png/edit-undo.png"), _("Undo"), this);
+	a = new QAction(QPixmap(":/png/edit-undo.png"), tr("Undo"), this);
 	connect(a, SIGNAL(triggered()), edit, SLOT(undo()));
-	a->setToolTip(_("Undo editor change (Ctrl+Z)."));
+	a->setToolTip(tr("Undo editor change (Ctrl+Z)."));
 	a->setShortcut(Qt::CTRL+Qt::Key_Z);	o->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/edit-redo.png"), _("Redo"), this);
+	a = new QAction(QPixmap(":/png/edit-redo.png"), tr("Redo"), this);
 	connect(a, SIGNAL(triggered()), edit, SLOT(redo()));
-	a->setToolTip(_("Redo editor change (Ctrl+Shift+Z)."));
+	a->setToolTip(tr("Redo editor change (Ctrl+Shift+Z)."));
 	a->setShortcut(Qt::CTRL+Qt::SHIFT+Qt::Key_Z);	o->addAction(a);	t->addAction(a);
 
 	o->addSeparator();
-	o->addAction(_("Clear all"), edit, SLOT(clear()));
-	a = new QAction(QPixmap(":/png/edit-cut.png"), _("Cut text"), this);
+	o->addAction(tr("Clear all"), edit, SLOT(clear()));
+	a = new QAction(QPixmap(":/png/edit-cut.png"), tr("Cut text"), this);
 	connect(a, SIGNAL(triggered()), edit, SLOT(cut()));
-	a->setToolTip(_("Cut selected text to clipboard (Ctrl+X)."));
+	a->setToolTip(tr("Cut selected text to clipboard (Ctrl+X)."));
 	a->setShortcut(Qt::CTRL+Qt::Key_X);	o->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/edit-copy.png"), _("Copy text"), this);
+	a = new QAction(QPixmap(":/png/edit-copy.png"), tr("Copy text"), this);
 	connect(a, SIGNAL(triggered()), edit, SLOT(copy()));
-	a->setToolTip(_("Copy selected text or data to clipboard (Ctrl+C)."));
+	a->setToolTip(tr("Copy selected text or data to clipboard (Ctrl+C)."));
 	a->setShortcut(Qt::CTRL+Qt::Key_C);	o->addAction(a);	t->addAction(a);
 
-	a = new QAction(QPixmap(":/png/edit-paste.png"), _("Paste text"), this);
+	a = new QAction(QPixmap(":/png/edit-paste.png"), tr("Paste text"), this);
 	connect(a, SIGNAL(triggered()), edit, SLOT(paste()));
-	a->setToolTip(_("Paste text or data from clipboard (Ctrl+V)."));
+	a->setToolTip(tr("Paste text or data from clipboard (Ctrl+V)."));
 	a->setShortcut(Qt::CTRL+Qt::Key_V);	o->addAction(a);	t->addAction(a);
 
-	o->addAction(QPixmap(":/png/edit-select-all.png"), _("Select all"), edit, SLOT(selectAll()), Qt::CTRL+Qt::Key_A);
+	o->addAction(QPixmap(":/png/edit-select-all.png"), tr("Select all"), edit, SLOT(selectAll()), Qt::CTRL+Qt::Key_A);
 	o->addSeparator();
 
-	a = new QAction(QPixmap(":/png/edit-find.png"), _("Find/Replace"), this);
+	a = new QAction(QPixmap(":/png/edit-find.png"), tr("Find/Replace"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(find()));
-	a->setToolTip(_("Show dialog for text finding (Ctrl+F)."));
+	a->setToolTip(tr("Show dialog for text finding (Ctrl+F)."));
 	a->setShortcut(Qt::CTRL+Qt::Key_F);	o->addAction(a);	t->addAction(a);
 
-	a = new QAction(_("Find next"), this);
+	a = new QAction(tr("Find next"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(findText()));
 	a->setShortcut(Qt::Key_F3);	o->addAction(a);
 	o->addSeparator();
 
 	// insert menu
-	oo = o->addMenu(_("Insert"));
-	aa=a = new QAction(QPixmap(":/png/format-indent-more.png"), _("New command"), this);
+	oo = o->addMenu(tr("Insert"));
+	aa=a = new QAction(QPixmap(":/png/format-indent-more.png"), tr("New command"), this);
 	a->setShortcut(Qt::META+Qt::Key_C);	connect(a, SIGNAL(triggered()), this, SLOT(newCmd()));
-	a->setToolTip(_("Show dialog for new command or edit arguments of existed one."));
+	a->setToolTip(tr("Show dialog for new command or edit arguments of existed one."));
 	oo->addAction(a);
-	a = new QAction(QPixmap(box_xpm), _("New inplot"), this);
+	a = new QAction(QPixmap(box_xpm), tr("New inplot"), this);
 	a->setShortcut(Qt::META+Qt::Key_C);	connect(a, SIGNAL(triggered()), subplotDlg, SLOT(show()));
-	a->setToolTip(_("Show dialog for new inplot and put it into the script."));
+	a->setToolTip(tr("Show dialog for new inplot and put it into the script."));
 	oo->addAction(a);
 
-	a = new QAction(_("Fitted formula"), this);
+	a = new QAction(tr("Fitted formula"), this);
 	a->setShortcut(Qt::META+Qt::Key_F);	connect(a, SIGNAL(triggered()), this, SLOT(insFitF()));
-	a->setToolTip(_("Insert last fitted formula with found coefficients."));
+	a->setToolTip(tr("Insert last fitted formula with found coefficients."));
 	oo->addAction(a);
-	a = new QAction(QPixmap(style_xpm), _("Plot style"), this);
+	a = new QAction(QPixmap(style_xpm), tr("Plot style"), this);
 	a->setShortcut(Qt::META+Qt::Key_S);	connect(a, SIGNAL(triggered()), this, SLOT(addStyle()));
-	a->setToolTip(_("Show dialog for styles and put it into the script.\nStyles define the plot view (color scheme, marks, dashing and so on)."));
+	a->setToolTip(tr("Show dialog for styles and put it into the script.\nStyles define the plot view (color scheme, marks, dashing and so on)."));
 	oo->addAction(a);
-	a = new QAction(QPixmap(option_xpm), _("Command options"), this);
+	a = new QAction(QPixmap(option_xpm), tr("Command options"), this);
 	a->setShortcut(Qt::META+Qt::Key_O);	connect(a, SIGNAL(triggered()), this, SLOT(addOptions()));
-	a->setToolTip(_("Show dialog for options and put it into the script.\nOptions are used for additional setup the plot."));
+	a->setToolTip(tr("Show dialog for options and put it into the script.\nOptions are used for additional setup the plot."));
 	oo->addAction(a);
-	a = new QAction(_("Numeric value"), this);
+	a = new QAction(tr("Numeric value"), this);
 	a->setShortcut(Qt::META+Qt::Key_N);	connect(a, SIGNAL(triggered()), this, SLOT(insNVal()));
-	a->setToolTip(_("Replace expression by its numerical value."));
+	a->setToolTip(tr("Replace expression by its numerical value."));
 	oo->addAction(a);
-	a = new QAction(QPixmap(":/png/text-csv.png"), _("File name"), this);
+	a = new QAction(QPixmap(":/png/text-csv.png"), tr("File name"), this);
 	a->setShortcut(Qt::META+Qt::Key_P);	connect(a, SIGNAL(triggered()), this, SLOT(insFile()));
-	a->setToolTip(_("Select and insert file name."));
+	a->setToolTip(tr("Select and insert file name."));
 	oo->addAction(a);
-	a = new QAction(QPixmap(":/png/folder.png"), _("Folder path"), this);
+	a = new QAction(QPixmap(":/png/folder.png"), tr("Folder path"), this);
 	connect(a, SIGNAL(triggered()), this, SLOT(insPath()));
-	a->setToolTip(_("Select and insert folder name."));
+	a->setToolTip(tr("Select and insert folder name."));
 	oo->addAction(a);
-	a = new QAction(QPixmap(curve_xpm), _("Manual primitives"), this);
+	a = new QAction(QPixmap(curve_xpm), tr("Manual primitives"), this);
 	a->setShortcut(Qt::META+Qt::Key_P);	connect(a, SIGNAL(triggered()), this, SLOT(insPrim()));
-	a->setToolTip(_("Move mouse-handled primitives to script."));
+	a->setToolTip(tr("Move mouse-handled primitives to script."));
 	oo->addAction(a);	bb->setMenu(oo);	bb->setDefaultAction(aa);
 
-	a = new QAction(QPixmap(":/png/document-properties.png"), _("Graphics setup"), this);
+	a = new QAction(QPixmap(":/png/document-properties.png"), tr("Graphics setup"), this);
 	a->setShortcut(Qt::META+Qt::Key_G);	connect(a, SIGNAL(triggered()), this, SLOT(addSetup()));
-	a->setToolTip(_("Show dialog for plot setup and put code into the script.\nThis dialog setup axis, labels, lighting and other general things."));
+	a->setToolTip(tr("Show dialog for plot setup and put code into the script.\nThis dialog setup axis, labels, lighting and other general things."));
 	o->addAction(a);	t->addAction(a);
 }
 //-----------------------------------------------------------------------------

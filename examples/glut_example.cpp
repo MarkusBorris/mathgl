@@ -56,7 +56,6 @@ printf("i=%d, gr=%p\n",i,gr);	fflush(stdout);
 }
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL);
 	static pthread_t thr;
 	pthread_create(&thr,0,calc,0);
 	pthread_detach(thr);
@@ -76,7 +75,6 @@ int sample_d(mglGraph *gr);
 typedef int (*draw_func)(mglGraph *gr);
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL,"");
 	char key = 0;
 	if(argc>1)	key = argv[1][0]!='-' ? argv[1][0] : argv[1][1];
 	else	printf("You may specify argument '1', '2', '3' or 'd' for viewing examples of 1d, 2d, 3d or dual plotting\n");

@@ -1,6 +1,6 @@
 if(QT_ENABLED)
 
-configure_file(${MathGL2_SOURCE_DIR}/udav/mgl.xml.in ${MathGL2_BINARY_DIR}/udav/mgl.xml)
+configure_file(${MathGL_SOURCE_DIR}/udav/mgl.xml.in ${MathGL_BINARY_DIR}/udav/mgl.xml)
 
 #set(mgl_wnd_src window.cpp)
 set(udav_src anim_dlg.cpp find_dlg.cpp mem_pnl.cpp prop_dlg.cpp textedit.cpp args_dlg.cpp
@@ -19,10 +19,10 @@ if(WIN32)
 endif(WIN32)
 
 if(enable-qt5)
-	include(../scripts/qt5.cmake)
+	include(../cmake-qt5.txt)
 	qt5_add_resources(udav_rc_src ${udav_rc} )
 else(enable-qt5)
-	include(../scripts/qt4.cmake)
+	include(../cmake-qt4.txt)
 	qt4_add_resources(udav_rc_src ${udav_rc} )
 endif(enable-qt5)
 add_executable(udav ${udav_src} ${udav_moc_hdr} ${udav_rc_src})
@@ -33,16 +33,13 @@ else(enable-qt5)
 	target_link_libraries(udav mgl-qt4 ${MGL_QT4_LIBS})
 endif(enable-qt5)
 
-mgl_po_src(${udav_src} ${udav_hdr})
-
 if(MGL_HAVE_PTHREAD)
 	target_link_libraries(udav ${CMAKE_THREAD_LIBS_INIT})
 endif(MGL_HAVE_PTHREAD)
 
 install(
 	TARGETS udav
-	EXPORT MathGLTargets
-	RUNTIME DESTINATION ${MathGL_INSTALL_BIN_DIR}
+	RUNTIME DESTINATION bin
 )
 install(FILES udav.png DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps/)
 install(FILES udav_ru.qm DESTINATION ${CMAKE_INSTALL_PREFIX}/share/udav/)

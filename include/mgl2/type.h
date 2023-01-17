@@ -64,9 +64,9 @@ inline mglPoint operator-(const mglPoint &a, const mglPoint &b)
 inline mglPoint operator-(const mglPoint &a)
 {	return mglPoint(-a.x, -a.y, -a.z, -a.c);	}
 inline mglPoint operator*(mreal b, const mglPoint &a)
-{	return mglPoint(a.x*b, a.y*b, a.z*b, a.c*b);	}	// TODO check conficts of a.c*b!!!
+{	return mglPoint(a.x*b, a.y*b, a.z*b);	}
 inline mglPoint operator*(const mglPoint &a, mreal b)
-{	return mglPoint(a.x*b, a.y*b, a.z*b, a.c*b);	}	// TODO check conficts of a.c*b!!!
+{	return mglPoint(a.x*b, a.y*b, a.z*b);	}
 inline mglPoint operator/(const mglPoint &a, mreal b)
 {	return mglPoint(a.x/b, a.y/b, a.z/b);	}
 inline mreal operator*(const mglPoint &a, const mglPoint &b)
@@ -81,10 +81,10 @@ inline mglPoint operator^(const mglPoint &a, const mglPoint &b)
 {	return mglPoint(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);	}
 inline mglPoint operator!(const mglPoint &a)
 {	mreal f=mgl_hypot(a.x,a.y);	return f==0?mglPoint(0.,1.,0.):mglPoint(-a.y/f, a.x/f, 0);	}
-inline bool operator==(const mglPoint &a, const mglPoint &b)	// NOTE: exact comparison is used here
+inline bool operator==(const mglPoint &a, const mglPoint &b)
 {	return (a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)+(a.z-b.z)*(a.z-b.z)+(a.c-b.c)*(a.c-b.c)==0;	}
 //{	return !memcmp(&a, &b, sizeof(mglPoint));	}
-inline bool operator!=(const mglPoint &a, const mglPoint &b)	// NOTE: exact comparison is used here
+inline bool operator!=(const mglPoint &a, const mglPoint &b)
 {	return (a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)+(a.z-b.z)*(a.z-b.z)+(a.c-b.c)*(a.c-b.c)!=0;	}
 //{	return memcmp(&a, &b, sizeof(mglPoint));	}
 inline bool operator<(const mglPoint &a, const mglPoint &b)
@@ -121,8 +121,7 @@ struct MGL_EXPORT mglColor
 	/// Set color as Red, Green, Blue values
 	void Set(mglColor c, float bright=1)
 	{
-		if(bright<0)	bright=0;
-		if(bright>2.f)	bright=2.f;
+		if(bright<0)	bright=0;	if(bright>2.f)	bright=2.f;
 		r = bright<=1 ? c.r*bright : 1 - (1-c.r)*(2-bright);
 		g = bright<=1 ? c.g*bright : 1 - (1-c.g)*(2-bright);
 		b = bright<=1 ? c.b*bright : 1 - (1-c.b)*(2-bright);	a = 1;
@@ -144,10 +143,10 @@ struct MGL_EXPORT mglColor
 	inline const mglColor &operator=(const mglColor &p)
 	{	r=p.r;	g=p.g;	b=p.b;	a=p.a;	return p;	}
 	/// Copy color from other one
-	inline bool operator==(const mglColor &c) const	// NOTE: exact comparison is used here
+	inline bool operator==(const mglColor &c) const
 	{	return (r-c.r)*(r-c.r)+(g-c.g)*(g-c.g)+(b-c.b)*(b-c.b)+(a-c.a)*(a-c.a)==0;	}
 //	{	return !memcmp(this, &c, sizeof(mglColor));	}
-	inline bool operator!=(const mglColor &c) const	// NOTE: exact comparison is used here
+	inline bool operator!=(const mglColor &c) const
 	{	return (r-c.r)*(r-c.r)+(g-c.g)*(g-c.g)+(b-c.b)*(b-c.b)+(a-c.a)*(a-c.a)!=0;	}
 //	{	return memcmp(this, &c, sizeof(mglColor));		}
 	inline bool operator<(const mglColor &c) const

@@ -120,9 +120,9 @@ public:
 	/// Delete data rows/columns/slices
 	inline void Delete(char dir, long at=0, long num=1)
 	{	mgl_data_delete(this,dir,at,num);	}
-	/// Remove rows with duplicate values in column clmn
-	inline void Clean(long clmn)
-	{	mgl_data_clean(this,clmn);	}
+	/// Remove rows with duplicate values in column id
+	inline void Clean(long id)
+	{	mgl_data_clean(this,id);	}
 	/// Join with another data array
 	inline void Join(const mglData &d)
 	{	mgl_data_join(this,&d);	}
@@ -238,13 +238,6 @@ public:
 	{	return mglData(true,mgl_data_subdata_ext(this,&xx,&yy,0));	}
 	inline mglData SubData(const mglData &xx) const
 	{	return mglData(true,mgl_data_subdata_ext(this,&xx,0,0));	}
-	/// Get data from sections ids, separated by value val along specified direction.
-	/** If section id is negative then reverse order is used (i.e. -1 give last section). */
-	inline mglData Section(const mglData &ids, char dir='y', mreal val=NAN) const
-	{	return mglData(true,mgl_data_section(this,&ids,dir,val));	}
-	inline mglData Section(long id, char dir='y', mreal val=NAN) const
-	{	return mglData(true,mgl_data_section_val(this,id,dir,val));	}
-
 	/// Get trace of the data array
 	inline mglData Trace() const
 	{	return mglData(true,mgl_data_trace(this));	}
@@ -277,19 +270,14 @@ public:
 	inline mglData Evaluate(const mglData &idat, const mglData &jdat, const mglData &kdat, bool norm=true) const
 	{	return mglData(true,mgl_data_evaluate(this,&idat,&jdat,&kdat,norm));	}
 	/// Find roots for set of nonlinear equations defined by textual formula
-	inline mglData Roots(const char *eq, char var='x') const
-	{	return mglData(true,mgl_data_roots(eq, this, var));	}
+	inline mglData Roots(const char *func, char var='x') const
+	{	return mglData(true,mgl_data_roots(func, this, var));	}
 	/// Find correlation with another data arrays
 	inline mglData Correl(const mglData &dat, const char *dir) const
 	{	return mglData(true,mgl_data_correl(this,&dat,dir));	}
 	/// Find auto correlation function
 	inline mglData AutoCorrel(const char *dir) const
 	{	return mglData(true,mgl_data_correl(this,this,dir));	}
-	/// Get curves, separated by NAN, for maximal values of array d as function of x coordinate.
-	/** Noises below lvl amplitude are ignored.
-	 * Parameter dy \in [0,ny] set the "attraction" distance of points to curve. */
-	inline mglData Detect(mreal lvl, mreal dj, mreal di=0, mreal min_len=0) const
-	{	return mglData(true,mgl_data_detect(this,lvl,dj,di,min_len));	}
 
 	/// Cumulative summation the data in given direction or directions
 	inline void CumSum(const char *dir)	{	mgl_data_cumsum(this,dir);	}
@@ -314,13 +302,6 @@ public:
 	inline void Mirror(const char *dir)		{	mgl_data_mirror(this,dir);	}
 	/// Sort rows (or slices) by values of specified column
 	inline void Sort(long idx, long idy=-1)	{	mgl_data_sort(this,idx,idy);	}
-	/// Return dilated array of 0 or 1 for data values larger val 
-	inline void Dilate(mreal val=1, long step=1)
-	{	mgl_data_dilate(this, val, step);	}
-	/// Return eroded array of 0 or 1 for data values larger val 
-	inline void Erode(mreal val=1, long step=1)
-	{	mgl_data_erode(this, val, step);	}
-	
 
 	/// Set as the data envelop
 	inline void Envelop(char dir='x')
@@ -343,9 +324,6 @@ public:
 	/// Normalize the data to range [v1,v2] slice by slice
 	inline void NormSl(mreal v1=0,mreal v2=1,char dir='z',bool keep_en=true,bool sym=false)
 	{	mgl_data_norm_slice(this,v1,v2,dir,keep_en,sym);	}
-	/// Limit the data to be inside [-v,v], keeping the original sign
-	inline void Limit(mreal v)
-	{	mgl_data_limit(this, v);	}
 
 	/// Apply Hankel transform
 	inline void Hankel(const char *dir)	{	mgl_data_hankel(this,dir);	}
@@ -353,12 +331,7 @@ public:
 	inline void SinFFT(const char *dir)	{	mgl_data_sinfft(this,dir);	}
 	/// Apply Cos-Fourier transform
 	inline void CosFFT(const char *dir)	{	mgl_data_cosfft(this,dir);	}
-	/// Fill data by coordinates/momenta samples for Hankel ('h') or Fourier ('f') transform
-	/** Parameter \a how may contain:
-	 * ‘x‘,‘y‘,‘z‘ for direction (only one will be used),
-	 * ‘k‘ for momenta samples,
-	 * ‘h‘ for Hankel samples,
-	 * ‘f‘ for Cartesian/Fourier samples (default). */
+	/// Fill data by 'x'/'k' samples for Hankel ('h') or Fourier ('f') transform
 	inline void FillSample(const char *how)
 	{	mgl_data_fill_sample(this,how);	}
 	/// Apply wavelet transform
@@ -503,19 +476,9 @@ inline mglData mglQO3d(const char *ham, const mglData &ini_re, const mglData &in
 /// Finds ray with starting point r0, p0 (and prepares ray data for mglQO2d)
 inline mglData mglRay(const char *ham, mglPoint r0, mglPoint p0, mreal dt=0.1, mreal tmax=10)
 {	return mglData(true, mgl_ray_trace(ham, r0.x, r0.y, r0.z, p0.x, p0.y, p0.z, dt, tmax));	}
-/// Saves result of ODE solving for var complex variables with right part func (separated by ';') and initial conditions x0 over time interval [0,tmax] with time step dt
-inline mglData mglODE(const char *func, const char *var, const mglData &ini, mreal dt=0.1, mreal tmax=10)
-{	return mglData(true, mgl_ode_solve_str(func,var, &ini, dt, tmax));	}
-//-----------------------------------------------------------------------------
-/// Get array as solution of tridiagonal system of equations a[i]*x[i-1]+b[i]*x[i]+c[i]*x[i+1]=d[i]
-/** String \a how may contain:
- * 'x', 'y', 'z' for solving along x-,y-,z-directions, or
- * 'h' for solving along hexagonal direction at x-y plain (need nx=ny),
- * 'c' for using periodical boundary conditions,
- * 'd' for diffraction/diffuse calculation. */
-inline mglData mglTridMat(const mglData &A, const mglData &B, const mglData &C, const mglData &D, const char *how)
-{	return mglData(true, mgl_data_tridmat(&A, &B, &C, &D, how));	}
-//-----------------------------------------------------------------------------
+/// Saves result of ODE solving (|u|^2) for "Hamiltonian" ham with initial conditions ini
+inline mglData mglODE(const char *df, const char *var, const mglData &ini, mreal dt=0.1, mreal tmax=10)
+{	return mglData(true, mgl_ode_solve_str(df,var, &ini, dt, tmax));	}
 /// Calculate Jacobian determinant for D{x(u,v), y(u,v)} = dx/du*dy/dv-dx/dv*dy/du
 inline mglData mglJacobian(const mglData &x, const mglData &y)
 {	return mglData(true, mgl_jacobian_2d(&x, &y));	}
@@ -527,27 +490,12 @@ inline mglData mglTriangulation(const mglData &x, const mglData &y, const mglDat
 {	return mglData(true,mgl_triangulation_3d(&x,&y,&z));	}
 inline mglData mglTriangulation(const mglData &x, const mglData &y)
 {	return mglData(true,mgl_triangulation_2d(&x,&y));	}
-/// Get curves, separated by NAN, for maximal values of array d as function of x coordinate.
-/** Noises below lvl amplitude are ignored.
- * Parameter dy \in [0,ny] set the "attraction" distance of points to curve. */
-inline mglData mglDetect(const mglData &d, mreal lvl, mreal dj, mreal di=0, mreal min_len=0)
-{	return mglData(true,mgl_data_detect(&d, lvl, dj, di, min_len));	}
-//-----------------------------------------------------------------------------
 /// Get array which is n-th pairs {x[i],y[i]} for iterated function system (fractal) generated by A
 inline mglData mglIFS2d(const mglData &A, long n, long skip=20)
 {	return mglData(true,mgl_data_ifs_2d(&A,n,skip));	}
 /// Get array which is n-th points {x[i],y[i],z[i]} for iterated function system (fractal) generated by A
 inline mglData mglIFS3d(const mglData &A, long n, long skip=20)
 {	return mglData(true,mgl_data_ifs_3d(&A,n,skip));	}
-/// Get array which is n-th points {x[i],y[i],z[i]} for iterated function system (fractal) defined in *.ifs file 'fname' and named as 'name'
-inline mglData mglIFSfile(const char *fname, const char *name, long n, long skip=20)
-{	return mglData(true,mgl_data_ifs_file(fname,name,n,skip));	}
-/// Get array which is n-th pairs {x[i],y[i]} for Flame fractal generated by A with functions F
-/** NOTE: A.nx must be >= 7 and F.nx >= 2 and F.nz=A.ny.
- * F[0,i,j] denote function id. F[1,i,j] give function weight, F(2:5,i,j) provide function parameters.
- * Resulting point is {xnew,ynew} = sum_i F[1,i,j]*F[0,i,j]{IFS2d(A[j]){x,y}}. */
-inline mglData mglFlame2d(const mglData &A, const mglData &F, long n, long skip=20)
-{	return mglData(true,mgl_data_flame_2d(&A,&F,n,skip));	}
 //-----------------------------------------------------------------------------
 /// Get sub-array of the data with given fixed indexes
 inline mglData mglSubData(const mglData &dat, long xx, long yy=-1, long zz=-1)

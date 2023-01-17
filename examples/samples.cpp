@@ -1786,26 +1786,24 @@ const char *mmgl_surfc="call 'prepare2d'\ntitle 'SurfC plot':rotate 50 60:light 
 void smgl_surfc(mglGraph *gr)
 {
 	mglData a,b;	mgls_prepare2d(&a,&b);
-	if(big!=3)	gr->Title("SurfC plot");
-	gr->Rotate(50,60);	gr->Light(true);	gr->Box();	gr->SurfC(a,b);
+	if(big!=3)	gr->Title("SurfC plot");	gr->Rotate(50,60);
+	gr->Light(true);	gr->Box();	gr->SurfC(a,b);
 }
 //-----------------------------------------------------------------------------
 const char *mmgl_surfca="call 'prepare2d'\ntitle 'SurfCA plot':rotate 50 60:light on:alpha on:box:surfca a b a";
 void smgl_surfca(mglGraph *gr)
 {
 	mglData a,b;	mgls_prepare2d(&a,&b);
-	if(big!=3)	gr->Title("SurfCA plot");
-	gr->Rotate(50,60);	gr->Alpha(true);	gr->Light(true);	gr->Box();
-	gr->SurfCA(a,b,a);
+	if(big!=3)	gr->Title("SurfCA plot");	gr->Rotate(50,60);
+	gr->Alpha(true);	gr->Light(true);	gr->Box();	gr->SurfCA(a,b,a);
 }
 //-----------------------------------------------------------------------------
 const char *mmgl_surfa="call 'prepare2d'\ntitle 'SurfA plot':rotate 50 60:light on:alpha on:box:surfa a b";
 void smgl_surfa(mglGraph *gr)
 {
 	mglData a,b;	mgls_prepare2d(&a,&b);
-	if(big!=3)	gr->Title("SurfA plot");
-	gr->Rotate(50,60);	gr->Alpha(true);	gr->Light(true);	gr->Box();
-	gr->SurfA(a,b);
+	if(big!=3)	gr->Title("SurfA plot");	gr->Rotate(50,60);
+	gr->Alpha(true);	gr->Light(true);	gr->Box();	gr->SurfA(a,b);
 }
 //-----------------------------------------------------------------------------
 const char *mmgl_tile="call 'prepare2d'\ntitle 'Tile plot':rotate 50 60:box:tile a";
@@ -2784,247 +2782,7 @@ void smgl_ifs3d(mglGraph *gr)
 	gr->Dots(f.SubData(0), f.SubData(1), f.SubData(2),"G#o","size 0.05");
 }
 //-----------------------------------------------------------------------------
-const char *mmgl_flame2d="list A [0.33,0,0,0.33,0,0,0.2] [0.33,0,0,0.33,0.67,0,0.2] [0.33,0,0,0.33,0.33,0.33,0.2]\\\n"
-"\t[0.33,0,0,0.33,0,0.67,0.2] [0.33,0,0,0.33,0.67,0.67,0.2]\n"
-"new B 2 3 A.ny '0.3'\nput B 3 0 0 -1\nput B 3 0 1 -1\nput B 3 0 2 -1\n"
-"flame2d fx fy A B 1000000\nsubplot 1 1 0 '<_':title 'Flame2d sample'\n"
-"ranges fx fy:box:axis\nplot fx fy 'r#o ';size 0.05";
-void smgl_flame2d(mglGraph *gr)
-{
-	mglData A, B(2,3,5);
-	A.SetList(35, 0.33,0.,0.,0.33,0.,0.,0.2, 0.33,0.,0.,0.33,0.67,0.,0.2, 0.33,0.,0.,0.33,0.33,0.33,0.2,
-			0.33,0.,0.,0.33,0.,0.67,0.2, 0.33,0.,0.,0.33,0.67,0.67,0.2);
-	A.Rearrange(7);
-	for(long i=0;i<2*3*5;i++)	B.a[i] = 0.3;
-	for(long i=0;i<5;i++)	B.a[2*3*i] = B.a[2*3*i+1*2] = B.a[2*3*i+2*2] = 3;
-	mglData f(mglFlame2d(A,B,1000000));
-	gr->SubPlot(1,1,0,"<_");
-	if(big!=3)	gr->Title("Flame2d sample");
-	gr->SetRanges(f.SubData(0), f.SubData(1));
-	gr->Axis();	gr->Box();
-	gr->Plot(f.SubData(0), f.SubData(1),"r#o ","size 0.05");
-}
-//-----------------------------------------------------------------------------
-const char *mmgl_detect="subplot 1 1 0 '':title 'Detect sample'\n"
-"new a 200 100 'exp(-30*(y-0.5*sin(pi*x))^2-rnd/10)+exp(-30*(y+0.5*sin(pi*x))^2-rnd/10)+exp(-30*(x+y)^2-rnd/10)'\n"
-"ranges 0 a.nx 0 a.ny:box\nalpha on:crange a:dens a\n\n"
-"detect r a 0.1 5\nplot r(0) r(1) '.'";
-void smgl_detect(mglGraph *gr)
-{
-	mglData a(200, 100);
-	gr->Fill(a,"exp(-30*(y-0.5*sin(pi*x))^2-rnd/10)+exp(-30*(y+0.5*sin(pi*x))^2-rnd/10)+exp(-30*(x+y)^2-rnd/10)");
-	gr->SubPlot(1,1,0,"");
-	if(big!=3)	gr->Title("Detect sample");
-	gr->SetRanges(0,a.nx,0,a.ny);	gr->SetRange('c',a);
-	gr->Alpha(true);	gr->Box();	gr->Dens(a);
-	mglData r(a.Detect(0.1,5));
-	gr->Plot(r.SubData(0), r.SubData(1), ".");
-}
-//-----------------------------------------------------------------------------
-const char *mmgl_iris="read a 'iris.dat'\ncrop a 0 4 'x':rearrange a a.nx 50\n"
-"subplot 1 1 0 '':title 'Iris plot'\n"
-"iris a 'sepal\\n length;sepal\\n width;petal\\n length;petal\\n width' '. ';value -1.5;size -2";
-void smgl_iris(mglGraph *gr)
-{
-	mglData a("iris.dat");	a.Crop(0,4,'x');	a.Rearrange(4,50);
-	gr->SubPlot(1,1,0,"");
-	if(big!=3)	gr->Title("Iris sample");
-	gr->Iris(a, "sepal\nlength;sepal\nwidth;petal\nlength;petal\nwidth", ". ", "value -1.5;size -2");
-}
-//-----------------------------------------------------------------------------
-const char *mmgl_dilate="subplot 2 2 0:title 'Dilate&Erode 1D sample'\n"
-"new y 11:put y 1 5\nranges 0 10 0 1:axis:box\nplot y 'b*'\n"
-"dilate y 0.5 2\nplot y 'rs'\nerode y 0.5 1\nplot y 'g#o'\n\n"
-"subplot 2 2 1:title 'Dilate&Erode 2D sample':rotate 40 60\n"
-"ranges 0 10 0 10 0 3\naxis:box\nnew z 11 11:put z 3 5 5\n"
-"boxs z 'b':boxs z 'k#'\ndilate z 1 2\nboxs z 'r':boxs z 'k#'\n"
-"erode z 1 1\nboxs 2*z 'g':boxs 2*z 'k#'\n\n"
-"subplot 2 2 2\ntext 0.5 0.7 'initial' 'ba';size -2\n"
-"text 0.5 0.5 'dilate=2' 'ra';size -2\ntext 0.5 0.3 'erode=1' 'ga';size -2\n\n"
-"subplot 2 2 3:title 'Dilate&Erode 3D sample'\nrotate 60 50:light on:alpha on\n"
-"ranges 0 10 0 10 0 10:crange 0 3\naxis:box\nnew a 11 11 11:put a 3 5 5 5\n"
-"surf3a a a 1.5 'b'\ndilate a 1 2\nsurf3a a a 0.5 'r'\n"
-"erode a 1 1\nsurf3a 2*a 2*a 1 'g'";
-void smgl_dilate(mglGraph *gr)
-{
-	mglData y(11),	z(11,11), a(11,11,11);
-	y.a[5]=1;	z.a[5+11*5]=a.a[5+11*(5+11*5)] = 3;
-
-	if(big!=3)	{	gr->SubPlot(2,2,0);	gr->Title("Dilate&Erode 1D sample");	}
-	else	gr->SubPlot(1,1,0,"");
-	gr->SetRanges(0,10,0,1);	gr->Axis();	gr->Box();	gr->Plot(y,"b*");
-	y.Dilate(1,2);	gr->Plot(y,"rs");
-	y.Erode(1,1);	gr->Plot(y,"g#o");
-	if(big==3)	return;
-	
-	gr->SubPlot(2,2,1);	gr->Title("Dilate&Erode 2D sample");
-	gr->Rotate(40,60);	gr->SetRanges(0,10,0,10,0,3);
-	gr->Axis();	gr->Box();	gr->Boxs(z,"b");	gr->Boxs(z,"k#");
-	z.Dilate(1,2);			gr->Boxs(z,"r");	gr->Boxs(z,"k#");
-	z.Erode(1,1);	z*=2;	gr->Boxs(z,"g");	gr->Boxs(z,"k#");
-	
-	gr->SubPlot(2,2,2);
-	gr->Puts(0.5,0.7,"initial","ba",-2);
-	gr->Puts(0.5,0.5,"dilate=2","ra",-2);
-	gr->Puts(0.5,0.3,"erode=1","ga",-2);
-	
-	gr->SubPlot(2,2,3);	gr->Title("Dilate&Erode 3D sample");
-	gr->Rotate(60,50);	gr->Alpha(true);	gr->Light(true);
-	gr->SetRanges(0,10,0,10,0,10);	gr->SetRange('c',0,3);
-	gr->Axis();	gr->Box();	gr->Surf3A(1.5,a,a,"b");
-	a.Dilate(1,2);			gr->Surf3A(0.5,a,a,"r");
-	a.Erode(1,1);	a*=2;	gr->Surf3A(1,a,a,"g");
-}
-//-----------------------------------------------------------------------------
-const char *mmgl_section="subplot 1 1 0 '<_':title 'Section&Join sample'\n"
-"axis:box:line -1 0 1 0 'h:'\n# first lets demonstrate 'join'\n"
-"new aa 11 'x^2':new a1 3 '-x':new a2 15 'x^3'\njoin aa a1:join aa a2\n"
-"# add x-coordinate\nnew xx aa.nx 'x':join aa xx\nplot aa(:,1) aa(:,0) '2y'\n"
-"# now select 1-st (id=0) section between zeros\n"
-"section b1 aa 0 'x' 0\nplot b1(:,1) b1(:,0) 'bo'\n"
-"# next, select 3-d (id=2) section between zeros\n"
-"section b3 aa 2 'x' 0\nplot b3(:,1) b3(:,0) 'gs'\n"
-"# finally, select 2-nd (id=-2) section from the end\n"
-"section b4 aa -2 'x' 0\nplot b4(:,1) b4(:,0) 'r#o'";
-void smgl_section(mglGraph *gr)
-{
-	gr->SubPlot(1,1,0,"<_");
-	if(big!=3)	gr->Title("Section&Join sample");
-	gr->Axis();	gr->Box();	gr->Line(mglPoint(-1,0),mglPoint(1,0),"h:");
-	// first lets demonstrate 'join'
-	mglData aa(11), a1(3), a2(15);
-	gr->Fill(aa,"x^2");	gr->Fill(a1,"-x");	gr->Fill(a2,"x^3");
-	aa.Join(a1);	aa.Join(a2);
-	// add x-coordinate
-	mglData xx(aa.nx);	gr->Fill(xx,"x");	aa.Join(xx);
-	gr->Plot(aa.SubData(-1,1), aa.SubData(-1,0), "2y");
-	// now select 1-st (id=0) section between zeros
-	mglData b1(aa.Section(0,'x',0));
-	gr->Plot(b1.SubData(-1,1), b1.SubData(-1,0), "bo");
-	// next, select 3-d (id=2) section between zeros
-	mglData b2(aa.Section(2,'x',0));
-	gr->Plot(b2.SubData(-1,1), b2.SubData(-1,0), "gs");
-	// finally, select 2-nd (id=-2) section from the end
-	mglData b3(aa.Section(-2,'x',0));
-	gr->Plot(b3.SubData(-1,1), b3.SubData(-1,0), "r#o");
-}
-//-----------------------------------------------------------------------------
-const char *mmgl_3wave="define t 50\n"
-"ode !r '-b*f;a*conj(f);a*conj(b)-0.1*f' 'abf' [1,1e-3,0] 0.1 t\n"
-"ranges 0 t 0 r.max\nplot r(0) 'b';legend 'a'\n"
-"plot r(1) 'g';legend 'b'\nplot r(2) 'r';legend 'f'\n"
-"axis:box:legend";
-void smgl_3wave(mglGraph *gr)
-{
-	gr->SubPlot(1,1,0,"<_");
-	if(big!=3)	gr->Title("Complex ODE sample");
-	double t=50;
-	mglData ini;	ini.SetList(3, 1., 1e-3, 0.);
-	mglDataC r(mglODEc("-b*f;a*conj(f);a*conj(b)-0.1*f","abf",ini,0.1,t));
-	gr->SetRanges(0, t, 0, r.Maximal());
-	gr->Plot(r.SubData(0),"b","legend 'a'");
-	gr->Plot(r.SubData(1),"g","legend 'b'");
-	gr->Plot(r.SubData(2),"r","legend 'f'");
-	gr->Axis();	gr->Box();	gr->Legend();
-}
-//-----------------------------------------------------------------------------
-const char *mmgl_diffract="define n 32	#number of points\ndefine m 20 # number of iterations\n"
-"define dt 0.01 # time step\nnew res n m+1\nranges -1 1 0 m*dt 0 1\n\n"
-"#tridmat periodic variant\nnew !a n 'i',dt*(n/2)^2/2\ncopy !b !(1-2*a)\n\n"
-"new !u n 'exp(-6*x^2)'\nput res u all 0\nfor $i 0 m\ntridmat u a b a u 'xdc'\n"
-"put res u all $i+1\nnext\nsubplot 2 2 0 '<_':title 'Tridmat, periodic b.c.'\naxis:box:dens res\n\n"
-"#fourier variant\nnew k n:fillsample k 'xk'\ncopy !e !exp(-i1*dt*k^2)\n\n"
-"new !u n 'exp(-6*x^2)'\nput res u all 0\nfor $i 0 m\nfourier u 'x'\nmulto u e\nfourier u 'ix'\n"
-"put res u all $i+1\nnext\nsubplot 2 2 1 '<_':title 'Fourier method'\naxis:box:dens res\n\n"
-"#tridmat zero variant\nnew !u n 'exp(-6*x^2)'\nput res u all 0\nfor $i 0 m\ntridmat u a b a u 'xd'\n"
-"put res u all $i+1\nnext\nsubplot 2 2 2 '<_':title 'Tridmat, zero b.c.'\naxis:box:dens res\n\n"
-"#diffract exp variant\nnew !u n 'exp(-6*x^2)'\ndefine q dt*(n/2)^2/8 # need q<0.4 !!!\n"
-"put res u all 0\nfor $i 0 m\nfor $j 1 8	# due to smaller dt\ndiffract u 'xe' q\nnext\n"
-"put res u all $i+1\nnext\nsubplot 2 2 3 '<_':title 'Diffract, exp b.c.'\naxis:box:dens res";
-void smgl_diffract(mglGraph *gr)
-{
-	long n=32;	// number of points
-	long m=20;	// number of iterations
-	double dt=0.01;	// time step
-	mglData res(n,m+1);
-	gr->SetRanges(-1,1, 0,m*dt, 0,1);
-
-	// tridmat periodic variant
-	mglDataC a(n), b(n);	a = dual(0,dt*n*n/8);
-	for(long i=0;i<n;i++)	b.a[i] = mreal(1)-mreal(2)*a.a[i];
-	mglDataC u(n);	gr->Fill(u,"exp(-6*x^2)");	res.Put(u,-1,0);
-	for(long i=0;i<m;i++)
-	{
-		u = mglTridMatC(a,b,a,u,"xdc");
-		res.Put(u,-1,i+1);
-	}
-	gr->SubPlot(2,2,0,"<_");	gr->Title("Tridmat, periodic b.c.");
-	gr->Axis();	gr->Box();	gr->Dens(res);
-
-	// fourier variant
-	mglData k(n);	k.FillSample("xk");
-	mglDataC e(n);	for(long i=0;i<n;i++)	e.a[i] = exp(-dual(0,dt*k.a[i]*k.a[i]));
-	gr->Fill(u,"exp(-6*x^2)");	res.Put(u,-1,0);
-	for(long i=0;i<m;i++)
-	{
-		u.FFT("x");	u *= e;	u.FFT("ix");
-		res.Put(u,-1,i+1);
-	}
-	gr->SubPlot(2,2,1,"<_");	gr->Title("Fourier method");
-	gr->Axis();	gr->Box();	gr->Dens(res);
-
-	// tridmat zero variant
-	gr->Fill(u,"exp(-6*x^2)");	res.Put(u,-1,0);
-	for(long i=0;i<m;i++)
-	{
-		u = mglTridMatC(a,b,a,u,"xd");
-		res.Put(u,-1,i+1);
-	}
-	gr->SubPlot(2,2,2,"<_");	gr->Title("Tridmat, zero b.c.");
-	gr->Axis();	gr->Box();	gr->Dens(res);
-	
-	// diffract exp variant
-	gr->Fill(u,"exp(-6*x^2)");	res.Put(u,-1,0);
-	double q=dt*n*n/4/8;	// NOTE: need q<0.4 !!!
-	for(long i=0;i<m;i++)
-	{
-		for(long j=0;j<8;j++)	// due to smaller dt
-			u.Diffraction("xe",q);
-		res.Put(u,-1,i+1);
-	}
-	gr->SubPlot(2,2,3,"<_");	gr->Title("Diffract, exp b.c.");
-	gr->Axis();	gr->Box();	gr->Dens(res);
-}
-//-----------------------------------------------------------------------------
-const char *mmgl_earth="import dat 'Equirectangular-projection.jpg' 'BbGYw' -1 1\n"
-"subplot 1 1 0 '<>':title 'Earth in 3D':rotate 40 60\n"
-"copy phi dat 'pi*x':copy tet dat 'pi*y/2'\n"
-"copy x cos(tet)*cos(phi)\ncopy y cos(tet)*sin(phi)\ncopy z sin(tet)\n\n"
-"light on\nsurfc x y z dat 'BbGYw'\ncontp [-0.5,-0.5] x y z dat 'y'";
-void smgl_earth(mglGraph *gr)
-{
-	mglData dat;	dat.Import("Equirectangular-projection.jpg","BbGYw",-1,1);
-	// Calc proper 3d coordinates from projection
-	mglData phi(dat.nx,dat.ny);	phi.Fill(-M_PI,M_PI);
-	mglData tet(dat.nx,dat.ny);	tet.Fill(-M_PI/2,M_PI/2,'y');
-	mglData x(dat.nx,dat.ny), y(dat.nx,dat.ny), z(dat.nx,dat.ny);
-#pragma omp parallel for
-	for(long i=0;i<dat.nx*dat.ny;i++)
-	{	x.a[i] = cos(tet.a[i])*cos(phi.a[i]);
-		y.a[i] = cos(tet.a[i])*sin(phi.a[i]);
-		z.a[i] = sin(tet.a[i]);	}
-
-	gr->SubPlot(1,1,0,"<>");
-	if(big!=3)	gr->Title("Earth in 3D");
-	gr->Rotate(40,60);	gr->Light(true);
-	gr->SurfC(x,y,z,dat,"BbGYw");
-	mglData vals(2);	vals.a[0]=-0.5;
-	gr->ContP(vals, x,y,z,dat,"y");
-}
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
 mglSample samp[] = {
-	{"3wave", smgl_3wave, mmgl_3wave},
 	{"alpha", smgl_alpha, mmgl_alpha},
 	{"apde", smgl_apde, mmgl_apde},
 	{"area", smgl_area, mmgl_area},
@@ -3063,18 +2821,13 @@ mglSample samp[] = {
 	{"dens", smgl_dens, mmgl_dens},
 	{"dens_xyz", smgl_dens_xyz, mmgl_dens_xyz},
 	{"densa", smgl_densa, mmgl_densa},
-	{"detect", smgl_detect, mmgl_detect},
 	{"dew", smgl_dew, mmgl_dew},
-	{"diffract", smgl_diffract, mmgl_diffract},
-	{"dilate", smgl_dilate, mmgl_dilate},
 	{"dots", smgl_dots, mmgl_dots},
-	{"earth", smgl_earth, mmgl_earth},
 	{"error", smgl_error, mmgl_error},
 	{"error2", smgl_error2, mmgl_error2},
 	{"export", smgl_export, mmgl_export},
 	{"fall", smgl_fall, mmgl_fall},
 	{"fit", smgl_fit, mmgl_fit},
-	{"flame2d", smgl_flame2d, mmgl_flame2d},
 	{"flow", smgl_flow, mmgl_flow},
 	{"fog", smgl_fog, mmgl_fog},
 	{"fonts", smgl_fonts, mmgl_fonts},
@@ -3084,7 +2837,6 @@ mglSample samp[] = {
 	{"ifs3d", smgl_ifs3d, mmgl_ifs3d},
 	{"indirect",smgl_indirect,mmgl_indirect},
 	{"inplot", smgl_inplot, mmgl_inplot},
-	{"iris", smgl_iris, mmgl_iris},
 	{"label", smgl_label, mmgl_label},
 	{"lamerey", smgl_lamerey, mmgl_lamerey},
 	{"legend", smgl_legend, mmgl_legend },
@@ -3118,7 +2870,6 @@ mglSample samp[] = {
 	{"region", smgl_region, mmgl_region},
 	{"scanfile", smgl_scanfile, mmgl_scanfile },
 	{"schemes", smgl_schemes, mmgl_schemes },
-	{"section", smgl_section, mmgl_section},
 	{"several_light", smgl_several_light, mmgl_several_light },
 	{"solve", smgl_solve, mmgl_solve},
 	{"stem", smgl_stem, mmgl_stem},

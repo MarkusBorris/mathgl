@@ -23,7 +23,6 @@
 //-----------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-	mgl_textdomain(argv?argv[0]:NULL,"");
 	QApplication a(argc, argv);
 	MainWindow w;
 	w.show();
@@ -43,8 +42,7 @@ void MainWindow::initializeGL()
 void MainWindow::paintGL()
 {
 	gr->Clf();
-	gr->SubPlot(1,1,0);
-	gr->Rotate(40,60);
+	gr->Rotate(40,5);
 	gr->Light(true);
 	gr->AddLight(0,mglPoint(0,0,10),mglPoint(0,0,-1));
 	gr->Axis();

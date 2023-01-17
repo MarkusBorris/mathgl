@@ -54,7 +54,7 @@ if(enable-python)
 	)
 	add_custom_target(mgl_python_module ALL DEPENDS _mathgl mathgl.pyc)
 
-	install(FILES ${MathGL2_BINARY_DIR}/lang/mathgl.py ${MathGL2_BINARY_DIR}/lang/mathgl.pyc DESTINATION ${MGL_PYTHON_SITE_PACKAGES})
+	install(FILES ${MathGL_BINARY_DIR}/lang/mathgl.py ${MathGL_BINARY_DIR}/lang/mathgl.pyc DESTINATION ${MGL_PYTHON_SITE_PACKAGES})
 	install (TARGETS _mathgl LIBRARY DESTINATION ${MGL_PYTHON_SITE_PACKAGES})
 	set(mgl_clean_files ${mgl_clean_files} mathgl.py)
 endif(enable-python)
@@ -71,7 +71,7 @@ if(enable-lua)
 	SWIG_LINK_LIBRARIES(mgl-lua mgl ${LUA_LIBRARIES})
 	set_target_properties(mgl-lua PROPERTIES PREFIX "" BUILD_WITH_INSTALL_RPATH ON)
 
-	install (TARGETS mgl-lua LIBRARY DESTINATION ${MathGL_INSTALL_LIB_DIR})
+	install (TARGETS mgl-lua LIBRARY DESTINATION ${MGL_LIB_INSTALL_DIR})
 endif(enable-lua)
 
 if(enable-octave)
@@ -105,7 +105,7 @@ if(enable-octave)
 message(STATUS "${oct_prog} ${oct_host} ${oct_api}")
 	set(oct_arch ${oct_host}-${oct_api})
 	set(pkg_name mathgl)
-	set(mgl_pkg_dir ${MathGL2_BINARY_DIR}/lang/${pkg_name}/inst/${oct_arch})
+	set(mgl_pkg_dir ${MathGL_BINARY_DIR}/lang/${pkg_name}/inst/${oct_arch})
 
 	add_compile_options(${oct_inc})
 	SET(SWIG_MODULE_mgl-oct_EXTRA_DEPS numpy.i ${src_imp_dep})
@@ -114,10 +114,10 @@ message(STATUS "${oct_prog} ${oct_host} ${oct_api}")
 	set_target_properties(mgl-oct PROPERTIES OUTPUT_NAME mathgl PREFIX "" SUFFIX ".oct" BUILD_WITH_INSTALL_RPATH ON)
 	add_custom_command(OUTPUT mathgl.tar.gz
 		COMMAND ${CMAKE_COMMAND} -E make_directory ${mgl_pkg_dir}
-		COMMAND ${CMAKE_COMMAND} -E copy ${MathGL2_SOURCE_DIR}/COPYING ${MathGL2_BINARY_DIR}/lang/${pkg_name}
-		COMMAND ${CMAKE_COMMAND} -E copy ${MathGL2_SOURCE_DIR}/lang/DESCRIPTION ${MathGL2_BINARY_DIR}/lang/${pkg_name}
-		COMMAND ${CMAKE_COMMAND} -E copy ${MathGL2_SOURCE_DIR}/lang/INDEX ${MathGL2_BINARY_DIR}/lang/${pkg_name}
-		COMMAND ${CMAKE_COMMAND} -E copy ${MathGL2_SOURCE_DIR}/lang/PKG_ADD_template ${MathGL2_BINARY_DIR}/lang/${pkg_name}
+		COMMAND ${CMAKE_COMMAND} -E copy ${MathGL_SOURCE_DIR}/COPYING ${MathGL_BINARY_DIR}/lang/${pkg_name}
+		COMMAND ${CMAKE_COMMAND} -E copy ${MathGL_SOURCE_DIR}/lang/DESCRIPTION ${MathGL_BINARY_DIR}/lang/${pkg_name}
+		COMMAND ${CMAKE_COMMAND} -E copy ${MathGL_SOURCE_DIR}/lang/INDEX ${MathGL_BINARY_DIR}/lang/${pkg_name}
+		COMMAND ${CMAKE_COMMAND} -E copy ${MathGL_SOURCE_DIR}/lang/PKG_ADD_template ${MathGL_BINARY_DIR}/lang/${pkg_name}
 		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:mgl-oct> ${mgl_pkg_dir}
 		COMMAND ${oct_tar} cpzf mathgl.tar.gz ${pkg_name}
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/lang

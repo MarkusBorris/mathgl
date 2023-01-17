@@ -55,7 +55,6 @@ void *calc(void *)
 }
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL);
 	static pthread_t thr;
 	pthread_create(&thr,0,calc,0);
 	pthread_detach(thr);
@@ -66,7 +65,6 @@ int main(int argc,char **argv)
 mglPoint pnt;	// some global variable for changeable data
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL);
 	mglFLTK gr("test");
 	gr.RunThr();	// <-- need MathGL version which use pthread
 	for(int i=0;i<10;i++)	// do calculation
@@ -97,7 +95,7 @@ class myDraw : public mglDraw
 	long i;			// another variable to be shown
 	mglWnd *wnd;	// external window for plotting
 public:
-	myDraw(mglWnd *w=0) : mglDraw()	{	i=0;	wnd=w;	}
+	myDraw(mglWnd *w=0) : mglDraw()	{	wnd=w;	}
 	void SetWnd(mglWnd *w)	{	wnd=w;	}
 	int Draw(mglGraph *gr)
 	{
@@ -121,7 +119,6 @@ public:
 //-----------------------------------------------------------------------------
 int main(int argc,char **argv)
 {
-	mgl_textdomain(argv?argv[0]:NULL,"");
 	mglFLTK *gr;
 	char key = 0;
 	if(argc>1)	key = argv[1][0]!='-' ? argv[1][0]:argv[1][1];

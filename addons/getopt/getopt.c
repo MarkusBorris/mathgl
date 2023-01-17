@@ -47,6 +47,20 @@ EXPRESSLY ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 	#define _GETOPT_THROW
 #endif
 
+#if defined(WIN32) || defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__WINDOWS__) || defined(__TOS_WIN__)
+#define UL_OS_WINDOWS 1
+#if defined(_WIN64)
+#define UL_OS_WINDOWS_64 1
+#endif
+#include <winapifamily.h>
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#define UL_OS_WINDOWS_DESKTOP_GE_WIN81 1
+#define UL_OS_WINDOWS_DESKTOP          1
+#elif WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+#define UL_OS_WINDOWS_UWP_APP  1
+#endif
+#endif
+
 int optind = 1;
 int opterr = 1;
 int optopt = '?';
@@ -55,7 +69,7 @@ enum ENUM_ORDERING { REQUIRE_ORDER, PERMUTE, RETURN_IN_ORDER };
 //
 //
 //		Ansi structures and functions follow
-//
+// 
 //
 
 static struct _getopt_data_a
@@ -84,7 +98,8 @@ static void exchange_a(char **argv, struct _getopt_data_a *d)
 		if (top - middle > middle - bottom)
 		{
 			int len = middle - bottom;
-			for (int i = 0; i < len; i++)
+			int i;
+			for (i = 0; i < len; i++)
 			{
 				tem = argv[bottom + i];
 				argv[bottom + i] = argv[top - (middle - bottom) + i];
@@ -95,7 +110,8 @@ static void exchange_a(char **argv, struct _getopt_data_a *d)
 		else
 		{
 			int len = top - middle;
-			for (int i = 0; i < len; i++)
+			int i;
+			for (i = 0; i < len; i++)
 			{
 				tem = argv[bottom + i];
 				argv[bottom + i] = argv[middle + i];
@@ -111,7 +127,12 @@ static const char *_getopt_initialize_a (const char *optstring, struct _getopt_d
 {
 	d->__first_nonopt = d->__last_nonopt = d->optind;
 	d->__nextchar = NULL;
-	d->__posixly_correct = posixly_correct | !!getenv("POSIXLY_CORRECT");
+    d->__posixly_correct = posixly_correct |
+#if UL_OS_WINDOWS_UWP_APP
+        0;
+#else
+        !!getenv("POSIXLY_CORRECT");
+#endif
 	if (optstring[0] == '-')
 	{
 		d->__ordering = RETURN_IN_ORDER;
@@ -513,7 +534,7 @@ int _getopt_long_only_r_a (int argc, char *const *argv, const char *options, con
 //
 //
 //	Unicode Structures and Functions
-//
+// 
 //
 
 static struct _getopt_data_w
@@ -542,7 +563,8 @@ static void exchange_w(wchar_t **argv, struct _getopt_data_w *d)
 		if (top - middle > middle - bottom)
 		{
 			int len = middle - bottom;
-			for (int i = 0; i < len; i++)
+			int i;
+			for (i = 0; i < len; i++)
 			{
 				tem = argv[bottom + i];
 				argv[bottom + i] = argv[top - (middle - bottom) + i];
@@ -553,7 +575,8 @@ static void exchange_w(wchar_t **argv, struct _getopt_data_w *d)
 		else
 		{
 			int len = top - middle;
-			for (int i = 0; i < len; i++)
+			int i;
+			for (i = 0; i < len; i++)
 			{
 				tem = argv[bottom + i];
 				argv[bottom + i] = argv[middle + i];
@@ -569,7 +592,12 @@ static const wchar_t *_getopt_initialize_w (const wchar_t *optstring, struct _ge
 {
 	d->__first_nonopt = d->__last_nonopt = d->optind;
 	d->__nextchar = NULL;
-	d->__posixly_correct = posixly_correct | !!_wgetenv(L"POSIXLY_CORRECT");
+    d->__posixly_correct = posixly_correct |
+#if UL_OS_WINDOWS_UWP_APP
+        0;
+#else
+        !!_wgetenv(L"POSIXLY_CORRECT");
+#endif
 	if (optstring[0] == L'-')
 	{
 		d->__ordering = RETURN_IN_ORDER;
@@ -686,7 +714,7 @@ int _getopt_internal_r_w (int argc, wchar_t *const *argv, const wchar_t *optstri
 			if (ambig_list != NULL && !exact)
 			{
 				if (print_errors)
-				{
+				{						
 					struct option_list first;
 					first.p = pfound;
 					first.next = ambig_list;

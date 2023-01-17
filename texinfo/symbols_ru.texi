@@ -34,7 +34,7 @@ define complex variable/expression in MGL script if placed at beginning.
 @item #
 set to use solid marks (see @ref{Line styles}) or solid @ref{error} boxes;
 
-set to draw wired plot for @ref{axial}, @ref{surf3}, @ref{surf3a}, @ref{surf3c}, @ref{triplot}, @ref{quadplot}, @ref{area}, @ref{region}, @ref{bars}, @ref{barh}, @ref{tube}, @ref{tape}, @ref{cone}, @ref{boxs} and draw boundary only for @ref{circle}, @ref{ellipse}, @ref{rhomb};
+set to draw wired plot for @ref{axial}, @ref{surf3}, @ref{surf3a}, @ref{surf3c}, @ref{triplot}, @ref{quadplot}, @ref{area}, @ref{bars}, @ref{barh}, @ref{tube}, @ref{tape}, @ref{cone}, @ref{boxs} and draw boundary only for @ref{circle}, @ref{ellipse}, @ref{rhomb};
 
 set to draw also mesh lines for @ref{surf}, @ref{surfc}, @ref{surfa}, @ref{dens}, @ref{densx}, @ref{densy}, @ref{densz}, @ref{dens3}, or boundary for @ref{chart}, @ref{facex}, @ref{facey}, @ref{facez}, @ref{rect};
 
@@ -58,9 +58,7 @@ set color scheme along 2 coordinates @ref{Color scheme}.
 
 @item &
 
-set to pass long integer number in tick template @ref{xtick}, @ref{ytick}, @ref{ztick}, @ref{ctick};
-
-specifier of drawing user-defined symbols as mark (see @ref{Line styles});
+set to pass long integer number in tick template @ref{xtick}, @ref{ytick}, @ref{ztick}, @ref{ctick}.
 
 operation in @ref{Textual formulas}.
 
@@ -83,14 +81,10 @@ one of mask for face filling (see @ref{Color scheme});
 
 set to print @samp{+} for positive numbers in @ref{axis}, @ref{label}, @ref{table};
 
-operation of increasing last character value in MGL strings;
-
 operation in @ref{Textual formulas}.
 
 @item ,
-separator for color positions (see @ref{Color styles}) or items in a list
-
-concatenation of MGL string with another string or numerical value.
+separator for color positions (see @ref{Color styles}) or items in a list.
 
 @item -
 solid line style (see @ref{Line styles});
@@ -122,8 +116,6 @@ stop color scheme parsing (see @ref{Color scheme});
 
 range operation in @ref{MGL scripts};
 
-style for @ref{axis};
-
 separator of commands in @ref{MGL scripts}.
 
 @item ;
@@ -131,11 +123,7 @@ line dashing style (see @ref{Line styles});
 
 one of mask for face filling (see @ref{Color scheme});
 
-start of an option in @ref{MGL scripts} or in @ref{Command options};
-
-separator of equations in @ref{ode};
-
-separator of labels in @ref{iris}.
+start of an option in @ref{MGL scripts} or in @ref{Command options}.
 
 @item <
 one of marks (see @ref{Line styles});
@@ -229,9 +217,7 @@ set to draw contours at bottom for @ref{cont}, @ref{contf}, @ref{contd}, @ref{co
 switch to lower index inside a string (see @ref{Font styles}).
 
 @item []
-contain symbols excluded from color scheme parsing (see @ref{Color scheme});
-
-operation of getting n-th character from MGL string.
+contain symbols excluded from color scheme parsing (see @ref{Color scheme}).
 
 @item @{@}
 contain extended specification of color (see @ref{Color styles}), dashing (see @ref{Line styles}) or mask (see @ref{Color scheme});
@@ -259,8 +245,6 @@ disable drawing of tick labels for @ref{axis} and @ref{colorbar};
 
 disable first segment in @ref{lamerey};
 
-reduce number of segments in @ref{plot} and @ref{tens};
-
 one of mask for face filling (see @ref{Color scheme}).
 
 @item 0,1,2,3,4,5,6,7,8,9
@@ -287,8 +271,6 @@ set to use absolute position in whole picture for @ref{text}, @ref{colorbar}, @r
 
 @item a
 set to use absolute position in subplot for @ref{text};
-
-style of @ref{plot}, @ref{radar}, @ref{tens}, @ref{area}, @ref{region} to draw segments between points outside of axis range;
 
 style of @ref{bars}, @ref{barh}, @ref{cones}.
 
@@ -332,8 +314,6 @@ green-yellow color (see @ref{Color styles}).
 
 @item F
 
-set fixed bar widths in @ref{bars}, @ref{barh};
-
 set LaTeX-like format for numbers in @ref{axis}, @ref{label}, @ref{table}.
 
 @item f
@@ -373,7 +353,7 @@ set to use inverse values for @ref{cloud}, @ref{pipe}, @ref{dew};
 
 set to fill only area with y1<y<y2 for @ref{region};
 
-inverse Fourier transform for @ref{transform}, @ref{transforma}, @ref{fourier}.
+inverse Fourier transform for @ref{transform}.
 
 @item j
 line dashing style (see @ref{Line styles});
@@ -505,14 +485,11 @@ name of w-axis (one of ternary axis);
 arrow style (see @ref{Line styles}).
 
 @item x
+one of marks (see @ref{Line styles}) or kind of @ref{error} boxes;
 
 name of x-axis or x-direction or 1st dimension of a data array;
 
 start hex-color description if placed inside @{@} (see @ref{Color styles});
-
-one of marks (see @ref{Line styles}) or kind of @ref{error} boxes;
-
-tiles orientation perpendicular to x-axis in @ref{tile}, @ref{tiles};
 
 style of @ref{tape}.
 
@@ -522,9 +499,7 @@ dark yellow or gold color (see @ref{Color styles}).
 @item y
 yellow color (see @ref{Color styles});
 
-name of y-axis or y-direction or 2nd dimension of a data array;
-
-tiles orientation perpendicular to y-axis in @ref{tile}, @ref{tiles}.
+name of y-axis or y-direction or 2nd dimension of a data array.
 
 @item z
 

@@ -24,8 +24,6 @@
 #include "mgl2/data.h"
 #include "mgl2/base.h"
 //-----------------------------------------------------------------------------
-void MGL_NO_EXPORT mgl_surf_gen(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT c, HCDT a, const char *sch);
-//-----------------------------------------------------------------------------
 HCDT MGL_NO_EXPORT fill_slice_x(HMGL gr, double sv, HCDT a, mglDataV &xx, mglDataV &yy, mglDataV &zz, mglData &aa)
 {
 	long n=a->GetNx(),m=a->GetNy(),l=a->GetNz();
@@ -107,7 +105,7 @@ void MGL_EXPORT mgl_dens_x(HMGL gr, HCDT a, const char *sch, double sv, const ch
 	if(sv<gr->Min.x || sv>gr->Max.x)	{	gr->SetWarn(mglWarnSlc,"DensX");	gr->LoadState();	return;	}
 	mglDataV xx,yy,zz;	mglData aa;
 	a = fill_slice_x(gr,sv,a,xx,yy,zz,aa);
-	mgl_surf_gen(gr, &xx,&yy,&zz,a, 0, sch);
+	mgl_surfc_xy(gr,&xx,&yy,&zz,a,sch,0);
 }
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_dens_y(HMGL gr, HCDT a, const char *sch, double sv, const char *opt)
@@ -119,7 +117,7 @@ void MGL_EXPORT mgl_dens_y(HMGL gr, HCDT a, const char *sch, double sv, const ch
 	if(sv<gr->Min.y || sv>gr->Max.y)	{	gr->SetWarn(mglWarnSlc,"DensY");	gr->LoadState();	return;	}
 	mglDataV xx,yy,zz;	mglData aa;
 	a = fill_slice_y(gr,sv,a,xx,yy,zz,aa);
-	mgl_surf_gen(gr, &xx,&yy,&zz,a, 0, sch);
+	mgl_surfc_xy(gr,&xx,&yy,&zz,a,sch,0);
 }
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_dens_z(HMGL gr, HCDT a, const char *sch, double sv, const char *opt)
@@ -131,7 +129,7 @@ void MGL_EXPORT mgl_dens_z(HMGL gr, HCDT a, const char *sch, double sv, const ch
 	if(sv<gr->Min.z || sv>gr->Max.z)	{	gr->SetWarn(mglWarnSlc,"DensZ");	gr->LoadState();	return;	}
 	mglDataV xx,yy,zz;	mglData aa;
 	a = fill_slice_z(gr,sv,a,xx,yy,zz,aa);
-	mgl_surf_gen(gr, &xx,&yy,&zz,a, 0, sch);
+	mgl_surfc_xy(gr,&xx,&yy,&zz,a,sch,0);
 }
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_dens_x_(uintptr_t *gr, uintptr_t *a, const char *sch, mreal *sv, const char *opt,int l,int lo)

@@ -1,0 +1,4 @@
+*.user
+.idea
+_build*
+cmake-build-*

@@ -72,7 +72,7 @@ int MGL_NO_EXPORT mgl_pnga_save(const char *fname, int w, int h, unsigned char *
 	if(fl)	fclose(fp);
 	return 0;
 #else
-	mgl_set_global_warn(_("PNG support was disabled. Please, enable it and rebuild MathGL."));
+	mgl_set_global_warn("PNG support was disabled. Please, enable it and rebuild MathGL.");
 	return 1;
 #endif
 }
@@ -106,7 +106,7 @@ int MGL_NO_EXPORT mgl_png_save(const char *fname, int w, int h, unsigned char **
 	if(fl)	fclose(fp);
 	return 0;
 #else
-	mgl_set_global_warn(_("PNG support was disabled. Please, enable it and rebuild MathGL."));
+	mgl_set_global_warn("PNG support was disabled. Please, enable it and rebuild MathGL.");
 	return 1;
 #endif
 }
@@ -130,9 +130,11 @@ int MGL_NO_EXPORT mgl_bmp_save(const char *fname, int w, int h, unsigned char **
 	fwrite(z,4,1,fp);	fwrite(z,4,1,fp);
 	fwrite(z,4,1,fp);	fwrite(z,4,1,fp);
 	// image
-	for(long i=h-1;i>=0;i--)	for(long j=0;j<w;j++)
+	const unsigned char *q;
+	int i,j;
+	for(i=h-1;i>=0;i--)	for(j=0;j<w;j++)
 	{
-		const unsigned char *q = p[i]+3*j;
+		q = p[i]+3*j;
 		fwrite(q+2,1,1,fp);
 		fwrite(q+1,1,1,fp);
 		fwrite(q+0,1,1,fp);
@@ -152,9 +154,11 @@ int MGL_NO_EXPORT mgl_tga_save(const char *fname, int w, int h, unsigned char **
 	fwrite(&w,2,1,fp);	fwrite(&h,2,1,fp);
 	fwrite(head+12,2,1,fp);
 	// image
-	for(long i=h-1;i>=0;i--)	for(long j=0;j<w;j++)
+	int i,j;
+	const unsigned char *q;
+	for(i=h-1;i>=0;i--)	for(j=0;j<w;j++)
 	{
-		const unsigned char *q = p[i]+4*j;
+		q = p[i]+4*j;
 		fwrite(q+2,1,1,fp);
 		fwrite(q+1,1,1,fp);
 		fwrite(q+0,1,1,fp);
@@ -189,7 +193,7 @@ int MGL_NO_EXPORT mgl_jpeg_save(const char *fname, int w, int h, unsigned char *
 	if(fl)	fclose(fp);
 	return 0;
 #else
-	mgl_set_global_warn(_("JPEG support was disabled. Please, enable it and rebuild MathGL."));
+	mgl_set_global_warn("JPEG support was disabled. Please, enable it and rebuild MathGL.");
 	return 1;
 #endif
 }
@@ -303,7 +307,7 @@ int MGL_NO_EXPORT mgl_gif_save(const char *fname, int w, int h, unsigned char **
 #endif
 	delete []line;	return 0;
 #else
-	mgl_set_global_warn(_("GIF support was disabled. Please, enable it and rebuild MathGL."));
+	mgl_set_global_warn("GIF support was disabled. Please, enable it and rebuild MathGL.");
 	return 1;
 #endif
 }
@@ -338,9 +342,10 @@ void mglCanvas::StartGIF(const char *fname, int ms)
 	// define colormap
 	GifColorType col[256];
 	memset(col,0,256*sizeof(GifColorType));
-	for(int i=0;i<6;i++)	for(int j=0;j<6;j++)	for(int k=0;k<6;k++)
+	int i,j,k,m;
+	for(i=0;i<6;i++)	for(j=0;j<6;j++)	for(k=0;k<6;k++)
 	{
-		long m = i+6*(j+6*k);		// part 1
+		m = i+6*(j+6*k);		// part 1
 		col[m].Red = 51*i;
 		col[m].Green=51*j;
 		col[m].Blue =51*k;
@@ -372,7 +377,7 @@ void mglCanvas::StartGIF(const char *fname, int ms)
 	EGifPutExtension(gif,0xf9,4,ext2);
 #endif
 #else
-	mgl_set_global_warn(_("GIF support was disabled. Please, enable it and rebuild MathGL."));
+	mgl_set_global_warn("GIF support was disabled. Please, enable it and rebuild MathGL.");
 #endif
 }
 //-----------------------------------------------------------------------------
@@ -385,7 +390,7 @@ void mglCanvas::CloseGIF()
 	if(gif)	EGifCloseFile(gif);
 #endif
 #else
-	mgl_set_global_warn(_("GIF support was disabled. Please, enable it and rebuild MathGL."));
+	mgl_set_global_warn("GIF support was disabled. Please, enable it and rebuild MathGL.");
 #endif
 	gif = 0;
 }
@@ -574,31 +579,31 @@ void MGL_EXPORT mgl_write_frame(HMGL gr, const char *fname,const char *descr)
 	{	snprintf(buf,64,"%s%04d.jpg",_Gr_->PlotId.c_str(),_Gr_->GetNumFrame());	buf[63]=0;	fname = buf;	}
 	int len=strlen(fname);
 	if(!strcmp(fname+len-4,".jpg")) 	mgl_write_jpg(gr,fname,descr);
-	else if(!strcmp(fname+len-5,".jpeg"))	mgl_write_jpg(gr,fname,descr);
-	else if(!strcmp(fname+len-4,".prc")) 	mgl_write_prc(gr,fname,descr,1);
-	else if(!strcmp(fname+len-4,".pdf")) 	mgl_write_prc(gr,fname,descr,1);
-	else if(!strcmp(fname+len-4,".png")) 	mgl_write_png(gr,fname,descr);
-	else if(!strcmp(fname+len-4,".eps")) 	mgl_write_eps(gr,fname,descr);
-	else if(!strcmp(fname+len-5,".epsz"))	mgl_write_eps(gr,fname,descr);
-	else if(!strcmp(fname+len-7,".eps.gz"))	mgl_write_eps(gr,fname,descr);
-	else if(!strcmp(fname+len-4,".bps")) 	mgl_write_bps(gr,fname,descr);
-	else if(!strcmp(fname+len-5,".bpsz"))	mgl_write_bps(gr,fname,descr);
-	else if(!strcmp(fname+len-7,".bps.gz"))	mgl_write_bps(gr,fname,descr);
-	else if(!strcmp(fname+len-4,".svg")) 	mgl_write_svg(gr,fname,descr);
-	else if(!strcmp(fname+len-5,".svgz"))	mgl_write_svg(gr,fname,descr);
-	else if(!strcmp(fname+len-7,".svg.gz"))	mgl_write_svg(gr,fname,descr);
-	else if(!strcmp(fname+len-4,".gif")) 	mgl_write_gif(gr,fname,descr);
-	else if(!strcmp(fname+len-4,".bmp")) 	mgl_write_bmp(gr,fname,descr);
-	else if(!strcmp(fname+len-4,".tga")) 	mgl_write_tga(gr,fname,descr);
-	else if(!strcmp(fname+len-5,".mgld"))	mgl_export_mgld(gr,fname,descr);
-	else if(!strcmp(fname+len-5,".json"))	mgl_write_json(gr,fname,descr);
-	else if(!strcmp(fname+len-6,".jsonz"))	mgl_write_json(gr,fname,descr);
-	else if(!strcmp(fname+len-4,".obj")) 	mgl_write_obj(gr,fname,descr,1);
-	else if(!strcmp(fname+len-4,".tex")) 	mgl_write_tex(gr,fname,descr);
-	else if(!strcmp(fname+len-4,".xyz")) 	mgl_write_xyz(gr,fname,descr);
-	else if(!strcmp(fname+len-4,".stl")) 	mgl_write_stl(gr,fname,descr);
-	else if(!strcmp(fname+len-4,".off")) 	mgl_write_off(gr,fname,descr,0);
-//	else if(!strcmp(fname+len-4,".x3d")) 	mgl_write_x3d(gr,fname,descr,1);
+	if(!strcmp(fname+len-5,".jpeg"))	mgl_write_jpg(gr,fname,descr);
+	if(!strcmp(fname+len-4,".prc")) 	mgl_write_prc(gr,fname,descr,1);
+	if(!strcmp(fname+len-4,".pdf")) 	mgl_write_prc(gr,fname,descr,1);
+	if(!strcmp(fname+len-4,".png")) 	mgl_write_png(gr,fname,descr);
+	if(!strcmp(fname+len-4,".eps")) 	mgl_write_eps(gr,fname,descr);
+	if(!strcmp(fname+len-5,".epsz"))	mgl_write_eps(gr,fname,descr);
+	if(!strcmp(fname+len-7,".eps.gz"))	mgl_write_eps(gr,fname,descr);
+	if(!strcmp(fname+len-4,".bps")) 	mgl_write_bps(gr,fname,descr);
+	if(!strcmp(fname+len-5,".bpsz"))	mgl_write_bps(gr,fname,descr);
+	if(!strcmp(fname+len-7,".bps.gz"))	mgl_write_bps(gr,fname,descr);
+	if(!strcmp(fname+len-4,".svg")) 	mgl_write_svg(gr,fname,descr);
+	if(!strcmp(fname+len-5,".svgz"))	mgl_write_svg(gr,fname,descr);
+	if(!strcmp(fname+len-7,".svg.gz"))	mgl_write_svg(gr,fname,descr);
+	if(!strcmp(fname+len-4,".gif")) 	mgl_write_gif(gr,fname,descr);
+	if(!strcmp(fname+len-4,".bmp")) 	mgl_write_bmp(gr,fname,descr);
+	if(!strcmp(fname+len-4,".tga")) 	mgl_write_tga(gr,fname,descr);
+	if(!strcmp(fname+len-5,".mgld"))	mgl_export_mgld(gr,fname,descr);
+	if(!strcmp(fname+len-5,".json"))	mgl_write_json(gr,fname,descr);
+	if(!strcmp(fname+len-6,".jsonz"))	mgl_write_json(gr,fname,descr);
+	if(!strcmp(fname+len-4,".obj")) 	mgl_write_obj(gr,fname,descr,1);
+	if(!strcmp(fname+len-4,".tex")) 	mgl_write_tex(gr,fname,descr);
+	if(!strcmp(fname+len-4,".xyz")) 	mgl_write_xyz(gr,fname,descr);
+	if(!strcmp(fname+len-4,".stl")) 	mgl_write_stl(gr,fname,descr);
+	if(!strcmp(fname+len-4,".off")) 	mgl_write_off(gr,fname,descr,0);
+//	if(!strcmp(fname+len-4,".x3d")) 	mgl_write_x3d(gr,fname,descr,1);
 }
 void MGL_EXPORT mgl_write_frame_(uintptr_t *gr, const char *fname,const char *descr,int l,int n)
 {	char *s=new char[l+1];	memcpy(s,fname,l);	s[l]=0;
@@ -612,7 +617,13 @@ void MGL_EXPORT mgl_write_frame_(uintptr_t *gr, const char *fname,const char *de
 void MGL_EXPORT mgl_show_image(HMGL gr, const char *viewer, int keep)
 {
 	char fname[128], *cmd = new char [128];
-	snprintf(fname,128,"%s.png", tmpnam(NULL));	fname[127]=0;
+	snprintf(fname,128,"%s.png",
+#ifdef __GNUC__
+    mkstemp(NULL)
+#else
+    tmpnam(NULL)
+#endif
+    );	fname[127]=0;
 	mgl_write_png_solid(gr,fname,"MathGL ShowImage file");
 	if(!viewer || !viewer[0])
 		viewer = MGL_DEF_VIEWER;
@@ -620,7 +631,10 @@ void MGL_EXPORT mgl_show_image(HMGL gr, const char *viewer, int keep)
 		if(keep)
 		{
 			snprintf(cmd,128,"%s %s &", viewer,fname);	cmd[127]=0;
-			if(system(cmd)==-1)	printf(_("Error to call external viewer\n"));
+#if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+			if(system(cmd)==-1)
+#endif
+                printf("Error to call external viewer\n");
 			Sleep(2000);
 			snprintf(cmd,128,"del %s", fname);
 		}
@@ -629,14 +643,21 @@ void MGL_EXPORT mgl_show_image(HMGL gr, const char *viewer, int keep)
 		if(keep)
 		{
 			snprintf(cmd,128,"%s %s &", viewer,fname);	cmd[127]=0;
-			if(system(cmd)==-1)	printf(_("Error to call external viewer\n"));
+			if(system(cmd)==-1)	printf("Error to call external viewer\n");
 			sleep(2);
 			snprintf(cmd,128,"rm %s", fname);
 		}
 		else	snprintf(cmd,128,"%s %s; rm %s", viewer,fname,fname);
 #endif
 		cmd[127] = 0;
-		if(system(cmd)==-1)	printf(_("Error to call external viewer\n"));
+#ifdef WIN32
+#if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
+        if(system(cmd)==-1)
+#endif
+#else
+        if(system(cmd)==-1)
+#endif
+            printf("Error to call external viewer\n");
 		delete []cmd;
 }
 void MGL_EXPORT mgl_show_image_(uintptr_t *gr, const char *viewer, int *keep, int l)

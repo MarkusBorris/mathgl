@@ -1,4 +1,4 @@
-configure_file(${MathGL2_SOURCE_DIR}/include/config.h.in ${MathGL2_BINARY_DIR}/include/mgl2/config.h)
+configure_file(${MathGL_SOURCE_DIR}/include/config.h.in ${MathGL_BINARY_DIR}/include/mgl2/config.h)
 
 install(DIRECTORY mgl2/ DESTINATION ${MGL_INCLUDE_PATH}
                         PATTERN ".svn" EXCLUDE
@@ -14,7 +14,7 @@ install(DIRECTORY mgl2/ DESTINATION ${MGL_INCLUDE_PATH}
                         PATTERN "*.pas"
                         PATTERN "*.h")
 
-install(FILES ${MathGL2_BINARY_DIR}/include/mgl2/config.h DESTINATION ${MGL_INCLUDE_PATH})
+install(FILES ${MathGL_BINARY_DIR}/include/mgl2/config.h DESTINATION ${MGL_INCLUDE_PATH})
 if(MGL_HAVE_FLTK)
 	install(FILES mgl2/fltk.h DESTINATION ${MGL_INCLUDE_PATH})
 endif(MGL_HAVE_FLTK)

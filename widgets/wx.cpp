@@ -25,8 +25,6 @@
 #include <wx/menu.h>
 #include <wx/scrolwin.h>
 
-#undef _
-
 #include "mgl2/canvas_wnd.h"
 #include "mgl2/wx.h"
 //-----------------------------------------------------------------------------
@@ -89,8 +87,8 @@ END_EVENT_TABLE()
 wxMathGL::wxMathGL(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style, const wxString& name) : wxWindow(parent,id,pos,size,style,name)
 {
 	AutoResize = false;	draw_par = 0;	draw_func = 0;
-	gr = new mglCanvas;	popup = 0;		draw_cl = 0;
-	phi = tet = per = 0;	x0=y0=xe=ye=0;
+	gr = new mglCanvas;	popup = 0;
+	phi = tet = per = 0;
 	x1 = y1 = 0;	x2 = y2 = 1;
 	alpha = light = zoom = rotate = false;
 //	SetSize(600, 400);
@@ -193,7 +191,7 @@ void wxMathGL::Update()
 	if(draw_func || draw_cl)
 	{
 		if(mgl_get_flag(gr,MGL_CLF_ON_UPD))	mgl_set_def_param(gr);
-		mgl_set_def_param(gr);		mgl_reset_frames(gr);
+		mgl_reset_frames(gr);
 		mgl_set_alpha(gr,alpha);	mgl_set_light(gr,light);
 		if(draw_func)	draw_func(gr, draw_par);	// drawing itself
 		else 	if(draw_cl)	{	mglGraph g(gr);	draw_cl->Draw(&g);	}
@@ -281,10 +279,8 @@ void wxMathGL::OnMouseMove(wxMouseEvent &ev)
 			mreal ff = 240/sqrt(mreal(w*h));
 			phi += int((x0-xe)*ff);
 			tet += int((y0-ye)*ff);
-			if(phi>180)		phi-=360;
-			if(phi<-180)	phi+=360;
-			if(tet>180)		tet-=360;
-			if(tet<-180)	tet+=360;
+			if(phi>180)	phi-=360;		if(phi<-180)	phi+=360;
+			if(tet>180)	tet-=360;		if(tet<-180)	tet+=360;
 //			Update();
 		}
 		if(ev.ButtonDown(wxMOUSE_BTN_RIGHT))	// zoom and perspective
@@ -294,8 +290,7 @@ void wxMathGL::OnMouseMove(wxMouseEvent &ev)
 			x1 = cx+(x1-cx)*exp(-ff);	x2 = cx+(x2-cx)*exp(-ff);
 			y1 = cy+(y1-cy)*exp(-ff);	y2 = cy+(y2-cy)*exp(-ff);
 			per = per + gg;
-			if(per<0)	per = 0;
-			if(per>=1)	per = 0.9999;
+			if(per<0)	per = 0;	if(per>=1)	per = 0.9999;
 //			Update();
 		}
 		if(ev.ButtonDown(wxMOUSE_BTN_MIDDLE))	// shift
@@ -356,7 +351,11 @@ void wxMathGL::ExportBPS(wxString fname)
 	if(fname.IsEmpty())	fname = ScriptName;
 	if(fname.IsEmpty())	wxMessageBox(appName, wxT("No filename."),wxOK|wxICON_ERROR ,this);
 	else
+	{
+		setlocale(LC_ALL, "C");
 		mgl_write_bps(gr,mglw_str(mglSetExtension(fname,"eps")), mglw_str(appName));
+		setlocale(LC_ALL, "");
+	}
 }
 //-----------------------------------------------------------------------------
 void wxMathGL::ExportEPS(wxString fname)
@@ -364,7 +363,11 @@ void wxMathGL::ExportEPS(wxString fname)
 	if(fname.IsEmpty())	fname = ScriptName;
 	if(fname.IsEmpty())	wxMessageBox(appName, wxT("No filename."),wxOK|wxICON_ERROR ,this);
 	else
+	{
+		setlocale(LC_ALL, "C");
 		mgl_write_eps(gr,mglw_str(mglSetExtension(fname,"eps")), mglw_str(appName));
+		setlocale(LC_ALL, "");
+	}
 }
 //-----------------------------------------------------------------------------
 void wxMathGL::ExportSVG(wxString fname)
@@ -372,7 +375,11 @@ void wxMathGL::ExportSVG(wxString fname)
 	if(fname.IsEmpty())	fname = ScriptName;
 	if(fname.IsEmpty())	wxMessageBox(appName, wxT("No filename."),wxOK|wxICON_ERROR ,this);
 	else
+	{
+		setlocale(LC_ALL, "C");
 		mgl_write_svg(gr,mglw_str(mglSetExtension(fname,"eps")), mglw_str(appName));
+		setlocale(LC_ALL, "");
+	}
 }
 //-----------------------------------------------------------------------------
 void wxMathGL::Copy()

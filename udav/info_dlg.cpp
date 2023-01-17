@@ -36,23 +36,23 @@ InfoDialog::InfoDialog(QWidget *parent) : QDialog(parent)
 	u = new QVBoxLayout(this);	u->addWidget(tab);
 	// graphics
 	p = new QWidget(this);	v = new QVBoxLayout(p);
-	l = new QLabel(_("Select kind of plot"),this);	v->addWidget(l);
+	l = new QLabel(tr("Select kind of plot"),this);	v->addWidget(l);
 	kind = new QComboBox(this);	v->addWidget(kind);
 	mgl = new QMathGL(this);	v->addWidget(mgl,1);
-	mgl->autoResize = true;		mgl->appName = _("Data preview");
-	mgl->setToolTip(_("Data preview for current slice."));
+	mgl->autoResize = true;		mgl->appName = tr("Data preview");
+	mgl->setToolTip(tr("Data preview for current slice."));
 
 	draw = new mglDrawScript(parser.Self());	mgl->setDraw(draw);
 
-	kind->addItem(_("1D plot"));	kind->addItem(_("2D plot"));
-	kind->setCurrentIndex(0);	//	kind->addItem(_("3D plot"));
+	kind->addItem(tr("1D plot"));	kind->addItem(tr("2D plot"));
+	kind->setCurrentIndex(0);	//	kind->addItem(tr("3D plot"));
 	connect(kind, SIGNAL(currentIndexChanged(int)), this, SLOT(refresh()));
-	kind->setToolTip(_("Kind of plots: lines for 1D, density for 2D."));
-	tab->addTab(p, _("Preview"));
+	kind->setToolTip(tr("Kind of plots: lines for 1D, density for 2D."));
+	tab->addTab(p, tr("Preview"));
 	// information
 	info = new QTextEdit(this);
-	info->setToolTip(_("Short information about the data."));
-	tab->addTab(info, _("Information"));
+	info->setToolTip(tr("Short information about the data."));
+	tab->addTab(info, tr("Information"));
 	connect(mgl,SIGNAL(showWarn(QString)),info,SLOT(setText(QString)));
 }
 //-----------------------------------------------------------------------------

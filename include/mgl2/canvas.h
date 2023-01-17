@@ -26,18 +26,15 @@ struct GifFileType;
 /// Structure for drawing axis and ticks
 struct MGL_EXPORT mglAxis
 {
-	mglAxis() : dv(0),ds(0),d(0),ns(0),	v0(0),v1(0),v2(0),o(NAN),	f(0),	ch(0),	pos('t'),sh(0),inv(false),angl(NAN)	{}
-	mglAxis(const mglAxis &aa) : dv(aa.dv),ds(aa.ds),d(aa.d),ns(aa.ns),	t(aa.t),fact(aa.fact),stl(aa.stl),	dir(aa.dir),a(aa.a),b(aa.b),org(aa.org), v0(aa.v0),v1(aa.v1),v2(aa.v2),o(aa.o),	f(aa.f),txt(aa.txt),	ch(aa.ch),	pos(aa.pos),sh(aa.sh),inv(aa.inv),angl(aa.angl)	{}
+	mglAxis() : dv(0),ds(0),d(0),ns(0),	v0(0),v1(0),v2(0),o(NAN),	f(0),	ch(0),	pos('t'),sh(0),inv(false)	{}
+	mglAxis(const mglAxis &aa) : dv(aa.dv),ds(aa.ds),d(aa.d),ns(aa.ns),	t(aa.t),fact(aa.fact),stl(aa.stl),	dir(aa.dir),a(aa.a),b(aa.b),org(aa.org), v0(aa.v0),v1(aa.v1),v2(aa.v2),o(aa.o),	f(aa.f),txt(aa.txt),	ch(aa.ch),	pos(aa.pos),sh(aa.sh),inv(aa.inv)	{}
 #if MGL_HAVE_RVAL
-	mglAxis(mglAxis &&aa) : dv(aa.dv),ds(aa.ds),d(aa.d),ns(aa.ns),	t(aa.t),fact(aa.fact),stl(aa.stl),	dir(aa.dir),a(aa.a),b(aa.b),org(aa.org), v0(aa.v0),v1(aa.v1),v2(aa.v2),o(aa.o),	f(aa.f),txt(aa.txt),	ch(aa.ch),	pos(aa.pos),sh(aa.sh),inv(aa.inv),angl(aa.angl)	{}
+	mglAxis(mglAxis &&aa) : dv(aa.dv),ds(aa.ds),d(aa.d),ns(aa.ns),	t(aa.t),fact(aa.fact),stl(aa.stl),	dir(aa.dir),a(aa.a),b(aa.b),org(aa.org), v0(aa.v0),v1(aa.v1),v2(aa.v2),o(aa.o),	f(aa.f),txt(aa.txt),	ch(aa.ch),	pos(aa.pos),sh(aa.sh),inv(aa.inv)	{}
 #endif
-
-	const mglAxis &operator=(const mglAxis &aa)
-	{	dv=aa.dv; ds=aa.ds; d=aa.d; ns=aa.ns; t=aa.t; fact=aa.fact; stl=aa.stl;
-		dir=aa.dir; a=aa.a; b=aa.b; org=aa.org; v0=aa.v0; v1=aa.v1; v2=aa.v2; o=aa.o;
-		f=aa.f; txt=aa.txt; 	ch=aa.ch; pos=aa.pos; sh=aa.sh; inv=aa.inv;	return aa;	}
+	inline void AddLabel(const wchar_t *lbl, mreal v)
+	{	if(mgl_isfin(v))	txt.push_back(mglText(lbl,"",v));	}
 	inline void AddLabel(const std::wstring &lbl, mreal v)
-	{	if(mgl_isfin(v))	txt.push_back(mglText(L' '+lbl+L' ',v));	}
+	{	if(mgl_isfin(v))	txt.push_back(mglText(lbl,v));	}
 	inline void Clear()
 	{	dv=ds=d=v0=v1=v2=sh=0;	o=NAN;	ns=f=0;	pos = 't';	inv=false;
 		fact.clear();	stl.clear();	t.clear();	txt.clear();	}
@@ -68,14 +65,11 @@ class mglCanvas;
 /// Structure for drawing region
 struct MGL_EXPORT mglDrawReg
 {
-	mglDrawReg() {	memset(this,0,sizeof(mglDrawReg));	}
+	mglDrawReg() {}
 	mglDrawReg(const mglDrawReg &aa) : PDef(aa.PDef),angle(aa.angle),ObjId(aa.ObjId),PenWidth(aa.PenWidth),pPos(aa.pPos) ,x1(aa.x1),x2(aa.x2),y1(aa.y1),y2(aa.y2)	{}
 #if MGL_HAVE_RVAL
 	mglDrawReg(mglDrawReg &&aa) : PDef(aa.PDef),angle(aa.angle),ObjId(aa.ObjId),PenWidth(aa.PenWidth),pPos(aa.pPos) ,x1(aa.x1),x2(aa.x2),y1(aa.y1),y2(aa.y2)	{}
 #endif
-	inline void copy(const mglPrim &p)
-	{	PDef = p.n3;	pPos = p.s;	ObjId = p.id;	PenWidth=p.w;	angle = p.angl;
-		if(p.type==2 || p.type==3) PDef = p.m;	}
 	inline const mglDrawReg &operator=(const mglDrawReg &aa)
 	{	memcpy(this,&aa,sizeof(mglDrawReg));	return aa;	}
 	union
@@ -108,7 +102,7 @@ struct MGL_EXPORT mglDrawDat
 	std::vector<mglTexture> Txt;	///< Pointer to textures
 };
 #if defined(_MSC_VER)
-template class MGL_EXPORT std::vector<mglDrawDat>;
+//template class MGL_EXPORT std::vector<mglDrawDat>;
 #endif
 //-----------------------------------------------------------------------------
 union mglRGBA	{	uint32_t c; unsigned char r[4];	};
@@ -145,7 +139,7 @@ using mglBase::Light;
 	/// Get PlotFactor
 	inline mreal GetPlotFactor()	{	return B.pf;	}
 	/// Pop transformation matrix from stack
-	void Pop();
+	inline void Pop()	{	B = stack.back(); stack.pop_back();	}
 	/// Clear up the frame
 	virtual void Clf(mglColor back=NC);
 	virtual void Clf(const char *col);
@@ -173,12 +167,6 @@ using mglBase::Light;
 	/// Set perspective (in range [0,1)) for plot. Set to zero for switching off. Return the current perspective.
 	void Perspective(mreal a, bool req=true)
 	{	if(req)	persp = Bp.pf = a;	else	Bp.pf = persp?persp:fabs(a);	}
-	/// Save parameters of current inplot
-	inline void SaveInPlot()
-	{	sB=B;	sW=inW, sH=inH, sZ=ZMin, sX=inX, sY=inY, sFF=font_factor;	}
-	/// Use saved parameters as current inplot
-	inline void LoadInPlot()
-	{	B=sB;	inW=sW, inH=sH, ZMin=sZ, inX=sX, inY=sY, font_factor=sFF;	}
 
 	/// Set size of frame in pixels. Normally this function is called internaly.
 	virtual void SetSize(int w,int h,bool clf=true);
@@ -198,9 +186,6 @@ using mglBase::Light;
 	int GetHeight() const	{	return Height;	}
 	/// Combine plots from 2 canvases. Result will be saved into this.
 	void Combine(const mglCanvas *gr);
-	/// Set boundary box for export graphics into 2D file formats
-	void SetBBox(int x1=0, int y1=0, int x2=-1, int y2=-1)
-	{	BBoxX1=x1;	BBoxY1=y1;	BBoxX2=x2;	BBoxY2=y2;	}
 
 	/// Rasterize current plot and set it as background image
 	void Rasterize();
@@ -382,7 +367,7 @@ protected:
 	int Depth;			///< Depth of the image
 	mreal inW, inH;		///< Width and height of last InPlot
 	mreal inX, inY;		///< Coordinates of last InPlot
-	mglLight light[10];	///< Light sources
+	mglLight light[10];	///< Light sources	// TODO move to mglBlock
 	mreal FogDist;		///< Inverse fog distance (fog ~ exp(-FogDist*Z))
 	mreal FogDz;		///< Relative shift of fog
 
@@ -391,7 +376,7 @@ protected:
 	/// Prepare labels for ticks
 	void LabelTicks(mglAxis &aa);
 	/// Draw axis
-	void DrawAxis(mglAxis &aa, int text=1, char arr=0,const char *stl="",mreal angl=NAN);
+	void DrawAxis(mglAxis &aa, bool text=true, char arr=0,const char *stl="",mreal angl=NAN);
 	/// Draw axis grid lines
 	void DrawGrid(mglAxis &aa, bool at_tick=false);
 	/// Update axis ranges
@@ -421,7 +406,6 @@ protected:
 	void trig_plot(long p1, long p2, long p3);
 	void quad_plot(long p1, long p2, long p3, long p4);
 	void Glyph(mreal x, mreal y, mreal f, int style, long icode, mreal col);
-	void smbl_plot(long p1, char id, double size);
 	mreal text_plot(long p,const wchar_t *text,const char *fnt,mreal size=-1,mreal sh=0,mreal  col=-('k'), bool rot=true);
 
 	void add_prim(mglPrim &a);	///< add primitive to list
@@ -434,17 +418,7 @@ protected:
 	void arrow_draw(long n1, long n2, char st, float ll);
 	void arrow_plot_3d(long n1, long n2, char st, float ll);
 	void glyph_draw(const mglPrim &P, mglDrawReg *d);
-	void glyph_draw_new(const mglPrim &P, mglDrawReg *d);
 	bool IsSame(const mglPrim &pr,mreal wp,mglColor cp,int st);
-
-	// check if visible
-	bool trig_vis(const mglPnt &p1, const mglPnt &p2, const mglPnt &p3) const;
-	bool quad_vis(const mglPnt &p1, const mglPnt &p2, const mglPnt &p3, const mglPnt &p4) const;
-
-	// functions for glyph drawing
-	virtual void glyph_fill(mreal phi, const mglPnt &p, mreal f, const mglGlyph &g, const mglDrawReg *d);
-	void glyph_wire(mreal phi, const mglPnt &p, mreal f, const mglGlyph &g, const mglDrawReg *d);
-	void glyph_line(mreal phi, const mglPnt &p, mreal f, bool solid, const mglDrawReg *d);
 
 	// restore normalized coordinates from screen ones
 	mglPoint RestorePnt(mglPoint ps, bool norm=false) const MGL_FUNC_PURE;
@@ -467,9 +441,6 @@ protected:
 private:
     mglCanvas(const mglCanvas &){}	// copying is not allowed
 	const mglCanvas &operator=(const mglCanvas &t){return t;}	// copying is not allowed
-
-	mglMatrix sB;	// parameters of saved inplot
-	mreal sW, sH, sZ, sX, sY, sFF;
 
 	uint32_t *pnt_col;
 //	mreal _tetx,_tety,_tetz;		// extra angles
@@ -504,6 +475,11 @@ private:
 	/// Set coordinate and add the point, return its id
 	long setPp(mglPnt &q, const mglPoint &p);
 
+	// functions for glyph drawing
+	void glyph_fill(const mglMatrix *M, const mglPnt &p, mreal f, const mglGlyph &g, const mglDrawReg *d);
+	void glyph_wire(const mglMatrix *M, const mglPnt &p, mreal f, const mglGlyph &g, const mglDrawReg *d);
+	void glyph_line(const mglMatrix *M, const mglPnt &p, mreal f, bool solid, const mglDrawReg *d);
+
 	// fill pixel for given primitive
 	void mark_pix(long i,long j,const mglPnt &p, char type, mreal size, mglDrawReg *d);
 	void arrow_pix(long i,long j,const mglPnt &p1, const mglPnt &p2, char st, mreal size, const mglDrawReg *d);
@@ -527,12 +503,5 @@ struct mglThreadG
 };
 /// Start several thread for the task
 void mglStartThread(void (mglCanvas::*func)(long i, long n), mglCanvas *gr, long n);
-//-----------------------------------------------------------------------------
-inline mreal get_persp(float pf, float z, float Depth)
-//{	return (1-pf)/(1-pf*z/Depth);	}
-{	return (1-pf/1.37)/(1-pf*z/Depth);	}
-inline mreal get_pfact(float pf, float Depth)
-//{	return pf/(1-pf)/Depth;	}
-{	return pf/(1-pf/1.37)/Depth;	}
 //-----------------------------------------------------------------------------
 #endif

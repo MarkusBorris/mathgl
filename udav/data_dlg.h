@@ -45,8 +45,8 @@ private slots:
 	void userRes();
 private:
 	QString result;
-	QComboBox *name, *oper, *dirs;
-	QLineEdit *res;
+	QComboBox *name, *suffix, *oper, *dirs;
+	QLineEdit *res, *func;
 	QSpinBox  *x1, *y1, *z1, *x2, *y2, *z2;
 	QLabel *sizes;
 };

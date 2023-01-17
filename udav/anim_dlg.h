@@ -21,7 +21,9 @@
 #define ANIMPARAM_H
 //-----------------------------------------------------------------------------
 #include <QDialog>
-#include "mgl2/define.h"
+#if defined(_MSC_VER)
+#include <mgl2/define.h>
+#endif
 //-----------------------------------------------------------------------------
 class QLineEdit;
 class QTextEdit;

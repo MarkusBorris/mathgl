@@ -41,20 +41,9 @@ public:
 	Fl_Valuator	*tet_val;	///< pointer to external tet-angle validator
 	Fl_Valuator	*phi_val;	///< pointer to external phi-angle validator
 	mglCanvas *gr;			///< Built-in mglCanvas instance (mglCanvasFLTK is used by default)
-	std::string prim;		///< manual primitives
-	bool use_pthr;			///< use pthread for update plot
 
 	Fl_MathGL(int x, int y, int w, int h, const char *label=0);
 	virtual ~Fl_MathGL();
-	
-	/// Set drawing functions and its parameter
-	inline void set_draw(int (*func)(mglBase *gr, void *par), void *par)
-	{	if(draw_cl)	delete draw_cl;	draw_cl=0;	draw_func=func;	draw_par=par;	}
-	/// Set drawing functions pointed on mglGraph
-	inline void set_draw(int (*dr)(mglGraph *gr))
-	{	set_draw(dr?mgl_draw_graph:0,(void*)dr);	}
-	/// Set drawing based on instance of mglDraw class
-	inline void set_draw(mglDraw *dr)	{	if(draw_cl)	delete draw_cl;	draw_cl=dr;	draw_func=0;	}
 
 	/// Update (redraw) plot
 	virtual void update();
@@ -63,7 +52,23 @@ public:
 	/// Set bitwise flags for general state (1-Alpha, 2-Light)
 	inline void set_flag(int f)	{	flag = f;	}
 	/// Set flags for handling mouse
-	void set_state(bool z, bool r, bool g=false)	{	zoom = z;	rotate = r;	grid = g;	}
+	void set_graph(HMGL gr);	///< Set grapher object
+	inline void set_graph(mglGraph *Gr)
+	{	set_graph(Gr->Self());	}
+	/// Get pointer to grapher
+	inline HMGL get_graph()	{	return (HMGL)gr;	}
+	/// Get mglDraw pointer or NULL
+	inline mglDraw *get_class()
+	{	mglDraw *d=0;
+		if(draw_func==mgl_draw_class)	d = (mglDraw*)draw_par;
+		if(draw_cl)	d = draw_cl;	return d;	}
+	/// Set drawing functions and its parameter
+	inline void set_draw(int (*func)(mglBase *gr, void *par), void *par)
+	{	if(draw_cl)	delete draw_cl;	draw_cl=0;	draw_func=func;	draw_par=par;	}
+	inline void set_draw(mglDraw *dr)	{	if(draw_cl)	delete draw_cl;	draw_cl=dr;	draw_func=0;	}
+	inline void set_draw(int (*dr)(mglGraph *gr))
+	{	set_draw(dr?mgl_draw_graph:0,(void*)dr);	}
+	void set_state(bool z, bool r)	{	zoom = z;	rotate = r;	}
 	/// Set zoom in/out region
 	inline void set_zoom(mreal X1, mreal Y1, mreal X2, mreal Y2)
 	{	x1 = X1;	x2 = X2;	y1 = Y1;	y2 = Y2;	update();	}
@@ -73,42 +78,15 @@ public:
 	/// Set popup menu pointer
 	inline void set_popup(const Fl_Menu_Item *pmenu, Fl_Widget *wdg, void *v)
 	{	popup = pmenu;	wpar = wdg;	vpar = v;	}
-
-	/// Set grapher object instead of built-in one. 
-	/// NOTE: Fl_MathGL will automatically delete this object
-	void set_graph(HMGL gr);
-	/// Set grapher object instead of built-in one. 
-	/// NOTE: Fl_MathGL will automatically delete this object
-	inline void set_graph(mglGraph *Gr)
-	{	set_graph(Gr->Self());	}
-	/// Get pointer to grapher
-	inline HMGL get_graph()	{	return (HMGL)gr;	}
-
-	/// Get mglDraw pointer or NULL
-	inline mglDraw *get_class()
-	{	mglDraw *d=0;
-		if(draw_func==mgl_draw_class)	d = (mglDraw*)draw_par;
-		if(draw_cl)	d = draw_cl;
-		return d;	}
-	
-	/// Show window with warnings after script parsing
-	inline void set_show_warn(bool s)	{	show_warn=s;	}
-	/// Ask to stop of script parsing
+	inline void zoom_region(mreal xx1,mreal xx2,mreal yy1, mreal yy2)
+	{	x1=xx1;	y1=yy1;	x2=xx2;	y2=yy2;	}
 	void stop(bool stop=true);
-	/// Enable/disable key handling as in mglview (default is false)
-	inline void set_handle_key(bool val)	{	handle_keys=true;	}
-	/// Get id of last clicked object
-	inline int get_last_id()	{	return last_id;	}
-	void draw_plot();	///< Single thread drawing itself
-	/// Check if script is parsing now or not
-	inline bool running()	{	return run;	}
 
 protected:
 	void *draw_par;		///< Parameters for drawing function mglCanvasWnd::DrawFunc.
 	/// Drawing function for window procedure. It should return the number of frames.
 	int (*draw_func)(mglBase *gr, void *par);
 	mglDraw *draw_cl;
-	int last_id;					///< last selected object id
 
 	const Fl_Menu_Item *popup;	///< pointer to popup menu items
 	Fl_Widget *wpar;			///< widget for popup menu
@@ -116,18 +94,11 @@ protected:
 	mreal tet,phi;				///< rotation angles
 	bool rotate;				///< flag for handle mouse
 	bool zoom;					///< flag for zoom by mouse
-	bool grid;					///< flag to draw grid and edit prim
-	bool show_warn;				///< show window with warnings
-	bool handle_keys;
+	bool wire;
 	mreal x1,x2,y1,y2;			///< zoom region
 	int flag;					///< bitwise flag for general state (1-Alpha, 2-Light)
 	int x0,y0,xe,ye;			///< mouse position
 	char pos[128];
-	bool run;					///< flag that drawing in progress
-	const unsigned char *img;	///< image for drawing
-#if (MGL_HAVE_PTHREAD|MGL_HAVE_PTHR_WIDGET)
-	pthread_t thr;				///< main thread for drawing
-#endif
 
 	virtual void draw();		///< quick drawing function
 	int handle(int code);		///< handle mouse events
@@ -147,19 +118,18 @@ public:
 	mreal (*delay)(void*);	///< Callback function for delay
 	void (*reload)(void*);	///< Callback function for reloading
 
-	void toggle_alpha()	{	toggle(alpha, alpha_bt, _("Graphics/Alpha"));	}
-	void toggle_light()	{	toggle(light, light_bt, _("Graphics/Light"));	}
-	void toggle_sshow()	{	toggle(sshow, anim_bt, _("Graphics/Animation/Slideshow"));	}
-	void toggle_grid()	{	toggle(grid, grid_bt, _("Graphics/Grid"));	}
+	void toggle_alpha()	{	toggle(alpha, alpha_bt, "Graphics/Alpha");	}
+	void toggle_light()	{	toggle(light, light_bt, "Graphics/Light");	}
+	void toggle_sshow()	{	toggle(sshow, anim_bt, "Graphics/Slideshow");	}
+	void toggle_grid()	{	toggle(grid, grid_bt, "Graphics/Grid");	}
 	void toggle_zoom()	{	toggle(zoom, zoom_bt);	}
 	void toggle_rotate(){	toggle(rotate, rotate_bt);	}
 	void setoff_zoom()	{	setoff(zoom, zoom_bt);	}
 	void setoff_rotate(){	setoff(rotate, rotate_bt);	}
 	bool is_sshow()		{	return sshow;	}
-	void toggle_pause()	{	toggle(pauseC, pause_bt, _("Graphics/Pause calc"));	exec_pause();	}
+	void toggle_pause()	{	toggle(pauseC, pause_bt, "Graphics/Pause calc");	exec_pause();	}
 	void adjust()
 	{	mgl_set_size(FMGL->get_graph(),scroll->w(),scroll->h());	FMGL->size(scroll->w(),scroll->h());	update();	}
-	HMGL get_graph()	{	return FMGL->get_graph();	}
 
 	Fl_MGLView(int x, int y, int w, int h, const char *label=0);
 	virtual ~Fl_MGLView();
@@ -178,7 +148,5 @@ protected:
 };
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_makemenu_fltk(Fl_Menu_ *m, Fl_MGLView *w);
-MGL_EXPORT const char *mgl_file_chooser(const char *mess, const char *filter="", bool save=false);
-MGL_EXPORT const char *mgl_dir_chooser(const char *mess, const char *path);
 //-----------------------------------------------------------------------------
 #endif

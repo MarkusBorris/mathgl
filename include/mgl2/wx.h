@@ -127,6 +127,7 @@ protected:
 	bool zoom;			///< Mouse zoom state
 	bool rotate;		///< Mouse rotation state
 	mreal x1,x2,y1,y2;	///< Zoom in region
+	bool showMessage;	///< Flag for showing messages (enabled by each execute())
 	wxMenu *popup;		///< Pointer to pop-up menu
 	wxTimer *timer;		///< Timer for animation
 	DECLARE_EVENT_TABLE()

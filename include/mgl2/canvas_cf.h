@@ -52,11 +52,6 @@ void MGL_EXPORT mgl_finish_(uintptr_t *gr);
 /// Force preparing the image and save result into background one.
 void MGL_EXPORT mgl_rasterize(HMGL gr);
 void MGL_EXPORT mgl_rasterize_(uintptr_t *gr);
-/// Set boundary box for export graphics into 2D file formats.
-/** If x2<0 (y2<0) then full width (height) will be used.
- *  If x1<0 or y1<0 or x1>=x2|Width or y1>=y2|Height then cropping will be disabled. */
-void MGL_EXPORT mgl_set_bbox(HMGL gr, int x1, int y1, int x2, int y2);
-void MGL_EXPORT mgl_set_bbox_(uintptr_t *gr, int *x1, int *y1, int *x2, int *y2);
 
 /// Set the size of semi-transparent area around lines, marks, glyphs, ... Default is 1.
 void MGL_EXPORT mgl_pen_delta(HMGL gr, double d);
@@ -472,15 +467,6 @@ void MGL_EXPORT mgl_subplot_d_(uintptr_t *gr, int *nx,int *ny,int *m, mreal *dx,
  *  '#' for using whole region. */
 void MGL_EXPORT mgl_multiplot(HMGL gr, int nx,int ny,int m,int dx,int dy,const char *style);
 void MGL_EXPORT mgl_multiplot_(uintptr_t *gr, int *nx,int *ny,int *m,int *dx,int *dy, const char *s,int);
-/// Put further plotting in rectangle of dx*dy cells starting from m-th cell of nx*ny grid of the image and shift it by distance {sx,sy}..
-/** String \a style may contain:
- *  '<' for reserving space at left
- *  '>' for reserving space at right
- *  '^' for reserving space at top
- *  '_' for reserving space at bottom
- *  '#' for using whole region. */
-void MGL_EXPORT mgl_multiplot_d(HMGL gr, int nx,int ny,int m,int dx,int dy,const char *style,double sx,double sy);
-void MGL_EXPORT mgl_multiplot_d_(uintptr_t *gr, int *nx,int *ny,int *m,int *dx,int *dy, const char *s, mreal *sx, mreal *sy,int);
 /// Put further plotting in a region [x1,x2]*[y1,y2] of the image (x1,x2,y1,y2 in range [0, 1]).
 void MGL_EXPORT mgl_inplot(HMGL gr, double x1,double x2,double y1,double y2);
 void MGL_EXPORT mgl_inplot_(uintptr_t *gr, mreal *x1, mreal *x2, mreal *y1, mreal *y2);
@@ -621,14 +607,6 @@ uintptr_t MGL_EXPORT mgl_parser_get_var_(uintptr_t* p, unsigned long *id);
 long MGL_EXPORT mgl_parser_num_var(HMPR p);
 long MGL_EXPORT mgl_parser_num_var_(uintptr_t* p);
 
-/// Get constant with given id
-/// NOTE !!! You must not delete obtained data arrays !!!
-MGL_EXPORT mglNum *mgl_parser_get_const(HMPR p, unsigned long id);
-uintptr_t MGL_EXPORT mgl_parser_get_const_(uintptr_t* p, unsigned long *id);
-/// Get number of constants
-long MGL_EXPORT mgl_parser_num_const(HMPR p);
-long MGL_EXPORT mgl_parser_num_const_(uintptr_t* p);
-
 /// Delete variable with name
 void MGL_EXPORT mgl_parser_del_var(HMPR p, const char *name);
 void MGL_EXPORT mgl_parser_del_var_(uintptr_t* p, const char *name, int);
@@ -645,10 +623,6 @@ void MGL_EXPORT mgl_parser_load_(uintptr_t *pr, const char *dll_name,int);
 void MGL_EXPORT mgl_rk_step(HMPR pr, const char *eqs, const char *vars, mreal dt);
 void MGL_EXPORT mgl_rk_step_w(HMPR pr, const wchar_t *eqs, const wchar_t *vars, mreal dt);
 void MGL_EXPORT mgl_rk_step_(uintptr_t *p, const char *eqs, const char *vars, double *dt, int,int);
-
-// Open all data arrays from HDF file and assign it as variables of parser p
-void MGL_EXPORT mgl_parser_openhdf(HMPR p, const char *fname);
-void MGL_EXPORT mgl_parser_openhdf_(uintptr_t *p, const char *fname,int l);
 
 /// Parse and draw single line of the MGL script
 int MGL_EXPORT mgl_parse_line(HMGL gr, HMPR p, const char *str, int pos);
@@ -679,10 +653,6 @@ void MGL_EXPORT mgl_parser_stop_(uintptr_t* p);
 /// Set variant of argument(s) separated by '?' to be used
 void MGL_EXPORT mgl_parser_variant(HMPR p, int var);
 void MGL_EXPORT mgl_parser_variant_(uintptr_t* p, int *var);
-/// Set starting object ID
-void MGL_EXPORT mgl_parser_start_id(HMPR p, int id);
-void MGL_EXPORT mgl_parser_start_id_(uintptr_t* p, int *id);
-
 
 /// Return type of command: 0 - not found, 1 - data plot, 2 - other plot,
 ///		3 - setup, 4 - data handle, 5 - data create, 6 - subplot, 7 - program
@@ -694,7 +664,7 @@ int MGL_EXPORT mgl_parser_cmd_type_(uintptr_t* p, const char *name, int);
 MGL_EXPORT const char *mgl_parser_cmd_desc(HMPR pr, const char *name);
 /// Return string of command format (command name and its argument[s])
 MGL_EXPORT const char *mgl_parser_cmd_frmt(HMPR pr, const char *name);
-/// Get name of command with number n
+/// Get name of command with nmber n
 MGL_EXPORT const char *mgl_parser_cmd_name(HMPR pr, long id);
 /// Get number of defined commands
 long MGL_EXPORT mgl_parser_cmd_num(HMPR pr);

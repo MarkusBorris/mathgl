@@ -40,8 +40,6 @@ typedef void *HADT;
 /// Get integer power of x
 mdual MGL_EXPORT_CONST mgl_ipowc(dual x,int n);
 mdual MGL_EXPORT mgl_ipowc_(dual *x,int *n);
-/// Get complex number from string. Parse (%g,%g), {%g,%g} and [%g,%g] if adv!=0.
-mdual MGL_EXPORT mgl_atoc(const char *s, int adv);
 /// Get exp(i*a)
 mdual MGL_EXPORT_CONST mgl_expi(dual a);
 
@@ -175,14 +173,6 @@ uintptr_t MGL_EXPORT mgl_datac_sum_(uintptr_t *dat, const char *dir,int);
 /// Get the data which is direct multiplication (like, d[i,j] = this[i]*a[j] and so on)
 HADT MGL_EXPORT mgl_datac_combine(HCDT dat1, HCDT dat2);
 uintptr_t MGL_EXPORT mgl_datac_combine_(uintptr_t *dat1, uintptr_t *dat2);
-/// Get data from sections ids, separated by value val along specified direction.
-/** If section id is negative then reverse order is used (i.e. -1 give last section). */
-HADT MGL_EXPORT mgl_datac_section(HCDT dat, HCDT ids, char dir, mreal val);
-uintptr_t MGL_EXPORT mgl_datac_section_(uintptr_t *d, uintptr_t *ids, const char *dir, mreal *val,int);
-/// Get data from section id, separated by value val along specified direction.
-/** If section id is negative then reverse order is used (i.e. -1 give last section). */
-HADT MGL_EXPORT mgl_datac_section_val(HCDT dat, long id, char dir, mreal val);
-uintptr_t MGL_EXPORT mgl_datac_section_val_(uintptr_t *d, int *id, const char *dir, mreal *val,int);
 
 /// Set names for columns (slices)
 void MGL_EXPORT mgl_datac_set_id(HADT d, const char *id);
@@ -261,9 +251,6 @@ void MGL_EXPORT mgl_datac_integral_(uintptr_t *dat, const char *dir,int);
 /// Differentiate the data in given direction or directions
 void MGL_EXPORT mgl_datac_diff(HADT dat, const char *dir);
 void MGL_EXPORT mgl_datac_diff_(uintptr_t *dat, const char *dir,int);
-/// Differentiate the parametrically specified data along direction v1 with v2,v3=const (v3 can be NULL)
-void MGL_EXPORT mgl_datac_diff_par(HADT dat, HCDT v1, HCDT v2, HCDT v3);
-void MGL_EXPORT mgl_datac_diff_par_(uintptr_t *dat, uintptr_t *v1, uintptr_t *v2, uintptr_t *v3);
 /// Double-differentiate (like Laplace operator) the data in given direction
 void MGL_EXPORT mgl_datac_diff2(HADT dat, const char *dir);
 void MGL_EXPORT mgl_datac_diff2_(uintptr_t *dat, const char *dir,int);
@@ -279,9 +266,6 @@ void MGL_EXPORT mgl_datac_mirror_(uintptr_t *dat, const char *dir,int);
 /// Crop the data
 void MGL_EXPORT mgl_datac_crop(HADT dat, long n1, long n2, char dir);
 void MGL_EXPORT mgl_datac_crop_(uintptr_t *dat, int *n1, int *n2, const char *dir,int);
-/// Crop the data to be most optimal for FFT (i.e. to closest value of 2^n*3^m*5^l)
-void MGL_EXPORT mgl_datac_crop_opt(HADT dat, const char *how);
-void MGL_EXPORT mgl_datac_crop_opt_(uintptr_t *dat, const char *how,int);
 
 /// Multiply the data by other one for each element
 void MGL_EXPORT mgl_datac_mul_dat(HADT dat, HCDT d);
@@ -311,12 +295,6 @@ void MGL_EXPORT mgl_datac_sub_num_(uintptr_t *dat, dual *d);
 /// Apply Hankel transform
 void MGL_EXPORT mgl_datac_hankel(HADT dat, const char *dir);
 void MGL_EXPORT mgl_datac_hankel_(uintptr_t *dat, const char *dir,int);
-/// Apply Sin-Fourier transform
-void MGL_EXPORT mgl_datac_sinfft(HADT dat, const char *dir);
-void MGL_EXPORT mgl_datac_sinfft_(uintptr_t *dat, const char *dir,int);
-/// Apply Cos-Fourier transform
-void MGL_EXPORT mgl_datac_cosfft(HADT dat, const char *dir);
-void MGL_EXPORT mgl_datac_cosfft_(uintptr_t *dat, const char *dir,int);
 /// Apply Fourier transform
 void MGL_EXPORT mgl_datac_fft(HADT dat, const char *dir);
 void MGL_EXPORT mgl_datac_fft_(uintptr_t *dat, const char *dir,int);
@@ -326,18 +304,6 @@ uintptr_t MGL_EXPORT mgl_datac_correl_(uintptr_t *dat1, uintptr_t *dat2, const c
 /// Calculate one step of diffraction by finite-difference method with parameter q
 void MGL_EXPORT mgl_datac_diffr(HADT dat, const char *how, mreal q);
 void MGL_EXPORT mgl_datac_diffr_(uintptr_t *d, const char *how, double q,int l);
-/// Apply wavelet transform
-/** Parameter \a dir may contain:
- * ‘x‘,‘y‘,‘z‘ for directions,
- * ‘d‘ for daubechies, ‘D‘ for centered daubechies,
- * ‘h‘ for haar, ‘H‘ for centered haar,
- * ‘b‘ for bspline, ‘B‘ for centered bspline,
- * ‘i‘ for applying inverse transform. */
-void MGL_EXPORT mgl_datac_wavelet(HADT dat, const char *how, int k);
-void MGL_EXPORT mgl_datac_wavelet_(uintptr_t *d, const char *dir, int *k,int);
-/// Set as the data envelop
-void MGL_EXPORT mgl_datac_envelop(HADT dat, char dir);
-void MGL_EXPORT mgl_datac_envelop_(uintptr_t *dat, const char *dir, int);
 
 /// Get real part of data values
 HMDT MGL_EXPORT mgl_datac_real(HCDT dat);

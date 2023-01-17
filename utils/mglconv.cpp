@@ -31,7 +31,6 @@ void mgl_ask_gets(const wchar_t *quest, wchar_t *res);
 //-----------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-	mgl_textdomain(argv?argv[0]:NULL,"");
 	mgl_suppress_warn(true);
 	mglGraph gr;
 	mglParse p(true);
@@ -46,6 +45,7 @@ int main(int argc, char *argv[])
 		if(ch>='1' && ch<='9')	p.AddParam(ch-'0', optarg);
 		else if(ch=='s')
 		{
+			setlocale(LC_CTYPE, "");
 			FILE *fp = fopen(optarg,"r");
 			if(fp)
 			{
@@ -55,8 +55,7 @@ int main(int argc, char *argv[])
 			}
 		}
 		else if(ch=='n')	none = true;
-		else if(ch=='L')
-		{	setlocale(LC_ALL, optarg);	setlocale(LC_NUMERIC, "C");	}
+		else if(ch=='L')	setlocale(LC_CTYPE, optarg);
 		else if(ch=='S')	mgl_set_size_scl(atof(optarg));
 		else if(ch=='q')	gr.SetQuality(atoi(optarg));
 		else if(ch=='v')	p.SetVariant(atoi(optarg));
@@ -81,10 +80,10 @@ int main(int argc, char *argv[])
 		}
 		else if(ch=='h' || (ch==-1 && optind>=argc))
 		{
-			printf(_("mglconv convert mgl script to image file (default PNG).\nCurrent version is 2.%g\n"),MGL_VER2);
-			printf(_("Usage:\tmglconv [parameter(s)] scriptfile\n"));
+			printf("mglconv convert mgl script to bitmap png file.\nCurrent version is 2.%g\n",MGL_VER2);
+			printf("Usage:\tmglconv [parameter(s)] scriptfile\n");
 			printf(
-				_("\t-1 str       set str as argument $1 for script\n"
+				"\t-1 str       set str as argument $1 for script\n"
 				"\t...          ...\n"
 				"\t-9 str       set str as argument $9 for script\n"
 				"\t-L loc       set locale to loc\n"
@@ -99,18 +98,19 @@ int main(int argc, char *argv[])
 				"\t-C n1:n2:dn  add animation value in range [n1,n2] with step dn\n"
 				"\t-C n1:n2     add animation value in range [n1,n2] with step 1\n"
 				"\t-            get script from standard input\n"
-				"\t-h           print this message\n") );
+				"\t-h           print this message\n" );
 			return 0;
 		}
-		else if(ch=='o')	mgl_strncpy(oname, optarg,256);
+		else if(ch=='o')	strncpy(oname, optarg,256);
 		else if(ch==-1 && optind<argc)
-		{	mgl_strncpy(iname, argv[optind][0]=='-'?"":argv[optind],256);	break;	}
+		{	strncpy(iname, argv[optind][0]=='-'?"":argv[optind],256);	break;	}
 	}
-	if(*oname==0)	{	mgl_strncpy(oname,*iname?iname:"out",250);	strcat(oname,".png");	}
+	if(*oname==0)	{	strncpy(oname,*iname?iname:"out",250);	strcat(oname,".png");	}
 	else	none = false;
 
 	mgl_ask_func = mgl_ask_gets;
 	// prepare for animation
+	setlocale(LC_CTYPE, "");
 	FILE *fp = *iname?fopen(iname,"r"):stdin;
 	if(!fp)	{	printf("No file for MGL script\n");	return 0;	}
 	wchar_t cw;

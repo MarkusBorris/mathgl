@@ -148,13 +148,6 @@ void MGL_EXPORT mgl_puts_dir(HMGL graph, double x, double y, double z, double dx
 void MGL_EXPORT mgl_puts_dir_(uintptr_t *graph, mreal *x, mreal *y, mreal *z, mreal *dx, mreal *dy, mreal *dz, const char *text, const char *font, mreal *size, int, int);
 void MGL_EXPORT mgl_putsw_dir(HMGL graph, double x, double y, double z, double dx, double dy, double dz, const wchar_t *text, const char *font, double size);
 
-/// Draw user-defined symbol in position p
-void MGL_EXPORT mgl_symbol(HMGL gr, double x, double y, double z, char id, const char *how, double size);
-void MGL_EXPORT mgl_symbol_(uintptr_t *gr, double *x, double *y, double *z, char *id, const char *how, double *size,int,int);
-/// Draw user-defined symbol in position p along direction d
-void MGL_EXPORT mgl_symbol_dir(HMGL gr, double x, double y, double z, double dx, double dy, double dz, char id, const char *how, double size);
-void MGL_EXPORT mgl_symbol_dir_(uintptr_t *gr, double *x, double *y, double *z, double *dx, double *dy, double *dz, char *id, const char *how, double *size,int,int);
-
 /// Draw textual marks with size r at points {x,y,z}
 void MGL_EXPORT mgl_textmark_xyzr(HMGL graph, HCDT x, HCDT y, HCDT z, HCDT r, const char *text, const char *fnt, const char *opt);
 void MGL_EXPORT mgl_textmark_xyzr_(uintptr_t *graph, uintptr_t *x, uintptr_t *y, uintptr_t *z, uintptr_t *r, const char *text, const char *fnt, const char *opt,int,int,int);
@@ -243,16 +236,6 @@ void MGL_EXPORT mgl_bifurcation_dat(HMGL gr, double dx, HCDT f, const char *stl,
 void MGL_EXPORT mgl_bifurcation_str(HMGL gr, double dx, const char *f, const char *stl, const char *opt);
 void MGL_EXPORT mgl_bifurcation_dat_(uintptr_t *gr, double *dx, uintptr_t *f, const char *stl, const char *opt, int,int);
 void MGL_EXPORT mgl_bifurcation_str_(uintptr_t *gr, double *dx, const char *f, const char *stl, const char *opt, int,int,int);
-
-/// Draws Iris plots for determining cross-dependences of data arrays
-/** NOTE: using the same ranges and empty ids will not draw axis. This will add data to existing Iris plot.
- * 	Option value set the size of data labels ids, separated by ';'.*/
-void MGL_EXPORT mgl_iris(HMGL gr, HCDT dats, HCDT ranges, const char *ids, const char *stl, const char *opt);
-void MGL_EXPORT mgl_iris_1(HMGL gr, HCDT dats, const char *ids, const char *stl, const char *opt);
-void MGL_EXPORT mgl_irisw(HMGL gr, HCDT dats, HCDT ranges, const wchar_t *ids, const char *stl, const char *opt);
-void MGL_EXPORT mgl_irisw_1(HMGL gr, HCDT dats, const wchar_t *ids, const char *stl, const char *opt);
-void MGL_EXPORT mgl_iris_(uintptr_t *gr, uintptr_t *dats, uintptr_t *ranges, const char *ids, const char *stl, const char *opt,int l,int m,int n);
-void MGL_EXPORT mgl_iris_1_(uintptr_t *gr, uintptr_t *dats, const char *ids, const char *stl, const char *opt,int,int,int);
 
 #ifdef __cplusplus
 }

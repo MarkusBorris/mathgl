@@ -65,8 +65,7 @@ public:
 	inline mglDraw *getClass()
 	{	mglDraw *d=0;
 		if(draw_func==mgl_draw_class)	d = (mglDraw*)draw_par;
-		if(draw)	d = draw;
-		return d;	}
+		if(draw)	d = draw;	return d;	}
 
 	int getPer() const	{return int(per);}	///< Get perspective value
 	int getPhi() const	{return int(phi);}	///< Get Phi-angle value
@@ -206,6 +205,7 @@ protected:
 	bool dotsRefr;		///< Set dots for image preview/rotation
 	mreal x1,x2,y1,y2;	///< Zoom in region
 	mreal ax1,ax2,ay1,ay2;	///< Axis range zoom
+	bool showMessage;	///< Flag for showing messages (enabled by each execute())
 	QMenu *popup;		///< Pointer to pop-up menu
 	QTimer *timer;		///< Timer for animation
 	QTimer *timerRefr;	///< Timer for redrawing
@@ -228,7 +228,7 @@ class MGL_EXPORT mglDrawScript : public mglDraw
 public:
 	HMPR par;		///< Parser to be used
 	QString text;	///< Script to be drawn
-	long line;		///< Line which will be highlighted
+	long line;		///< Line which will be highlited
 	mglDrawScript(HMPR p):mglDraw()	{	par=p;	line=-1;	}
 	virtual ~mglDrawScript() {}
 	int Draw(mglGraph *gr)

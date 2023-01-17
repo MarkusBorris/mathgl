@@ -50,10 +50,9 @@ struct mglGlyphDescr
 inline bool operator<(const mglGlyphDescr &a,const mglGlyphDescr &b)	{	return a.id<b.id;	}
 inline bool operator>(const mglGlyphDescr &a,const mglGlyphDescr &b)	{	return a.id>b.id;	}
 #if defined(_MSC_VER)
-template class MGL_EXPORT std::vector<mglGlyphDescr>;
+//template class MGL_EXPORT std::vector<mglGlyphDescr>;
 #endif
 //-----------------------------------------------------------------------------
-extern const float mgl_fact;
 struct MGL_EXPORT mglTeXsymb	{	unsigned kod;	const wchar_t *tex;	};
 const float mgl_fgen = 4*14;
 /// Get font color, style and align for internal parser

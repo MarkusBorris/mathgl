@@ -9,7 +9,7 @@ The full list of TeX-like commands recognizable by MathGL is shown below. If com
 
 @strong{Roots}: \sqrt, \sqrt3, \sqrt4
 
-@strong{Fractions}: \frac, \dfrac, \stack, \overset, \underset, \stackr, \stackl
+@strong{Fractions}: \frac, \stack, \overset, \underset, \stackr, \stackl
 
 @strong{Accents}: \hat, \tilde, \dot, \ddot, \dddot, \ddddot, \acute, \check, \grave, \vec, \bar, \breve
 

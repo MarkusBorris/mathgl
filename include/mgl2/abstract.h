@@ -44,20 +44,10 @@ typedef const mglDataA* HCDT;
 
 std::string MGL_EXPORT mgl_data_to_string(HCDT d, long ns);
 std::string MGL_EXPORT mgl_datac_to_string(HCDT d, long ns);
-/// Get section separated by symbol ch. This is analog of QString::section().
-std::string MGL_EXPORT mgl_str_arg(const std::string &str, char ch, int n1, int n2=-1);
-/// Get sections separated by symbol ch
-std::vector<std::string> MGL_EXPORT mgl_str_args(const std::string &str, char ch);
-/// Get string from real number
-std::string MGL_EXPORT mgl_str_num(double val);
-/// Get string from complex number
-std::string MGL_EXPORT mgl_str_num(dual val);
-
 extern "C" {
 
 #else
 #define mglDataA void
-#define mglNum void
 typedef void *HMGL;
 typedef void *HMDT;
 typedef void *HADT;
@@ -94,10 +84,8 @@ void MGL_EXPORT mgl_data_save_hdf_(uintptr_t *d, const char *fname, const char *
 MGL_EXPORT const char *mgl_data_info(HCDT dat);
 int MGL_EXPORT mgl_data_info_(uintptr_t *dat, char *out, int len);
 /// Put HDF data names into buf as '\t' separated.
-long MGL_EXPORT mgl_datas_hdf(const char *fname, char *buf, long size);
-long MGL_EXPORT mgl_datas_hdf_(const char *fname, char *buf, int l, int size);
-/// Put HDF data names as list of strings (last one is "").
-MGL_EXPORT const char * const * mgl_datas_hdf_str(const char *fname);
+int MGL_EXPORT mgl_datas_hdf(const char *fname, char *buf, long size);
+int MGL_EXPORT mgl_datas_hdf_(const char *fname, char *buf, int l, int size);
 
 /// Get maximal value of the data
 mreal MGL_EXPORT mgl_data_max(HCDT dat);
@@ -138,9 +126,6 @@ mreal MGL_EXPORT mgl_data_min_real_(uintptr_t *dat, mreal *x, mreal *y, mreal *z
 /// Get "energy and find 4 momenta of data: median, width, skewness, kurtosis
 mreal MGL_EXPORT mgl_data_momentum_val(HCDT d, char dir, mreal *m, mreal *w, mreal *s, mreal *k);
 mreal MGL_EXPORT mgl_data_momentum_val_(uintptr_t *dat, char *dir, mreal *m, mreal *w, mreal *s, mreal *k,int);
-/// Get first (last if from<0) maximum along direction dir, and save its orthogonal coordinates in p1, p2
-long MGL_EXPORT mgl_data_max_first(HCDT d, char dir, long from, long *p1, long *p2);
-long MGL_EXPORT mgl_data_max_first_(uintptr_t *d, const char *dir, long *from, long *p1, long *p2,int);
 
 /// Interpolate by linear function the data to given point x=[0...nx-1], y=[0...ny-1], z=[0...nz-1]
 mreal MGL_EXPORT mgl_data_linear(HCDT dat, mreal x,mreal y,mreal z);
@@ -159,19 +144,6 @@ extern MGL_EXPORT void (*mgl_ask_func)(const wchar_t *quest, wchar_t *res);
 //-----------------------------------------------------------------------------
 #ifdef __cplusplus
 }
-//-----------------------------------------------------------------------------
-/// Structure for the number handling (see mglParse class).
-struct MGL_EXPORT mglNum
-{
-	mreal d;		///< Number itself
-	dual c;
-	std::wstring s;	///< Number name
-	mglNum(mreal val=0):d(val),c(val)	{}
-	mglNum(const mglNum &n):d(n.d),c(n.c),s(n.s) {}
-	const mglNum &operator=(const mglNum &n)
-	{	d=n.d;	c=n.c;	s=n.s;	return n;	}
-};
-//-----------------------------------------------------------------------------
 /// Abstract class for data array
 class MGL_EXPORT mglDataA
 {
@@ -226,9 +198,6 @@ public:
 	/// Put HDF data names into buf as '\t' separated.
 	inline static int DatasHDF(const char *fname, char *buf, long size)
 	{	return mgl_datas_hdf(fname,buf,size);	}
-	/// Put HDF data names as list of strings (last one is "").
-	inline static const char * const * DatasHDF(const char *fname)
-	{	return mgl_datas_hdf_str(fname);	}
 
 	/// Get information about the data (sizes and momentum) to string
 	inline const char *PrintInfo() const	{	return mgl_data_info(this);	}
@@ -255,11 +224,6 @@ public:
 	/// Get minimal value of the data and its approximated position
 	inline mreal Minimal(mreal &x,mreal &y,mreal &z) const
 	{	return mgl_data_min_real(this,&x,&y,&z);	}
-	/// Get first (last if from<0) maximum along direction dir, and save its orthogonal coordinates in p1, p2
-	inline long Maximal(char dir, long from, long &p1, long &p2) const
-	{	return mgl_data_max_first(this,dir,from,&p1,&p2);	}
-	inline long Maximal(char dir, long from) const
-	{	return mgl_data_max_first(this,dir,from,0,0);	}
 	/// Get "energy" and find first (median) and second (width) momenta of data
 	inline mreal Momentum(char dir,mreal &m,mreal &w) const
 	{	return mgl_data_momentum_val(this,dir,&m,&w,0,0);	}

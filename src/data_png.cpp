@@ -45,7 +45,7 @@ MGL_NO_EXPORT unsigned char *mgl_create_scheme(const char *scheme,long &num)
 		if(col.Valid())
 		{	cc[3*np]=255*col.r;	cc[3*np+1]=255*col.g;	cc[3*np+2]=255*col.b;	np++;	}
 	}
-	if(np<2)	{	num=0;	delete []cc;	return 0;	}
+	if(np<2)	{	delete []cc;	return 0;	}
 	for(size_t i=0;i<np-1;i++)	nc+=mgl_col_dif(cc+3*i,cc+3*i+3,false);
 	c = new unsigned char[3*nc+3];
 	size_t pos=0;
@@ -119,7 +119,7 @@ bool MGL_NO_EXPORT mgl_read_image(unsigned char **g, int &w, int &h, const char 
 		png_destroy_read_struct(&png_ptr, &info_ptr,&end_info);
 		fclose(fp);
 #else
-		mgl_set_global_warn(_("PNG support was disabled. Please, enable it and rebuild MathGL."));
+		mgl_set_global_warn("PNG support was disabled. Please, enable it and rebuild MathGL.");
 #endif
 	}
 	else if(!strcmp(ext,".jpg") || !strcmp(ext,".jpeg"))
@@ -159,7 +159,7 @@ bool MGL_NO_EXPORT mgl_read_image(unsigned char **g, int &w, int &h, const char 
 		}
 		delete []buf;
 #else
-		mgl_set_global_warn(_("JPEG support was disabled. Please, enable it and rebuild MathGL."));
+		mgl_set_global_warn("JPEG support was disabled. Please, enable it and rebuild MathGL.");
 #endif
 	}
 	return true;
@@ -222,8 +222,7 @@ void MGL_EXPORT mgl_data_export(HCDT dd, const char *fname, const char *scheme,m
 	for(long i=0;i<ny;i++)	for(long j=0;j<nx;j++)
 	{
 		long k = long(num*(dd->v(j,i,ns)-v1)/(v2-v1));
-		if(k<0)		k=0;
-		if(k>=num) k=num-1;
+		if(k<0)	k=0;	if(k>=num) k=num-1;
 		memcpy(d+3*(j+i*nx),c+3*k,3);
 	}
 	delete []c;

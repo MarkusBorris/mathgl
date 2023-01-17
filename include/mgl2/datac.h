@@ -165,9 +165,6 @@ using mglDataA::Momentum;
 	/// Crop the data
 	inline void Crop(long n1, long n2,char dir='x')
 	{	mgl_datac_crop(this,n1,n2,dir);	}
-	/// Crop the data to be most optimal for FFT (i.e. to closest value of 2^n*3^m*5^l)
-	inline void Crop(const char *how="235x")
-	{	mgl_datac_crop_opt(this, how);	}
 	/// Insert data
 	inline void Insert(char dir, long at=0, long num=1)
 	{	mgl_datac_insert(this,dir,at,num);	}
@@ -293,13 +290,6 @@ using mglDataA::Momentum;
 	{	return mglDataC(true,mgl_datac_subdata_ext(this,&xx,&yy,0));	}
 	inline mglDataC SubData(const mglDataA &xx) const
 	{	return mglDataC(true,mgl_datac_subdata_ext(this,&xx,0,0));	}
-	/// Get data from sections ids, separated by value val along specified direction.
-	/** If section id is negative then reverse order is used (i.e. -1 give last section). */
-	inline mglDataC Section(const mglDataA &ids, char dir='y', mreal val=NAN) const
-	{	return mglDataC(true,mgl_datac_section(this,&ids,dir,val));	}
-	inline mglDataC Section(long id, char dir='y', mreal val=NAN) const
-	{	return mglDataC(true,mgl_datac_section_val(this,id,dir,val));	}
-
 	/// Get trace of the data array
 	inline mglDataC Trace() const
 	{	return mglDataC(true,mgl_datac_trace(this));	}
@@ -346,15 +336,6 @@ using mglDataA::Momentum;
 	inline void Integral(const char *dir)	{	mgl_datac_integral(this,dir);	}
 	/// Differentiate the data in given direction or directions
 	inline void Diff(const char *dir)	{	mgl_datac_diff(this,dir);	}
-	/// Differentiate the parametrically specified data along direction v1
-	inline void Diff(const mglDataA &v1)
-	{	mgl_datac_diff_par(this,&v1,0,0);	}
-	/// Differentiate the parametrically specified data along direction v1 with v2=const
-	inline void Diff(const mglDataA &v1, const mglDataA &v2)
-	{	mgl_datac_diff_par(this,&v1,&v2,0);	}
-	/// Differentiate the parametrically specified data along direction v1 with v2,v3=const
-	inline void Diff(const mglDataA &v1, const mglDataA &v2, const mglDataA &v3)
-	{	mgl_datac_diff_par(this,&v1,&v2,&v3);	}
 	/// Double-differentiate (like laplace operator) the data in given direction
 	inline void Diff2(const char *dir)	{	mgl_datac_diff2(this,dir);	}
 
@@ -377,26 +358,12 @@ using mglDataA::Momentum;
 	inline void Limit(mreal v)
 	{	mgl_datac_limit(this, v);	}
 
-	/// Set as the data envelop
-	inline void Envelop(char dir='x')	{	mgl_datac_envelop(this,dir);	}
 	/// Hankel transform
 	inline void Hankel(const char *dir)	{	mgl_datac_hankel(this,dir);	}
-	/// Apply Sin-Fourier transform
-	inline void SinFFT(const char *dir)	{	mgl_datac_sinfft(this,dir);	}
-	/// Apply Cos-Fourier transform
-	inline void CosFFT(const char *dir)	{	mgl_datac_cosfft(this,dir);	}
 	/// Fourier transform
 	inline void FFT(const char *dir)	{	mgl_datac_fft(this,dir);	}
 	/// Calculate one step of diffraction by finite-difference method with parameter q
 	inline void Diffraction(const char *how, mreal q)	{	mgl_datac_diffr(this,how,q);	}
-	/// Apply wavelet transform
-	/** Parameter \a dir may contain:
-	 * ‘x‘,‘y‘,‘z‘ for directions,
-	 * ‘d‘ for daubechies, ‘D‘ for centered daubechies,
-	 * ‘h‘ for haar, ‘H‘ for centered haar,
-	 * ‘b‘ for bspline, ‘B‘ for centered bspline,
-	 * ‘i‘ for applying inverse transform. */
-	inline void Wavelet(const char *how, int k)	{	mgl_datac_wavelet(this, how, k);	}
 
 	/// Interpolate by cubic spline the data to given point x=[0...nx-1], y=[0...ny-1], z=[0...nz-1]
 	inline dual Spline(mreal x,mreal y=0,mreal z=0) const
@@ -490,8 +457,7 @@ using mglDataA::Momentum;
 		aa = mglSpline3C(a,nx,ny,nz,x,y,z,&ax,&ay,&az);	res = abs(aa);
 		if(dx)	*dx = res?(real(aa)*real(ax)+imag(aa)*imag(ax))/res:0;
 		if(dy)	*dy = res?(real(aa)*real(ay)+imag(aa)*imag(ay))/res:0;
-		if(dz)	*dz = res?(real(aa)*real(az)+imag(aa)*imag(az))/res:0;
-		return res;	}
+		if(dz)	*dz = res?(real(aa)*real(az)+imag(aa)*imag(az))/res:0;	return res;	}
 	/// Get the interpolated value in given data cell without border checking
 	mreal value(mreal x,mreal y=0,mreal z=0) const
 	{	return abs(mglSpline3Cs(a,nx,ny,nz,x,y,z));	}
@@ -521,9 +487,6 @@ inline mglDataC mglQO3dc(const char *ham, const mglDataA &ini_re, const mglDataA
 {	return mglDataC(true, mgl_qo3d_solve_c(ham, &ini_re, &ini_im, &ray, r, k0, 0, 0, 0));	}
 inline mglDataC mglQO3dc(const char *ham, const mglDataA &ini_re, const mglDataA &ini_im, const mglDataA &ray, mglData &xx, mglData &yy, mglData &zz, mreal r=1, mreal k0=100)
 {	return mglDataC(true, mgl_qo3d_solve_c(ham, &ini_re, &ini_im, &ray, r, k0, &xx, &yy, &zz));	}
-/// Saves result of ODE solving for var complex variables with right part func (separated by ';') and initial conditions x0 over time interval [0,tmax] with time step dt
-inline mglDataC mglODEc(const char *func, const char *var, const mglDataA &ini, mreal dt=0.1, mreal tmax=10)
-{	return mglDataC(true, mgl_ode_solve_str_c(func,var, &ini, dt, tmax));	}
 //-----------------------------------------------------------------------------
 /// Get array as solution of tridiagonal system of equations a[i]*x[i-1]+b[i]*x[i]+c[i]*x[i+1]=d[i]
 /** String \a how may contain:

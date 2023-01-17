@@ -50,8 +50,8 @@ CalcDialog::CalcDialog(QWidget *parent) : QWidget(parent)
 	connect(text,SIGNAL(textChanged(QString)),this,SLOT(evaluate()));
 	connect(text,SIGNAL(returnPressed()),this,SLOT(addResult()));
 	hist = new QStandardItemModel(this);
-//	it = new QStandardItem(_("Formula"));	hist->setHorizontalHeaderItem(0,it);
-//	it = new QStandardItem(_("Result"));	hist->setHorizontalHeaderItem(1,it);
+//	it = new QStandardItem(tr("Formula"));	hist->setHorizontalHeaderItem(0,it);
+//	it = new QStandardItem(tr("Result"));	hist->setHorizontalHeaderItem(1,it);
 	prev = new QListView(this);	o->addWidget(prev);
 	connect(prev,SIGNAL(clicked(QModelIndex)),this,SLOT(putText(QModelIndex)));
 	QFont f(font());	f.setPointSize(f.pointSize()*0.75);
@@ -60,12 +60,12 @@ CalcDialog::CalcDialog(QWidget *parent) : QWidget(parent)
 
 
 	o = new QVBoxLayout;		m->addLayout(o);
-	QLabel *l = new QLabel(_("Result"),this);	o->addWidget(l);
+	QLabel *l = new QLabel(tr("Result"),this);	o->addWidget(l);
 	result=new QLineEdit(this);	result->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 	result->setReadOnly(true);	o->addWidget(result);
-	b = new QPushButton(_("To script"), this);	o->addWidget(b);
+	b = new QPushButton(tr("To script"), this);	o->addWidget(b);
 	connect(b, SIGNAL(clicked()), this, SLOT(keyPut()));
-	b = new QPushButton(_("Clear"), this);	o->addWidget(b);
+	b = new QPushButton(tr("Clear"), this);	o->addWidget(b);
 	connect(b, SIGNAL(clicked()), this, SLOT(clear()));
 
 	QGridLayout *g = new QGridLayout;	m->addLayout(g);	m->setStretchFactor(g,0);
@@ -124,7 +124,7 @@ CalcDialog::CalcDialog(QWidget *parent) : QWidget(parent)
 	descr->setText(funcInfo[0].at(0));
 	connect(type, SIGNAL(currentIndexChanged(int)), this, SLOT(typeUpdate(int)));
 	connect(func, SIGNAL(currentIndexChanged(int)), this, SLOT(funcUpdate(int)));
-	b = new QPushButton(_("Put function"), this);	o->addWidget(b);
+	b = new QPushButton(tr("Put function"), this);	o->addWidget(b);
 	connect(b, SIGNAL(clicked()), this, SLOT(keyFnc()));
 }
 //-----------------------------------------------------------------------------
@@ -189,9 +189,9 @@ void CalcDialog::evaluate()
 //-----------------------------------------------------------------------------
 void CalcDialog::fillFuncName()
 {
-	names<<_("Basic")<<_("Exp and log")<<_("Trigonometric")<<_("Hyperbolic")
-			<<_("Bessel")<<_("Elliptic")<<_("Jacobi")<<_("Airy and Gamma")
-			<<_("Exp-integrals")<<_("Special");
+	names<<tr("Basic")<<tr("Exp and log")<<tr("Trigonometric")<<tr("Hyperbolic")
+			<<tr("Bessel")<<tr("Elliptic")<<tr("Jacobi")<<tr("Airy and Gamma")
+			<<tr("Exp-integrals")<<tr("Special");
 	// basic
 	funcName[0]<<"abs()"<<"sign()"<<"step()"<<"sqrt()"<<"mod(,)"<<"arg(,)";
 	funcInfo[0]<<"Absolute value"<<"Sign of number"<<"Step function"
@@ -251,7 +251,7 @@ void CalcDialog::fillFuncName()
 //-----------------------------------------------------------------------------
 void CalcDialog::typeUpdate(int s)
 {
-	if(s<0 || s>9)	return;
+	if(s<0 && s>9)	return;
 	func->clear();	func->addItems(funcName[s]);	func->setCurrentIndex(0);
 }
 //-----------------------------------------------------------------------------

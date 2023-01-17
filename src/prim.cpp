@@ -19,8 +19,6 @@
  ***************************************************************************/
 #include "mgl2/canvas.h"
 #include "mgl2/prim.h"
-#include "mgl2/font.h"
-#include "mgl2/plot.h"
 #include "mgl2/data.h"
 std::wstring MGL_EXPORT mgl_ftoa(double v, const char *fmt);
 //-----------------------------------------------------------------------------
@@ -150,10 +148,8 @@ void MGL_EXPORT mgl_face(HMGL gr, double x0, double y0, double z0, double x1, do
 //	mreal c1,c2,c3,c4,zz=(gr->Min.z+gr->Max.z)/2;
 	mreal c1,c2,c3,c4,zz=2*gr->Max.z-gr->Min.z;
 	c1=c2=c3=c4=gr->CDef;
-	if(mgl_isnan(z0))	z0 = zz;
-	if(mgl_isnan(z1))	z1 = zz;
-	if(mgl_isnan(z2))	z2 = zz;
-	if(mgl_isnan(z3))	z3 = zz;
+	if(mgl_isnan(z0))	z0 = zz;	if(mgl_isnan(z1))	z1 = zz;
+	if(mgl_isnan(z2))	z2 = zz;	if(mgl_isnan(z3))	z3 = zz;
 	mglPoint p1(x0,y0,z0), p2(x1,y1,z1), p3(x2,y2,z2), p4(x3,y3,z3);
 	if(gr->GetNumPal(pal)>=4)
 	{	c2=gr->NextColor(pal,1);	c3=gr->NextColor(pal,2);	c4=gr->NextColor(pal,3);	}
@@ -279,7 +275,7 @@ void MGL_EXPORT mgl_cone_(uintptr_t* gr, mreal *x1, mreal *y1, mreal *z1, mreal 
 	mgl_cone(_GR_, *x1,*y1,*z1, *x2,*y2,*z2,*r1,*r2,s);	delete []s;	}
 //-----------------------------------------------------------------------------
 //
-//	Cones series
+//	Bars series
 //
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_cones_xyz(HMGL gr, HCDT x, HCDT y, HCDT z, const char *pen, const char *opt)
@@ -371,7 +367,7 @@ void MGL_EXPORT mgl_cones_(uintptr_t *gr, uintptr_t *y,	const char *pen, const c
 	mgl_cones(_GR_,_DA_(y),s,o);	delete []o;	delete []s;	}
 //-----------------------------------------------------------------------------
 //
-//	Polygon & Arc
+//	Ellipse & Rhomb
 //
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_polygon(HMGL gr, double x1, double y1, double z1, double x2, double y2, double z2, int n, const char *stl)
@@ -600,8 +596,7 @@ void MGL_EXPORT mgl_dew_xy(HMGL gr, HCDT x, HCDT y, HCDT ax, HCDT ay, const char
 	mreal zVal = gr->Min.z, xm=0;
 	long tx=1,ty=1;
 	if(gr->MeshNum>1)	{	tx=(n-1)/(gr->MeshNum-1);	ty=(m-1)/(gr->MeshNum-1);	}
-	if(tx<1)	tx=1;
-	if(ty<1)	ty=1;
+	if(tx<1)	tx=1;	if(ty<1)	ty=1;
 
 	for(long k=0;k<ax->GetNz();k++)	for(long j=0;j<m;j++)	for(long i=0;i<n;i++)
 	{
@@ -649,46 +644,6 @@ void MGL_EXPORT mgl_dew_2d_(uintptr_t *gr, uintptr_t *ax, uintptr_t *ay, const c
 	mgl_dew_2d(_GR_, _DA_(ax), _DA_(ay), s, o);	delete []o;	delete []s;	}
 //-----------------------------------------------------------------------------
 //
-//	Symbol series
-//
-//-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_symbol(HMGL gr, double x, double y, double z, char id, const char *how, double size)
-{	mgl_symbol_dir(gr, x, y, z, NAN, NAN, 0, id, how, size);	}
-void MGL_EXPORT mgl_symbol_dir(HMGL gr, double x, double y, double z, double dx, double dy, double dz, char id, const char *how, double size)
-{
-	bool a=mglchr(how,'a'), A=mglchr(how,'A');
-//	static int cgid=1;	gr->StartGroup("Puts",cgid++);
-	mglCanvas *g = dynamic_cast<mglCanvas *>(gr);
-	if(g && (a||A))
-	{
-		g->Push();	g->Identity(a);
-		gr->set(MGL_DISABLE_SCALE);
-		mreal s=a?1:g->GetPlotFactor();
-		x = (2*x-1)*s;	y = (2*y-1)*s;
-		dx= (2*dx-1)*s;	dy= (2*dy-1)*s;
-	}
-	if(mgl_isnan(z))	z=2*gr->Max.z-gr->Min.z;
-	mglPoint p(x,y,z), d(dx-x,dy-y,dz-z);
-	long cc = mgl_get_num_color(how,0)?gr->AddTexture(how):gr->AddTexture('k');
-	long k = gr->AddPnt(p,cc,d,-1,7);
-	gr->AddActive(k,0);
-	gr->AddActive(gr->AddPnt(mglPoint(dx,dy,dz),cc,d,-1,7),1);
-	if(g && (a||A))	{	g->Pop();	gr->clr(MGL_DISABLE_SCALE);	}
-	if(size<0)	size *= -gr->GetFontSize();
-	
-	int font=0;	mglGetStyle(how, &font, NULL);
-	if(font&MGL_FONT_WIRE)	size = -size;
-	gr->smbl_plot(k,id,size);
-//	gr->EndGroup();
-}
-void MGL_EXPORT mgl_symbol_(uintptr_t *gr, double *x, double *y, double *z, char *id, const char *how, double *size,int,int n)
-{	char *f=new char[n+1];	memcpy(f,how,n);	f[n]=0;
-	mgl_symbol(_GR_, *x, *y, *z, *id, f, *size);	delete []f;	}
-void MGL_EXPORT mgl_symbol_dir_(uintptr_t *gr, double *x, double *y, double *z, double *dx, double *dy, double *dz, char *id, const char *how, double *size,int,int n)
-{	char *f=new char[n+1];	memcpy(f,how,n);	f[n]=0;
-	mgl_symbol_dir(_GR_, *x, *y, *z, *dx, *dy, *dz, *id, f, *size);	delete []f;	}
-//-----------------------------------------------------------------------------
-//
 //	Puts series
 //
 //-----------------------------------------------------------------------------
@@ -706,11 +661,10 @@ void MGL_EXPORT mgl_putsw_dir(HMGL gr, double x, double y, double z, double dx, 
 {
 	bool a=mglchr(font,'a'), A=mglchr(font,'A');
 	static int cgid=1;	gr->StartGroup("Puts",cgid++);
-
 	mglCanvas *g = dynamic_cast<mglCanvas *>(gr);
 	if(g && (a||A))
 	{
-		g->SaveInPlot();	g->Identity(a);
+		g->Push();	g->Identity(a);
 		gr->set(MGL_DISABLE_SCALE);
 		mreal s=a?1:g->GetPlotFactor();
 		x = (2*x-1)*s;	y = (2*y-1)*s;
@@ -721,8 +675,8 @@ void MGL_EXPORT mgl_putsw_dir(HMGL gr, double x, double y, double z, double dx, 
 	long k = gr->AddPnt(p,-1,d,-1,7);
 	gr->AddActive(k,0);
 	gr->AddActive(gr->AddPnt(mglPoint(dx,dy,dz),-1,d,-1,7),1);
+	if(g && (a||A))	{	g->Pop();	gr->clr(MGL_DISABLE_SCALE);	}
 	gr->text_plot(k,text,font,size);
-	if(g && (a||A))	{	g->LoadInPlot();	gr->clr(MGL_DISABLE_SCALE);	}
 	gr->EndGroup();
 }
 //-----------------------------------------------------------------------------
@@ -754,16 +708,16 @@ void MGL_EXPORT mgl_textmarkw_xyzr(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT r, cons
 	m = r->GetNy() > m ? r->GetNy() : m;
 	gr->Reserve(n*m);
 
-	mglPoint q(NAN);
-	int d = gr->MeshNum>0 ? gr->MeshNum+1 : n, dx = n>d?n/d:1;
+	mglPoint p,q(NAN);
 	for(long j=0;j<m;j++)
 	{
 		if(gr->NeedStop())	break;
 		long mx = j<x->GetNy() ? j:0, my = j<y->GetNy() ? j:0;
 		long mz = j<z->GetNy() ? j:0, mr = j<r->GetNy() ? j:0;
-		for(long i=0;i<n;i+=dx)
+		for(long i=0;i<n;i++)
 		{
-			long k = gr->AddPnt(mglPoint(x->v(i,mx), y->v(i,my), z->v(i,mz)),-1,q);
+			p.Set(x->v(i,mx), y->v(i,my), z->v(i,mz));
+			long k = gr->AddPnt(p,-1,q);
 			gr->text_plot(k, text, fnt, -0.5*fabs(r->v(i,mr)));
 		}
 	}
@@ -1093,7 +1047,7 @@ void MGL_EXPORT mgl_bifurcation(HMGL gr, double dx, double (*f)(double,double,vo
 		r = f(gr->Min.x,r,par);
 		for(long j=0;j<m1;j++)	if(fabs(v1[j]-r)<dd)
 		{	fin=true;	break;	}
-		if(fin)	break;	else	v1[m1]=r;
+		if(fin)	break;	v1[m1]=r;
 	}
 	for(mreal xx = gr->Min.x+dx;xx<=gr->Max.x;xx+=dx)
 	{
@@ -1104,7 +1058,7 @@ void MGL_EXPORT mgl_bifurcation(HMGL gr, double dx, double (*f)(double,double,vo
 			r = f(xx,r,par);
 			for(long j=0;j<m1;j++)	if(fabs(v1[j]-r)<dd)
 			{	fin=true;	break;	}
-			if(fin)	break;	else	v1[m1]=r;
+			if(fin)	break;	v1[m1]=r;
 		}
 		if(m1>=m2)	for(long i=0;i<m1;i++)
 		{
@@ -1151,115 +1105,4 @@ void MGL_EXPORT mgl_bifurcation_str_(uintptr_t *gr, double *dx, const char *func
 	char *o=new char[n+1];	memcpy(o,opt,n);	o[n]=0;
 	char *f=new char[m+1];	memcpy(f,func,m);	f[m]=0;
 	mgl_bifurcation_str(_GR_,*dx,f,s,o);	delete []f;	delete []s;	delete []o;	}
-//-----------------------------------------------------------------------------
-//
-// Iris series
-//
-//-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_irisw(HMGL gr, HCDT dats, HCDT ranges, const wchar_t *ids, const char *stl, const char *opt)
-{
-	long m=dats->GetNx(), nx=dats->GetNy(), ny=dats->GetNz();	// TODO parse several slices?
-	if(m<2 || nx<2)	{	gr->SetWarn(mglWarnLow,"Iris");	return;	}
-	if(m!=ranges->GetNy())	{	gr->SetWarn(mglWarnDim,"Iris");	return;	}
-	mglCanvas *g = dynamic_cast<mglCanvas *>(gr);	if(!g)	return;
-	mreal ofsize = gr->GetFontSize();
-	mreal res=gr->SaveState(opt), fsize = gr->GetFontSize();
-	if(mgl_isnan(res))	res=-1;
-	res /= m;
-	static int cgid=1;	gr->StartGroup("Iris",cgid++);
-	std::wstring *strs = new std::wstring[m];
-	bool label = ids && ids[0];	// disable axis drawing
-	if(label)
-	{
-		const wchar_t *s, *p=ids;
-		if(wcschr(ids,';'))	for(long i=0;i<m;i++)
-		{
-			s = wcschr(p,';');
-			if(s)	{	strs[i] = std::wstring(p,s-p);	p = s+1;	}
-			else	{	strs[i] = p;	break;	}
-		}
-// 		else	for(long i=0;i<m;i++)
-// 		{
-// 			s = wcsstr(p,L"\\t ");
-// 			if(s)	{	strs[i] = std::wstring(p,s-p);	p = s+3;	}
-// 			else	{	strs[i] = p;	break;	}
-// 		}
-	}
-	HMDT dat[m];
-	mreal dx = 1./m;
-	for(long i=0;i<m;i++)	dat[i]=mgl_data_subdata(dats,i,-1,-1);
-	for(long i=0;i<m;i++)	for(long j=0;j<m;j++)
-	{
-		g->InPlot(dx*i,dx*(i+1),dx*(m-j-1),dx*(m-j),true);
-		if(label)	g->Box();
-		gr->SetRanges(ranges->v(0,i),ranges->v(1,i),ranges->v(0,j),ranges->v(1,j));
-		gr->ResetPal();
-		gr->SetFontSize(fsize);
-		if(i==j)
-		{
-			const char *tstl = wcschr(strs[i].c_str(),'\n') || wcsstr(strs[i].c_str(),L"\\n ") ? "a":"aV";
-			mgl_putsw(gr, dx*(i+0.5), dx*(m-j-0.5),0, strs[i].c_str(), tstl, res);
-		}
-		else	mgl_plot_xy(gr,dat[i],dat[j],stl,NULL);
-	}
-	if(label)
-	{
-		for(long i=0;i<m;i+=2)
-		{
-			gr->SetRanges(ranges->v(0,i),ranges->v(1,i),ranges->v(0,m-i-1),ranges->v(1,m-i-1));
-			gr->SetFontSize(fsize);	g->InPlot(dx*i,dx*(i+1),0,dx,true);	g->Axis("x");
-			gr->SetFontSize(fsize);	g->InPlot(0,dx,dx*i,dx*(i+1),true);	g->Axis("y");
-		}
-		for(long i=1;i<m;i+=2)
-		{
-			gr->SetRanges(ranges->v(0,i),ranges->v(1,i),ranges->v(0,m-i-1),ranges->v(1,m-i-1));
-			gr->SetFontSize(fsize);	g->InPlot(dx*i,dx*(i+1),1-dx,1,true);	g->Axis("x^");
-			gr->SetFontSize(fsize);	g->InPlot(1-dx,1,dx*i,dx*(i+1),true);	g->Axis("y^");
-		}
-	}
-	delete []strs;	for(long i=0;i<m;i++)	delete dat[i];
-	g->InPlot(0,1,0,1,true);	gr->EndGroup();	gr->SetFontSize(ofsize);
-}
-//-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_irisw_1(HMGL gr, HCDT dats, const wchar_t *ids, const char *stl, const char *opt)
-{
-	long n=dats->GetNy()*dats->GetNz(), m=dats->GetNx();
-	mglData ranges(2,m);
-	for(long i=0;i<m;i++)
-	{
-		mreal &v1=ranges.a[2*i], &v2=ranges.a[1+2*i];
-		v1=INFINITY;	v2=-INFINITY;
-		for(long j=0;j<n;j++)
-		{
-			mreal v = dats->vthr(i+m*j);
-			if(v<v1)	v1=v;
-			if(v>v2)	v2=v;
-		}
-		if(!mgl_isnum(v1))	{	v1=-1;	v2=1;	}
-		if(v1==v2)	{	v1-=1;	v2+=1;	}
-	}
-	mgl_irisw(gr,dats,&ranges,ids,stl,opt);
-}
-//-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_iris(HMGL gr, HCDT dats, HCDT ranges, const char *ids, const char *stl, const char *opt)
-{
-	MGL_TO_WCS(ids,mgl_irisw(gr, dats, ranges, wcs, stl, opt));
-}
-//-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_iris_1(HMGL gr, HCDT dats, const char *ids, const char *stl, const char *opt)
-{
-	MGL_TO_WCS(ids,mgl_irisw_1(gr, dats, wcs, stl, opt));
-}
-//-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_iris_(uintptr_t *gr, uintptr_t *dats, uintptr_t *ranges, const char *ids, const char *stl, const char *opt,int l,int m,int n)
-{	char *i=new char[l+1];	memcpy(i,ids,l);	i[l]=0;
-	char *s=new char[m+1];	memcpy(s,stl,m);	s[m]=0;
-	char *o=new char[n+1];	memcpy(o,opt,n);	o[n]=0;
-	mgl_iris(_GR_,_DA_(dats),_DA_(ranges),i,s,o);	delete []i;	delete []s;	delete []o;	}
-//-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_iris_1_(uintptr_t *gr, uintptr_t *dats, const char *ids, const char *stl, const char *opt,int l,int m,int n)
-{	char *i=new char[l+1];	memcpy(i,ids,l);	i[l]=0;
-	char *s=new char[m+1];	memcpy(s,stl,m);	s[m]=0;
-	char *o=new char[n+1];	memcpy(o,opt,n);	o[n]=0;
-	mgl_iris_1(_GR_,_DA_(dats),i,s,o);	delete []i;	delete []s;	delete []o;	}
 //-----------------------------------------------------------------------------

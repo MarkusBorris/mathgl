@@ -95,37 +95,35 @@ HMDT MGL_EXPORT mgl_data_subdata_ext(HCDT d, HCDT xx, HCDT yy, HCDT zz)
 	}
 	long nx=d->GetNx(),ny=d->GetNy(),nz=d->GetNz();
 	long vx=long(xx->v(0)), vy=long(yy->v(0)), vz=long(zz->v(0));
-	mglData *r;
 	if(n*m*l>1)	// this is 2d or 3d data
 	{
 		mglDataV tx(n,m,l),ty(n,m,l),tz(n,m,l);
 		if(!ix)	{	xx = &tx;	if(vx>=0)	tx.Fill(vx);	else tx.All();	}
 		if(!iy)	{	yy = &ty;	if(vy>=0)	ty.Fill(vy);	else ty.All();	}
 		if(!iz)	{	zz = &tz;	if(vz>=0)	tz.Fill(vz);	else tz.All();	}
-		r=new mglData(n,m,l);
+		mglData *r=new mglData(n,m,l);
 #pragma omp parallel for
 		for(long i0=0;i0<n*m*l;i0++)
 		{
 			long x=long(0.5+xx->vthr(i0)), y=long(0.5+yy->vthr(i0)), z=long(0.5+zz->vthr(i0));
 			r->a[i0] = (x>=0 && x<nx && y>=0 && y<ny && z>=0 && z<nz)?d->v(x,y,z):NAN;
 		}
+		return r;
 	}
-	else	// this is 1d data -> try as normal SubData()
-	{
-		mglDataV tx(nx),ty(ny),tz(nz);	tx.All();	ty.All();	tz.All();
-		if(xx->GetNx()>1 || vx>=0)	n=xx->GetNx();	else	{	n=nx;	xx = &tx;	}
-		if(yy->GetNx()>1 || vy>=0)	m=yy->GetNx();	else	{	m=ny;	yy = &ty;	}
-		if(zz->GetNx()>1 || vz>=0)	l=zz->GetNx();	else	{	l=nz;	zz = &tz;	}
-		r=new mglData(n,m,l);
+	// this is 1d data -> try as normal SubData()
+	mglDataV tx(nx),ty(ny),tz(nz);	tx.All();	ty.All();	tz.All();
+	if(xx->GetNx()>1 || vx>=0)	n=xx->GetNx();	else	{	n=nx;	xx = &tx;	}
+	if(yy->GetNx()>1 || vy>=0)	m=yy->GetNx();	else	{	m=ny;	yy = &ty;	}
+	if(zz->GetNx()>1 || vz>=0)	l=zz->GetNx();	else	{	l=nz;	zz = &tz;	}
+	mglData *r=new mglData(n,m,l);
 #pragma omp parallel for collapse(3)
-		for(long k=0;k<l;k++)	for(long j=0;j<m;j++)	for(long i=0;i<n;i++)
-		{
-			long x=long(0.5+xx->v(i)), y=long(0.5+yy->v(j)), z=long(0.5+zz->v(k));
-			r->a[i+n*(j+m*k)] = (x>=0 && x<nx && y>=0 && y<ny && z>=0 && z<nz)?d->v(x,y,z):NAN;
-		}
-		if(m==1)	{	r->ny=r->nz;	r->nz=1;	}// "squeeze" dimensions
-		if(n==1)	{	r->nx=r->ny;	r->ny=r->nz;	r->nz=1;	r->NewId();}
+	for(long k=0;k<l;k++)	for(long j=0;j<m;j++)	for(long i=0;i<n;i++)
+	{
+		long x=long(0.5+xx->v(i)), y=long(0.5+yy->v(j)), z=long(0.5+zz->v(k));
+		r->a[i+n*(j+m*k)] = (x>=0 && x<nx && y>=0 && y<ny && z>=0 && z<nz)?d->v(x,y,z):NAN;
 	}
+	if(m==1)	{	r->ny=r->nz;	r->nz=1;	}// "squeeze" dimensions
+	if(n==1)	{	r->nx=r->ny;	r->ny=r->nz;	r->nz=1;	r->NewId();}
 	return r;
 }
 //-----------------------------------------------------------------------------
@@ -797,7 +795,7 @@ struct MGL_NO_EXPORT mglFuncV	{	mglFormula *eq;	char var;	};
 mreal MGL_NO_EXPORT mgl_funcv(mreal v, void *par)
 {
 	mglFuncV *f = (mglFuncV *)par;
-	mreal var[MGL_VS];	memset(var,0,MGL_VS*sizeof(mreal));
+	mreal var[MGL_VS];	memset(var,0,('z'-'a')*sizeof(mreal));
 	var[f->var-'a'] = v;
 	return f->eq->Calc(var);
 }
@@ -991,82 +989,4 @@ HMDT MGL_EXPORT mgl_data_pulse(HCDT dat, char dir)
 }
 uintptr_t MGL_EXPORT mgl_data_pulse_(uintptr_t *d, const char *dir,int)
 {	return uintptr_t(mgl_data_pulse(_DT_,dir[0]));	}
-//-----------------------------------------------------------------------------
-HMDT MGL_EXPORT mgl_data_section(HCDT dat, HCDT ids, char dir, mreal val)
-{
-	long di = 1, n = dat->GetNx();
-	if(dir=='y')	{	di = dat->GetNx();	n = dat->GetNy();	}
-	if(dir=='z')	{	di = dat->GetNx()*dat->GetNy();	n = dat->GetNz();	}
-	// first collect position of key values
-	std::vector<long> pos;	pos.push_back(0);
-	if(mgl_isnan(val))	for(long i=1;i<n;i++)
-	{
-		if(mgl_isnan(dat->vthr(i*di)))	pos.push_back(i);
-	}
-	else	for(long i=0;i<n;i++)
-	{
-		if(dat->vthr(i*di)==val)	pos.push_back(i);
-	}
-	pos.push_back(n);	// add last point (size of data)
-	// now collect required position from section and its lengths
-	std::vector<long> ls, ps;
-	long np = pos.size()-1, nl=0;
-	if(np<1)	return NULL;	// nothing to do
-	for(long i=0;i<ids->GetNN();i++)
-	{
-		long j = mgl_int(ids->vthr(i)+0.5);	j = j<0?np+j:j;
-		if(j>=0 && j<np)
-		{	long l = pos[j+1]-pos[j];	nl += l;
-			ls.push_back(l);	ps.push_back(pos[j]);	}
-	}
-	if(nl==0)	return NULL;
-	mglData *r=0;
-	size_t ns = ps.size();
-	if(dir=='y')
-	{
-		long nx=dat->GetNx(), nz=dat->GetNz(), sh=0;
-		r = new mglData(nx,nl,nz);
-		for(size_t s=0;s<ns;s++)
-		{
-			long pp = ps[s];
-#pragma omp parallel for collapse(3)
-			for(long k=0;k<nz;k++)	for(long j=0;j<ls[s];j++)	for(long i=0;i<nx;i++)
-				r->a[i+nx*(sh+j+nl*k)] = dat->v(i,pp+j,k);
-			sh += ls[s];
-		}
-	}
-	else if(dir=='x')
-	{
-		long ny=dat->GetNy(), nz=dat->GetNz(), sh=0;
-		r = new mglData(nl,ny,nz);
-		for(size_t s=0;s<ns;s++)
-		{
-			long pp = ps[s];
-#pragma omp parallel for collapse(3)
-			for(long k=0;k<nz;k++)	for(long j=0;j<ny;j++)	for(long i=0;i<ls[s];i++)
-				r->a[sh+i+nl*(j+ny*k)] = dat->v(pp+i,j,k);
-			sh += ls[s];
-		}
-	}
-	else if(dir=='z')
-	{
-		long nx=dat->GetNx(), ny=dat->GetNy(), sh=0;
-		r = new mglData(nx,ny,nl);
-		for(size_t s=0;s<ns;s++)
-		{
-			long pp = ps[s];
-#pragma omp parallel for collapse(3)
-			for(long k=0;k<ls[s];k++)	for(long j=0;j<ny;j++)	for(long i=0;i<nx;i++)
-				r->a[i+nx*(j+ny*(sh+k))] = dat->v(i,j,pp+k);
-			sh += ls[s];
-		}
-	}
-	return r;
-}
-HMDT MGL_EXPORT mgl_data_section_val(HCDT dat, long id, char dir, mreal val)
-{	mglData v;	v.a[0]=id;	return mgl_data_section(dat,&v,dir,val);	}
-uintptr_t MGL_EXPORT mgl_data_section_(uintptr_t *d, uintptr_t *ids, const char *dir, mreal *val,int)
-{	return uintptr_t(mgl_data_section(_DT_,_DA_(ids),dir[0],*val));	}
-uintptr_t MGL_EXPORT mgl_data_section_val_(uintptr_t *d, int *id, const char *dir, mreal *val,int)
-{	return uintptr_t(mgl_data_section_val(_DT_,*id,dir[0],*val));	}
 //-----------------------------------------------------------------------------

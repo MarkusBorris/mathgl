@@ -63,18 +63,17 @@ void mglCanvasGL::Finish()
 		{
 			p=GetPrm(i);	PDef=p.n3;	pPos=p.s;	PenWidth=p.w;
 			long n1=p.n1, n2=p.n2, n3=p.n3, n4=p.n4;
-			mglDrawReg d;	d.set(this,1,1,0);
 			switch(p.type)
 			{
 /*			case 0:	mark_draw(Pnt[n1],n4,p.s,0);	break;
 			case 1:	line_draw(n1,n2);	break;
 			case 2:	trig_draw(n1,n2,n3);	break;
 			case 3:	quad_draw(n1,n2,n3,n4);	break;*/
-			case 0:	mark_draw(Pnt[n1],n4,p.s,&d);	break;
-			case 1:	line_draw(Pnt[n1],Pnt[n2],&d);	break;
-			case 2:	trig_draw(Pnt[n1],Pnt[n2],Pnt[n3],true,&d);	break;
-			case 3:	quad_draw(Pnt[n1],Pnt[n2],Pnt[n3],Pnt[n4],&d);	break;
-			case 4:	glyph_draw(p,&d);	break;
+			case 0:	mark_draw(Pnt[n1],n4,p.s,0);	break;
+			case 1:	line_draw(Pnt[n1],Pnt[n2],0);	break;
+			case 2:	trig_draw(Pnt[n1],Pnt[n2],Pnt[n3],true,0);	break;
+			case 3:	quad_draw(Pnt[n1],Pnt[n2],Pnt[n3],Pnt[n4],0);	break;
+			case 4:	glyph_draw(p,0);	break;
 			}
 		}
 		PDef=pdef;	pPos=ss;	PenWidth=ww;
@@ -107,7 +106,7 @@ bool mglCanvasGL::Alpha(bool enable)
 void mglCanvasGL::AddLight(int n,mglPoint r,mglPoint d,char cc, mreal br,mreal ap)
 {
 	mglColor c(cc);
-	float amb[4],dif[4],spc[4], pos[4];
+	float amb[4],dif[4],spc[4], pos[4],dir[4];
 	bool inf = mgl_isnan(r.x);
 	if(n<0 || n>7)	{	SetWarn(mglWarnLId,"AddLight");	return;	}
 	if(c.Valid())
@@ -127,6 +126,7 @@ void mglCanvasGL::AddLight(int n,mglPoint r,mglPoint d,char cc, mreal br,mreal a
 	{	pos[0] = d.x;	pos[1] = d.y;	pos[2] = d.z;	pos[3] = 0;	}
 	else
 	{	pos[0] = r.x;	pos[1] = r.y;	pos[2] = r.z;	pos[3] = 1;	}
+	dir[0] = d.x;	dir[1] = d.y;	dir[2] = d.z;	dir[3] = 0;
 
 	glShadeModel(GL_SMOOTH);
 	glLightfv(GL_LIGHT0+n, GL_AMBIENT, amb);
@@ -135,9 +135,8 @@ void mglCanvasGL::AddLight(int n,mglPoint r,mglPoint d,char cc, mreal br,mreal a
 	glLightfv(GL_LIGHT0+n, GL_POSITION, pos);
 	if(!inf)
 	{
-//		float dir[4]={d.x, d.y, d.z, 0};
-//		glLightfv(GL_LIGHT0+n, GL_SPOT_DIRECTION, dir);
-//		glLightf(GL_LIGHT0+n, GL_SPOT_CUTOFF, ap);
+		glLightfv(GL_LIGHT0+n, GL_SPOT_DIRECTION, dir);
+		glLightf(GL_LIGHT0+n, GL_SPOT_CUTOFF, ap);
 	}
 	glEnable(GL_LIGHT0+n);
 }
@@ -217,6 +216,7 @@ void mglCanvasGL::gl_clf(mglColor Back)
 	if(Back==NC)	Back = WC;
 //	glDepthFunc(GL_LESS);
 	glDepthFunc(GL_GREATER);
+//	back[0]=Back.r;	back[1]=Back.g;	back[2]=Back.b;
 	glClearColor(Back.r,Back.g,Back.b,1.);
 	glClearDepth(-10.);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -224,14 +224,14 @@ void mglCanvasGL::gl_clf(mglColor Back)
 
 	glMatrixMode(GL_MODELVIEW);//GL_MODELVIEW GL_VIEWPORT GL_PROJECTION
 	glLoadIdentity();
+// 	glScaled(1.5,1.5,1.5);
+// 	glTranslated(-0.5,-0.5,-0.5);
 	glScaled(2,2,2);
 	glTranslated(-0.5,-0.5,-0.5);
-
-//	float dif[4]={DifBr,DifBr,DifBr,1};
-//	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
-	float spc[4]={1,1,1,1};
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spc);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, DifBr);
+	
+// 	float dif[4]={DifBr,DifBr,DifBr,1}, spc[4]={1,1,1,1};
+// 	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, dif);
+// 	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spc);
 }
 //-----------------------------------------------------------------------------
 /*void mglCanvasGL::EndFrame()
@@ -464,25 +464,6 @@ void mglCanvasGL::mark_draw(const mglPnt &q, char type, mreal size, mglDrawReg *
 			}
 			break;
 		}
-	}
-}
-//-----------------------------------------------------------------------------
-void mglCanvasGL::glyph_fill(mreal phi, const mglPnt &pp, mreal f, const mglGlyph &g, const mglDrawReg *d)
-{
-	if(!g.trig || g.nt<=0)	return;
-	const mreal co=cos(phi*M_PI/180), si=sin(phi*M_PI/180);
-	mglPnt q0=pp, q1=pp, q2=pp;
-	q0.u=q0.v=q1.u=q1.v=q2.u=q2.v=NAN;
-	for(long ik=0;ik<g.nt;ik++)
-	{
-		long ii = 6*ik;	mreal x, y;
-		x = pp.u+g.trig[ii]*f;	y = pp.v+g.trig[ii+1]*f;
-		q0.x = pp.x+(x*co+y*si)/2;	q0.y = pp.y+(y*co-x*si)/2;	ii+=2;
-		x = pp.u+g.trig[ii]*f;	y = pp.v+g.trig[ii+1]*f;
-		q1.x = pp.x+(x*co+y*si)/2;	q1.y = pp.y+(y*co-x*si)/2;	ii+=2;
-		x = pp.u+g.trig[ii]*f;	y = pp.v+g.trig[ii+1]*f;
-		q2.x = pp.x+(x*co+y*si)/2;	q2.y = pp.y+(y*co-x*si)/2;
-		trig_draw(q0,q1,q2,false,d);
 	}
 }
 //-----------------------------------------------------------------------------

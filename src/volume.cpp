@@ -48,7 +48,7 @@ void MGL_EXPORT mgl_cloud_xyz(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT a, const cha
 	mreal	alpha = gr->AlphaDef;
 	bool inv = mglchr(sch,'i');
 	bool dot = mglchr(sch,'.');
-	alpha /= pow((n/tx)*(m/ty)*(l/tz),1./3)/20;
+	alpha /= pow(n/tx*m/ty*l/tz,1./3)/20;
 	if(alpha>1)	alpha = 1;
 	long ss = gr->AddTexture(sch);
 
@@ -124,9 +124,10 @@ mreal MGL_NO_EXPORT mgl_get_norm(mreal x, mreal d1, mreal d2, mreal d3)
 }
 mglPoint MGL_NO_EXPORT mgl_normal_3d(HCDT a, mglPoint p, bool inv, long n,long m,long l)
 {
+	long i,j,k;
 	mreal x=p.x, y=p.y, z=p.z;
 	mreal nx=0, ny=0, nz=0;
-	long i=long(x), j=long(y), k=long(z);
+	i=long(x);	j=long(y);	k=long(z);
 	i = i<n-1 ? i:n-2;	j = j<m-1 ? j:m-2;	k = k<l-1 ? k:l-2;
 	x-=i;	y-=j;	z-=k;
 
@@ -638,23 +639,25 @@ void MGL_EXPORT mgl_beam_val(HMGL gr, double val, HCDT tr, HCDT g1, HCDT g2, HCD
 			amax = amax?sqrt(asum/asum0)/amax:0;
 			for(long j=0;j<m*l;j++)	b.a[j+m*l*i] = b.a[j+m*l*i]*amax;
 		}
-		const long ii=m*l*i;
-		if(flag & 1)	for(long k=0;k<l;k++)	for(long j=0;j<m;j++)
+		if(flag & 1)	for(long j=0;j<m;j++)	for(long k=0;k<l;k++)
 		{
-			long i0 = ii+j+m*k;
+			long i0 = j+m*(k+l*i);
 			x.a[i0] = 2*j/(m-1.)-1;
 			y.a[i0] = 2*k/(l-1.)-1;
 			z.a[i0] = gr->Max.z*i/(n-1.);
 		}
-		else	for(long k=0;k<l;k++)	for(long j=0;j<m;j++)
+		else	for(long j=0;j<m;j++)	for(long k=0;k<l;k++)
 		{
-			long i0 = ii+j+m*k;
+			long i0 = j+m*(k+l*i);
 			x.a[i0] = tr->v(0,i) + g1->v(0,i)*(2*j/(m-1.)-1)*r + g2->v(0,i)*(2*k/(l-1.)-1)*r;
 			y.a[i0] = tr->v(1,i) + g1->v(1,i)*(2*j/(m-1.)-1)*r + g2->v(1,i)*(2*k/(l-1.)-1)*r;
 			z.a[i0] = tr->v(2,i) + g1->v(2,i)*(2*j/(m-1.)-1)*r + g2->v(2,i)*(2*k/(l-1.)-1)*r;
 		}
-		if(flag & 2)	for(long j=0;j<m*l;j++)
-		{	long i0 = j+ii;	x.a[i0] = hypot(x.a[i0],y.a[i0]);	}
+		if(flag & 2)	for(long j=0;j<m;j++)	for(long k=0;k<l;k++)
+		{
+			long i0 = j+m*(k+l*i);
+			x.a[i0] = hypot(x.a[i0],y.a[i0]);
+		}
 	}
 	mgl_surf3_xyz_val(gr,val,&x,&y,&z,&b,stl,0);
 }

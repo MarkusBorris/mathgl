@@ -30,13 +30,11 @@
 #include <QTextStream>
 //-----------------------------------------------------------------------------
 #include "setup_dlg.h"
-#include "mgl2/define.h"
-#undef sprintf	// fix libintl bug of defining sprintf
 void fillColors(QComboBox *cb);
 //-----------------------------------------------------------------------------
 SetupDialog::SetupDialog(QWidget *parent) : QDialog(parent)
 {
-	setWindowTitle(_("UDAV - Setup plot"));
+	setWindowTitle(tr("UDAV - Setup plot"));
 	QWidget *p;
 	QGridLayout *g;
 	QLabel *l;
@@ -45,87 +43,87 @@ SetupDialog::SetupDialog(QWidget *parent) : QDialog(parent)
 	// line style
 	p = new QWidget(this);
 	g = new QGridLayout(p);	g->setAlignment(Qt::AlignTop);
-	l = new QLabel(_("X axis"), p);	g->addWidget(l,0,1);
-	l = new QLabel(_("Y axis"), p);	g->addWidget(l,0,2);
-	l = new QLabel(_("Z axis"), p);	g->addWidget(l,0,3);
-	l = new QLabel(_("C axis"), p);	g->addWidget(l,0,4);
-	l = new QLabel(_("Minimal"), p);	g->addWidget(l,1,0);
+	l = new QLabel(tr("X axis"), p);	g->addWidget(l,0,1);
+	l = new QLabel(tr("Y axis"), p);	g->addWidget(l,0,2);
+	l = new QLabel(tr("Z axis"), p);	g->addWidget(l,0,3);
+	l = new QLabel(tr("C axis"), p);	g->addWidget(l,0,4);
+	l = new QLabel(tr("Minimal"), p);	g->addWidget(l,1,0);
 	xmin = new QLineEdit(p);	g->addWidget(xmin,1,1);
 	ymin = new QLineEdit(p);	g->addWidget(ymin,1,2);
 	zmin = new QLineEdit(p);	g->addWidget(zmin,1,3);
 	cmin = new QLineEdit(p);	g->addWidget(cmin,1,4);
-	l = new QLabel(_("Maximal"), p);	g->addWidget(l,2,0);
+	l = new QLabel(tr("Maximal"), p);	g->addWidget(l,2,0);
 	xmax = new QLineEdit(p);	g->addWidget(xmax,2,1);
 	ymax = new QLineEdit(p);	g->addWidget(ymax,2,2);
 	zmax = new QLineEdit(p);	g->addWidget(zmax,2,3);
 	cmax = new QLineEdit(p);	g->addWidget(cmax,2,4);
-	l = new QLabel(_("Origin"), p);	g->addWidget(l,3,0);
+	l = new QLabel(tr("Origin"), p);	g->addWidget(l,3,0);
 	xorg = new QLineEdit(p);	g->addWidget(xorg,3,1);
 	yorg = new QLineEdit(p);	g->addWidget(yorg,3,2);
 	zorg = new QLineEdit(p);	g->addWidget(zorg,3,3);
-	l = new QLabel(_("Label"), p);	g->addWidget(l,4,0);
+	l = new QLabel(tr("Label"), p);	g->addWidget(l,4,0);
 	xlbl = new QLineEdit(p);	g->addWidget(xlbl,4,1);
 	ylbl = new QLineEdit(p);	g->addWidget(ylbl,4,2);
 	zlbl = new QLineEdit(p);	g->addWidget(zlbl,4,3);
-	l = new QLabel(_("at position"), p);	g->addWidget(l,5,0);
+	l = new QLabel(tr("at position"), p);	g->addWidget(l,5,0);
 	QStringList lpos;
-	lpos.append(_("at minimum"));	lpos += _("at center");	lpos += _("at maximum");
+	lpos.append(tr("at minimum"));	lpos += tr("at center");	lpos += tr("at maximum");
 	xpos = new QComboBox(p);	g->addWidget(xpos,5,1);	xpos->addItems(lpos);
 	ypos = new QComboBox(p);	g->addWidget(ypos,5,2);	ypos->addItems(lpos);
 	zpos = new QComboBox(p);	g->addWidget(zpos,5,3);	zpos->addItems(lpos);
-	l = new QLabel(_("Ticks"), p);	g->addWidget(l,6,0);
+	l = new QLabel(tr("Ticks"), p);	g->addWidget(l,6,0);
 	xtck = new QLineEdit(p);	g->addWidget(xtck,6,1);
 	ytck = new QLineEdit(p);	g->addWidget(ytck,6,2);
 	ztck = new QLineEdit(p);	g->addWidget(ztck,6,3);
-	l = new QLabel(_("SubTicks"), p);	g->addWidget(l,7,0);
+	l = new QLabel(tr("SubTicks"), p);	g->addWidget(l,7,0);
 	xsub = new QLineEdit(p);	g->addWidget(xsub,7,1);
 	ysub = new QLineEdit(p);	g->addWidget(ysub,7,2);
 	zsub = new QLineEdit(p);	g->addWidget(zsub,7,3);
-	l = new QLabel(_("Start"), p);	g->addWidget(l,8,0);
+	l = new QLabel(tr("Start"), p);	g->addWidget(l,8,0);
 	xort = new QLineEdit(p);	g->addWidget(xort,8,1);
 	yort = new QLineEdit(p);	g->addWidget(yort,8,2);
 	zort = new QLineEdit(p);	g->addWidget(zort,8,3);
-	l = new QLabel(_("Template"), p);	g->addWidget(l,9,0);
+	l = new QLabel(tr("Template"), p);	g->addWidget(l,9,0);
 	xtt = new QLineEdit(p);	g->addWidget(xtt,9,1);
 	ytt = new QLineEdit(p);	g->addWidget(ytt,9,2);
 	ztt = new QLineEdit(p);	g->addWidget(ztt,9,3);
 	ctt = new QLineEdit(p);	g->addWidget(ctt,9,4);
-	l = new QLabel(_("AlphaDef"), p);	g->addWidget(l,10,0);
+	l = new QLabel(tr("AlphaDef"), p);	g->addWidget(l,10,0);
 	aldef = new QLineEdit(p);	g->addWidget(aldef,11,0);
-	l = new QLabel(_("Ambient"), p);	g->addWidget(l,10,1);
+	l = new QLabel(tr("Ambient"), p);	g->addWidget(l,10,1);
 	amb = new QLineEdit(p);	g->addWidget(amb,11,1);
-	l = new QLabel(_("BaseWidth"), p);	g->addWidget(l,10,2);
+	l = new QLabel(tr("BaseWidth"), p);	g->addWidget(l,10,2);
 	basew = new QLineEdit(p);	g->addWidget(basew,11,2);
-	l = new QLabel(_("MeshNum"), p);	g->addWidget(l,10,3);
+	l = new QLabel(tr("MeshNum"), p);	g->addWidget(l,10,3);
 	mesh = new QLineEdit(p);	g->addWidget(mesh,11,3);
-	l = new QLabel(_("AxialDir"), p);	g->addWidget(l,10,4);
+	l = new QLabel(tr("AxialDir"), p);	g->addWidget(l,10,4);
 	axial = new QComboBox(p);	g->addWidget(axial,11,4);
 	axial->addItem("none");	axial->addItem("x");
 	axial->addItem("y");	axial->addItem("z");
-	l = new QLabel(_("Font"), p);	g->addWidget(l,12,0);
+	l = new QLabel(tr("Font"), p);	g->addWidget(l,12,0);
 	font = new QLineEdit(p);	g->addWidget(font,13,0);
-	l = new QLabel(_("FontSize"), p);	g->addWidget(l,12,1);
+	l = new QLabel(tr("FontSize"), p);	g->addWidget(l,12,1);
 	fsize = new QLineEdit(p);	g->addWidget(fsize,13,1);
-	alpha = new QCheckBox(_("Alpha"),p);	g->addWidget(alpha, 13,2);
-	light = new QCheckBox(_("Light"),p);	g->addWidget(light, 13,3);
-	rotate = new QCheckBox(_("No text rotation"),p);	g->addWidget(rotate, 13,4);
-	tab->addTab(p, _("General setup"));
+	alpha = new QCheckBox(tr("Alpha on"),p);	g->addWidget(alpha, 13,2);
+	light = new QCheckBox(tr("Light on"),p);	g->addWidget(light, 13,3);
+	rotate = new QCheckBox(tr("No text rotation"),p);	g->addWidget(rotate, 13,4);
+	tab->addTab(p, tr("General settings"));
 
 	p = new QWidget(this);
 	g = new QGridLayout(p);	g->setAlignment(Qt::AlignTop);
-	l = new QLabel(_("ID"), p);	g->addWidget(l,0,0);
-	l = new QLabel(_("State"), p);	g->addWidget(l,0,1);
-	l = new QLabel(_("X pos"), p);	g->addWidget(l,0,2);
-	l = new QLabel(_("Y pos"), p);	g->addWidget(l,0,3);
-	l = new QLabel(_("Z pos"), p);	g->addWidget(l,0,4);
-	l = new QLabel(_("Color"), p);	g->addWidget(l,0,5);
-	l = new QLabel(_("Brightness"), p);	g->addWidget(l,0,6);
+	l = new QLabel(tr("ID"), p);	g->addWidget(l,0,0);
+	l = new QLabel(tr("State"), p);	g->addWidget(l,0,1);
+	l = new QLabel(tr("X pos"), p);	g->addWidget(l,0,2);
+	l = new QLabel(tr("Y pos"), p);	g->addWidget(l,0,3);
+	l = new QLabel(tr("Z pos"), p);	g->addWidget(l,0,4);
+	l = new QLabel(tr("Color"), p);	g->addWidget(l,0,5);
+	l = new QLabel(tr("Brightness"), p);	g->addWidget(l,0,6);
 	char s[3] = "0:";
 	for(int i=0;i<10;i++)
 	{
 		s[0] = char(i+'0');
 		l = new QLabel(s, p);	g->addWidget(l,i+1,0);
-		slight[i] = new QCheckBox(_("on"),p);	g->addWidget(slight[i], i+1, 1);
+		slight[i] = new QCheckBox(tr("on"),p);	g->addWidget(slight[i], i+1, 1);
 		xlight[i] = new QLineEdit(p);	g->addWidget(xlight[i], i+1, 2);
 		ylight[i] = new QLineEdit(p);	g->addWidget(ylight[i], i+1, 3);
 		zlight[i] = new QLineEdit(p);	g->addWidget(zlight[i], i+1, 4);
@@ -133,18 +131,18 @@ SetupDialog::SetupDialog(QWidget *parent) : QDialog(parent)
 		fillColors(clight[i]);
 		blight[i] = new QLineEdit(p);	g->addWidget(blight[i], i+1, 6);
 	}
-	tab->addTab(p, _("Light settings"));
+	tab->addTab(p, tr("Light settings"));
 
 	QVBoxLayout *v = new QVBoxLayout(this);	v->addWidget(tab);
 	QHBoxLayout *h = new QHBoxLayout();		v->addLayout(h);
-	l = new QLabel(_("Template name"), this);		h->addWidget(l);
+	l = new QLabel(tr("Template name"), this);		h->addWidget(l);
 	fname = new QLineEdit("template.mgl", this);	h->addWidget(fname);
 	h->addStretch(1);
-	b = new QPushButton(_("Save"), this);		h->addWidget(b);
+	b = new QPushButton(tr("Save"), this);		h->addWidget(b);
 	connect(b, SIGNAL(clicked()),this, SLOT(saveTmpl()));
-	b = new QPushButton(_("Cancel"), this);	h->addWidget(b);
+	b = new QPushButton(tr("Cancel"), this);	h->addWidget(b);
 	connect(b, SIGNAL(clicked()),this, SLOT(reject()));
-	b = new QPushButton(_("To script"), this);	h->addWidget(b);
+	b = new QPushButton(tr("To script"), this);	h->addWidget(b);
 	connect(b, SIGNAL(clicked()),this, SLOT(toScript()));
 	b->setDefault(true);
 }
@@ -156,11 +154,11 @@ void SetupDialog::saveTmpl()
 	if(!convert())	return;
 	QFile f(fname->text());
 	if(!f.open(QIODevice::WriteOnly))
-		QMessageBox::warning(this, _("UDAV - Save template"), _("Could not write to file"), QMessageBox::Ok, 0);
+		QMessageBox::warning(this, tr("UDAV - Save template"), tr("Could not write to file"), QMessageBox::Ok, 0);
 	else
 	{
 		QTextStream t(&f);	t << res;	f.close();
-		QMessageBox::information(this, _("UDAV - Save template"), _("Template saved"), QMessageBox::Ok);
+		QMessageBox::information(this, tr("UDAV - Save template"), tr("Template saved"), QMessageBox::Ok);
 		emit putText(QString("#call %1").arg(fname->text()));
 	}
 
@@ -187,7 +185,7 @@ bool SetupDialog::convert()
 		if(!slight[i]->isChecked())	continue;
 		if(xlight[i]->text().isEmpty() || ylight[i]->text().isEmpty() || zlight[i]->text().isEmpty())
 		{
-			QMessageBox::information(this, _("UDAV - Setup plot"), _("Light position should be filled. Ignore it."), QMessageBox::Ok);
+			QMessageBox::information(this, tr("UDAV - Setup plot"), tr("Light position should be filled. Ignore it."), QMessageBox::Ok);
 			continue;
 		}
 		x1=xlight[i]->text().toDouble();	y1=ylight[i]->text().toDouble();

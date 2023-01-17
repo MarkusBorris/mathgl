@@ -1,4 +1,4 @@
-configure_file(${MathGL2_SOURCE_DIR}/texinfo/version.texi.in ${MathGL2_BINARY_DIR}/texinfo/version.texi)
+configure_file(${MathGL_SOURCE_DIR}/texinfo/version.texi.in ${MathGL_BINARY_DIR}/texinfo/version.texi)
 
 set(MGL_EXTRA light pendelta)
 set(MGL_PNG alpha area aspect axial axis barh bars belt boxplot
@@ -11,8 +11,7 @@ set(MGL_PNG alpha area aspect axial axis barh bars belt boxplot
 	surfa surfc surfca surf table tape tens ternary textmark text ticks tile tiles
 	torus traj triangulation triplot tube type0 type1 type2 vect vecta venn
 	projection5 mask correl refill ohlc ode indirect
-	pulse scanfile bifurcation lamerey pmap ifs2d ifs3d
-	flame2d detect dilate iris section apde earth )
+	pulse scanfile bifurcation lamerey pmap ifs2d ifs3d )
 set(MGL_PNG_N )
 set(MGL_PNG_S )
 set(MGL_PNG_J )
@@ -27,14 +26,6 @@ file(MAKE_DIRECTORY ${MGL_OUT}/json)
 file(MAKE_DIRECTORY ${MGL_OUT}/pdf)
 file(COPY ${MGL_TEX}/qt.png ${MGL_TEX}/fltk.png ${MGL_TEX}/classes.png ${MGL_TEX}/emblem_sm.png ${MGL_TEX}/datadvance.png DESTINATION ${MGL_OUT})
 file(COPY ${MGL_TEX}/index.html ${MGL_TEX}/json.html ${MGL_TEX}/mathgl.js DESTINATION ${MGL_OUT})
-file(COPY ${CMAKE_SOURCE_DIR}/examples/iris.dat DESTINATION ${MGL_OUT}/png)
-file(COPY ${CMAKE_SOURCE_DIR}/examples/iris.dat DESTINATION ${MGL_OUT}/small)
-file(COPY ${CMAKE_SOURCE_DIR}/examples/iris.dat DESTINATION ${MGL_OUT}/json)
-file(COPY ${CMAKE_SOURCE_DIR}/examples/iris.dat DESTINATION ${MGL_OUT}/pdf)
-file(COPY ${CMAKE_SOURCE_DIR}/examples/Equirectangular-projection.jpg DESTINATION ${MGL_OUT}/png)
-file(COPY ${CMAKE_SOURCE_DIR}/examples/Equirectangular-projection.jpg DESTINATION ${MGL_OUT}/small)
-file(COPY ${CMAKE_SOURCE_DIR}/examples/Equirectangular-projection.jpg DESTINATION ${MGL_OUT}/json)
-file(COPY ${CMAKE_SOURCE_DIR}/examples/Equirectangular-projection.jpg DESTINATION ${MGL_OUT}/pdf)
 
 set(UDAV_IMG udav_arg.png udav_calc.png udav_cmd.png udav_data.png udav_mask.png
 	udav_gen_set.png udav_help.png udav_light.png udav_main.png udav_opt.png udav_inplot.png
@@ -54,21 +45,22 @@ foreach(SAMPLE ${MGL_PNG})
 		COMMAND mgl_example -kind=${SAMPLE} -mini
 		DEPENDS mgl_example
 		WORKING_DIRECTORY ${MGL_OUT}/small )
-
-	if(MGL_HAVE_DOC_JSON)
-		set(MGL_PNG_J ${MGL_PNG_J} ${MGL_OUT}/json/${SAMPLE}.json)
-		add_custom_command(OUTPUT ${MGL_OUT}/json/${SAMPLE}.json
-			COMMAND mgl_example -json -kind=${SAMPLE}
-			DEPENDS mgl_example
-			WORKING_DIRECTORY ${MGL_OUT}/json )
-	endif(MGL_HAVE_DOC_JSON)
-	if(MGL_HAVE_DOC_PRC)
-		set(MGL_PNG_D ${MGL_PNG_D} ${MGL_OUT}/pdf/${SAMPLE}.pdf)
-		add_custom_command(OUTPUT ${MGL_OUT}/pdf/${SAMPLE}.pdf
-			COMMAND mgl_example -pdf -kind=${SAMPLE}
-			DEPENDS mgl_example
-			WORKING_DIRECTORY ${MGL_OUT}/pdf )
-	endif(MGL_HAVE_DOC_PRC)
+		
+		
+if(MGL_HAVE_DOC_JSON)
+	set(MGL_PNG_J ${MGL_PNG_J} ${MGL_OUT}/json/${SAMPLE}.json)
+	add_custom_command(OUTPUT ${MGL_OUT}/json/${SAMPLE}.json
+		COMMAND mgl_example -json -kind=${SAMPLE}
+		DEPENDS mgl_example
+		WORKING_DIRECTORY ${MGL_OUT}/json )
+endif(MGL_HAVE_DOC_JSON)
+if(MGL_HAVE_DOC_PRC)
+	set(MGL_PNG_D ${MGL_PNG_D} ${MGL_OUT}/pdf/${SAMPLE}.pdf)
+	add_custom_command(OUTPUT ${MGL_OUT}/pdf/${SAMPLE}.pdf
+		COMMAND mgl_example -pdf -kind=${SAMPLE}
+		DEPENDS mgl_example
+		WORKING_DIRECTORY ${MGL_OUT}/pdf )
+endif(MGL_HAVE_DOC_PRC)
 endforeach(SAMPLE)
 
 foreach(SAMPLE ${MGL_EXTRA})
@@ -84,8 +76,8 @@ foreach(SAMPLE ${MGL_EXTRA})
 		WORKING_DIRECTORY ${MGL_OUT}/small )
 endforeach(SAMPLE)
 
-set(list_texi_files_en overview_en.texi example_en.texi ex_mgl_en.texi parse_en.texi formats_en.texi udav_en.texi symbols_en.texi core_en.texi concept_en.texi widget_en.texi data_en.texi other_en.texi appendix_en.texi fdl.texi ${MathGL2_BINARY_DIR}/texinfo/version.texi time.texi time_big.texi )
-set(list_texi_files_ru overview_ru.texi example_ru.texi ex_mgl_ru.texi parse_ru.texi formats_ru.texi udav_ru.texi symbols_ru.texi core_ru.texi concept_ru.texi widget_ru.texi data_ru.texi other_ru.texi appendix_ru.texi fdl.texi ${MathGL2_BINARY_DIR}/texinfo/version.texi time.texi time_big.texi )
+set(list_texi_files_en overview_en.texi example_en.texi ex_mgl_en.texi parse_en.texi formats_en.texi udav_en.texi symbols_en.texi core_en.texi concept_en.texi widget_en.texi data_en.texi other_en.texi appendix_en.texi fdl.texi ${MathGL_BINARY_DIR}/texinfo/version.texi time.texi time_big.texi )
+set(list_texi_files_ru overview_ru.texi example_ru.texi ex_mgl_ru.texi parse_ru.texi formats_ru.texi udav_ru.texi symbols_ru.texi core_ru.texi concept_ru.texi widget_ru.texi data_ru.texi other_ru.texi appendix_ru.texi fdl.texi ${MathGL_BINARY_DIR}/texinfo/version.texi time.texi time_big.texi )
 
 add_custom_command(OUTPUT ${MGL_OUT}/mathgl_en.info
 	COMMAND ${findmi} ${MGL_TEX}/mathgl_en.texi
@@ -105,10 +97,6 @@ add_custom_command(OUTPUT ${MGL_OUT}/mathgl_en.html
 )
 add_custom_command(OUTPUT ${MGL_OUT}/mgl_en.html
 	COMMAND ${findth} ${th_opt} --set-customization-variable 'BODYTEXT ' -I ${MGL_OUT} --no-split ${MGL_TEX}/mgl_en.texi
-	# following line bypass FLTK bugs
-	COMMAND sed "'s/&ndash;/-/g'" -i ${MGL_OUT}/mgl_en.html
-	COMMAND sed "'s/&lsquo;/`/g'" -i ${MGL_OUT}/mgl_en.html
-	COMMAND sed "'s/&rsquo;/`/g'" -i ${MGL_OUT}/mgl_en.html
 	DEPENDS ${list_texi_files_en} mgl_en.texi ${MGL_PNG_N}
 	WORKING_DIRECTORY ${MGL_OUT}
 )
@@ -119,10 +107,6 @@ add_custom_command(OUTPUT ${MGL_OUT}/mathgl_ru.html
 )
 add_custom_command(OUTPUT ${MGL_OUT}/mgl_ru.html
 	COMMAND ${findth} ${th_opt} --set-customization-variable 'BODYTEXT ' -I=${MGL_OUT} --no-split ${MGL_TEX}/mgl_ru.texi
-	# following line bypass FLTK bugs
-	COMMAND sed "'s/&ndash;/-/g'" -i ${MGL_OUT}/mgl_ru.html
-	COMMAND sed "'s/&lsquo;/`/g'" -i ${MGL_OUT}/mgl_ru.html
-	COMMAND sed "'s/&rsquo;/`/g'" -i ${MGL_OUT}/mgl_ru.html
 	DEPENDS ${list_texi_files_ru} mgl_ru.texi ${MGL_PNG_N}
 	WORKING_DIRECTORY ${MGL_OUT}
 )

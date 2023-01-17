@@ -31,12 +31,7 @@ MathGL имеет встроенный скриптовый язык MGL для 
 Аргументы команды могут быть строками, переменными или числами.
 @itemize @bullet
 @item
-Строка -- произвольный набор символов между метками @samp{'}. Длинные строки могут быть соединены из нескольких линий файла символом @samp{\}. Т.е. строки файла @samp{'a +'\<br>' b'} дадут строку @samp{'a + b'} (здесь @samp{<br>} -- перевод строки). MGL поддерживает несколько операций над строками:
-@itemize @bullet
-@item Соединение строк и чисел, используя @samp{,} без пробелов (например, @samp{'max(u)=',u.max,' a.u.'} или @samp{'u=',!(1+i2)} для комплексных чисел);
-@item Получение n-го символа строки, используя @samp{[]} (например, @samp{'abc'[1]} даст @code{'b'});
-@item Инкремент последнего символа строки, используя @samp{+} (например, @samp{'abc'+3} даст @code{'abf'}).
-@end itemize
+Строка -- произвольный набор символов между метками @samp{'}. Длинные строки могут быть соединены из нескольких линий файла символом @samp{\}. Т.е. строки файла @samp{'a +'\<br>' b'} дадут строку @samp{'a + b'} (здесь @samp{<br>} -- перевод строки). Также можно использовать соединение строк и чисел, используя символ @samp{,} без пробелов (например, @samp{'max(u)=',u.max,' a.u.'}).
 
 @item
 Обычно переменная имеет имя, состоящее из букв и чисел (должно начинаться с буквы и не быть длиннее 64 символов). Если выражение или переменная начинается с символа @samp{!}, то будут использованы комплексные значения. Например, код @code{new x 100 'x':copy !b !exp(1i*x)} создаст массив действительных чисел @var{x} и массив комплексных чисел @var{b}, который будет равен @math{exp(I*x)}, где @math{I^2=-1}. 
@@ -60,7 +55,7 @@ MathGL имеет встроенный скриптовый язык MGL для 
 Временные массивы не могут стоять в качестве первого аргумента команд, создающих массивы (например, @samp{new}, @samp{read}, @samp{hist} и т.д.).
 
 @item
-К скалярным переменным, кроме собственно чисел, относятся: специальные переменные @code{nan=#QNAN, inf=бесконечность, rnd=случайное число, pi=3.1415926..., on=1, off=0, all=-1, :=-1}, переменные с суффиксами (@pxref{Data information}), переменные определенные командой @ref{define}, значения времени (в формате "hh-mm-ss_DD.MM.YYYY", "hh-mm-ss" или "DD.MM.YYYY") . Также массивы размером 1x1x1 считаются скалярами (например, @samp{pi/dat.nx}).
+К скалярным переменным, кроме собственно чисел, относятся: специальные переменные @code{nan=#QNAN, inf=бесконечность, rnd=случайное число, pi=3.1415926..., on=1, off=0, :=-1}, переменные с суффиксами (@pxref{Data information}), переменные определенные командой @ref{define}. Также массивы размером 1x1x1 считаются скалярами (например, @samp{pi/dat.nx}).
 @end itemize
 Перед первым использованием все переменные должны быть определены с помощью команд, создающих массивы (@ref{new}, @ref{var}, @ref{list}, @ref{copy}, @ref{read}, @ref{hist}, @ref{sum} и др., см. @ref{Data constructor}, @ref{Data filling} и @ref{Make another data}).
 
@@ -427,11 +422,6 @@ As an additional feature, when an image is not found or cannot be included, inst
 Возвращает указатель на переменную с именем @var{name}. Если переменная отсутствует, то она будет создана. Используйте эту функцию для добавления внешних массивов в скрипт. @strong{Не удаляйте} полученный массив!
 @end deftypefn
 
-@deftypefn {Метод класса @code{mglParse}} @code{void} OpenHDF (@code{const char *}fname)
-@deftypefnx {Функция С} @code{void} mgl_parser_openhdf (@code{HMPR} pr, @code{const char *}fname)
-Читает все массивы данных из HDF5 файла @var{fname} и создает переменные MGL с соответствующими именами. Если имя данных начинается с @samp{!}, то будут созданы комплексные массивы.
-@end deftypefn
-
 @deftypefn{Метод класса @code{mglParse} (C++)} @code{void} DeleteVar (@code{const char *}name)
 @deftypefnx{Метод класса @code{mglParse} (C++)} @code{void} DeleteVar (@code{const wchar_t *}name)
 @deftypefnx {Функция С} @code{void} mgl_parser_del_var (@code{HMPR} p, @code{const char *}name)
@@ -472,11 +462,6 @@ As an additional feature, when an image is not found or cannot be included, inst
 @deftypefn {Метод класса @code{mglParse}} @code{void} SetVariant (@code{int} var=@code{0})
 @deftypefnx {Функция С} @code{void} mgl_parser_variant (@code{HMPR} p, @code{int} var=@code{0})
 Задает вариант аргумента(ов), разделенных символом @samp{?}, для всех последующих комманд.
-@end deftypefn
-
-@deftypefn {Метод класса @code{mglParse}} @code{void} StartID (@code{int} id=@code{0})
-@deftypefnx {Функция С} @code{void} mgl_parser_start_id (@code{HMPR} p, @code{int} id)
-Задает начальный id (обычно это номер строки) первой строки при последующем выполнении скрипта.
 @end deftypefn
 
 

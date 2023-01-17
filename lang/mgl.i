@@ -58,8 +58,6 @@ public:
 
 	/// Set the transparency on/off.
 	inline void Alpha(bool enable)			{	mgl_set_alpha(gr, enable);	}
-	/// Set the gray-scale mode on/off.
-	inline void Gray(bool enable)			{	mgl_set_gray(gr, enable);	}
 	/// Set default value of alpha-channel
 	inline void SetAlphaDef(double alpha)	{	mgl_set_alpha_default(gr, alpha);	}
 	/// Set the transparency type (0 - usual, 1 - glass, 2 - lamp)
@@ -107,11 +105,11 @@ public:
 	inline void CutOff(const char *EqC)		{	mgl_set_cutoff(gr, EqC);	}
 
 	/// Set default font size
-	inline void SetFontSize(double size)	{	mgl_set_font_size(gr, size);	}
+	inline void SetFontSize(double size)		{	mgl_set_font_size(gr, size);	}
 	/// Set default font style and color
-	inline void SetFontDef(const char *fnt)	{	mgl_set_font_def(gr, fnt);	}
+	inline void SetFontDef(const char *fnt)		{	mgl_set_font_def(gr, fnt);	}
 	/// Set FontSize by size in pt and picture DPI (default is 16 pt for dpi=72)
-	virtual void SetFontSizePT(double pt, int dpi=72)	{	SetFontSize(pt*27.f/dpi);	}
+	virtual void SetFontSizePT(double pt, int dpi=72){	SetFontSize(pt*27.f/dpi);	}
 	/// Set FontSize by size in centimeters and picture DPI (default is 0.56 cm = 16 pt)
 	inline void SetFontSizeCM(double cm, int dpi=72)	{	SetFontSizePT(cm*28.45f,dpi);	}
 	/// Set FontSize by size in inch and picture DPI (default is 0.22 in = 16 pt)
@@ -273,15 +271,15 @@ public:
 	 *  '#' for using whole region. */
 	inline void SubPlot(int nx,int ny,int m,const char *style="<>_^", double dx=0, double dy=0)
 	{	mgl_subplot_d(gr, nx, ny, m, style, dx, dy);	}
-	/// Put further plotting in rectangle of dx*dy cells starting from m-th cell of nx*ny grid of the image and shift it by distance {sx,sy}.
+	/// Put further plotting in rectangle of dx*dy cells starting from m-th cell of nx*ny grid of the image.
 	/** String \a style may contain:
 	 *  '<' for reserving space at left
 	 *  '>' for reserving space at right
 	 *  '^' for reserving space at top
 	 *  '_' for reserving space at bottom
 	 *  '#' for using whole region. */
-	inline void MultiPlot(int nx,int ny,int m, int dx, int dy, const char *style="<>_^", double sx=0, double sy=0)
-	{	mgl_multiplot_d(gr, nx, ny, m, dx, dy, style, sx, sy);	}
+	inline void MultiPlot(int nx,int ny,int m, int dx, int dy, const char *style="<>_^")
+	{	mgl_multiplot(gr, nx, ny, m, dx, dy, style);	}
 	/// Put further plotting in a region [x1,x2]*[y1,y2] of the image or subplot (x1,x2,y1,y2 in range [0, 1]).
 	inline void InPlot(double x1,double x2,double y1,double y2, bool rel=true)
 	{	if(rel)	mgl_relplot(gr, x1, x2, y1, y2);
@@ -295,9 +293,6 @@ public:
 	/// Put further plotting in cell of stick rotated on angles tet, phi
 	inline void StickPlot(int num, int i, double tet, double phi)
 	{	mgl_stickplot(gr,num,i,tet,phi);	}
-	/// Put further plotting in cell of stick sheared on sx, sy.
-	inline void ShearPlot(int num, int i, mreal sx, mreal sy, mreal xd=1, mreal yd=0)
-	{	mgl_shearplot(gr,num,i,sx,sy,xd,yd);	}
 
 	/// Set factor of plot size
 	inline void SetPlotFactor(double val)
@@ -318,9 +313,6 @@ public:
 	/// Set aspect ratio for further plotting.
 	inline void Aspect(double Ax,double Ay,double Az=1)
 	{	mgl_aspect(gr, Ax, Ay, Az);		}
-	/// Shear a further plotting.
-	inline void Shear(double Sx,double Sy)
-	{	mgl_shear(gr, Sx, Sy);		}
 	/// Rotate a further plotting.
 	inline void Rotate(double TetX,double TetZ=0,double TetY=0)
 	{	mgl_rotate(gr, TetX, TetZ, TetY);	}
@@ -358,16 +350,11 @@ public:
 	/// Set drawing region for Quality&4
 	inline void SetDrawReg(long nx=1, long ny=1, long m=0)	{	mgl_set_draw_reg(gr,nx,ny,m);	}
 	/// Start group of objects
-	inline void StartGroup(const char *name)	{	mgl_start_group(gr, name);	}
+	inline void StartGroup(const char *name)		{	mgl_start_group(gr, name);	}
 	/// End group of objects
 	inline void EndGroup()	{	mgl_end_group(gr);	}
 	/// Highlight objects with given id
 	inline void Highlight(int id)	{	mgl_highlight(gr, id);	}
-	/// Set boundary box for export graphics into 2D file formats.
-	/** If x2<0 (y2<0) then full width (height) will be used.
-	 *  If x1<0 or y1<0 or x1>=x2|Width or y1>=y2|Height then cropping will be disabled. */
-	inline void SetBBox(int x1=0, int y1=0, int x2=-1, int y2=-1)
-	{	mgl_set_bbox(gr,x1,y1,x2,y2);	}
 
 	/// Show current image
 	inline void ShowImage(const char *viewer, bool keep=0)
@@ -590,18 +577,6 @@ public:
 	inline void Bifurcation(double dx, const char *func, const char *stl="", const char *opt="")
 	{	mgl_bifurcation_str(gr,dx,func,stl,opt);	}
 
-	/// Draws Iris plots for determining cross-dependences of data arrays
-	/** NOTE: using the same ranges and empty ids will not draw axis. This will add data to existing Iris plot.
-	 * 	Option value set the size of data labels ids, separated by ';'.*/
-	inline void Iris(mglData &dats, const char *ids, const char *stl="", const char *opt="")
-	{	mgl_iris_1(gr,&dats,ids,stl,opt);	}
-	inline void Iris(mglData &dats, const wchar_t *ids, const char *stl="", const char *opt="")
-	{	mgl_irisw_1(gr,&dats,ids,stl,opt);	}
-	inline void Iris(mglData &dats, mglData &ranges, const char *ids, const char *stl="", const char *opt="")
-	{	mgl_iris(gr,&dats,&ranges,ids,stl,opt);	}
-	inline void Iris(mglData &dats, mglData &ranges, const wchar_t *ids, const char *stl="", const char *opt="")
-	{	mgl_irisw(gr,&dats,&ranges,ids,stl,opt);	}
-
 	/// Draws the face between points with color stl (include interpolation up to 4 colors).
 	inline void Face(mglPoint p1, mglPoint p2, mglPoint p3, mglPoint p4, const char *stl="r")
 	{	mgl_face(gr, p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, p3.x, p3.y, p3.z, p4.x, p4.y, p4.z, stl);	}
@@ -654,8 +629,8 @@ public:
 	inline void Polygon(mglPoint p1, mglPoint p2, int n, const char *stl="r")
 	{	mgl_polygon(gr, p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, n,stl);	}
 	/// Draws the arc around axis pr with center at p0 and starting from p1, by color stl and angle a (in degrees)
-	inline void Arc(mglPoint p0, mglPoint pa, mglPoint p1, double a, const char *stl="r")
-	{	mgl_arc_ext(gr, p0.x,p0.y,p0.z, pa.x,pa.y,pa.z, p1.x,p1.y,p1.z, a,stl);	}
+	inline void Arc(mglPoint p0, mglPoint pr, mglPoint p1, double a, const char *stl="r")
+	{	mgl_arc_ext(gr, p0.x,p0.y,p0.z, pr.x,pr.y,pr.z, p1.x,p1.y,p1.z, a,stl);	}
 	/// Draws the arc around axis 'z' with center at p0 and starting from p1, by color stl and angle a (in degrees)
 	inline void Arc(mglPoint p0, mglPoint p1, double a, const char *stl="r")
 	{	mgl_arc_ext(gr, p0.x,p0.y,p0.z, 0,0,1, p1.x,p1.y,p0.z, a,stl);	}
@@ -1278,16 +1253,12 @@ public:
 	inline void Grid(const mglData &z, const char *stl="", const char *opt="")
 	{	mgl_grid(gr, &z, stl, opt);	}
 
-	/// Draw vertical tiles with manual colors c for 2d data specified parametrically
-	inline void Tile(const mglData &x, const mglData &y, const mglData &z, const mglData &c, const char *stl="", const char *opt="")
-	{	mgl_tile_xyc(gr, &x, &y, &z, &c, stl, opt);	}
 	/// Draw vertical tiles for 2d data specified parametrically
 	inline void Tile(const mglData &x, const mglData &y, const mglData &z, const char *stl="", const char *opt="")
 	{	mgl_tile_xy(gr, &x, &y, &z, stl, opt);	}
 	/// Draw vertical tiles for 2d data
 	inline void Tile(const mglData &z, const char *stl="", const char *opt="")
 	{	mgl_tile(gr, &z, stl, opt);	}
-
 	/// Draw density plot for 2d data specified parametrically
 	/** Style ‘#’ draw grid lines. Style ‘.’ produce plot by dots.*/
 	inline void Dens(const mglData &x, const mglData &y, const mglData &c, const char *stl="", const char *opt="")
@@ -1526,9 +1497,6 @@ public:
 	inline void Beam(double val, const mglData &tr, const mglData &g1, const mglData &g2, const mglData &a, double r, const char *stl=NULL, int flag=0)
 	{	mgl_beam_val(gr,val,&tr,&g1,&g2,&a,r,stl,flag);	}
 
-	/// Draw vertical tiles with variable size r and manual colors c for 2d data specified parametrically
-	inline void TileS(const mglData &x, const mglData &y, const mglData &z, const mglData &r, const mglData &c, const char *stl="", const char *opt="")
-	{	mgl_tiles_xyc(gr, &x, &y, &z, &r, &c, stl, opt);	}
 	/// Draw vertical tiles with variable size r for 2d data specified parametrically
 	inline void TileS(const mglData &x, const mglData &y, const mglData &z, const mglData &r, const char *stl="", const char *opt="")
 	{	mgl_tiles_xy(gr, &x, &y, &z, &r, stl, opt);	}
@@ -2220,9 +2188,6 @@ public:
 	inline void AllowDllCall(bool allow)	{	mgl_parser_allow_dll_call(pr, allow);	}
 	/// Set flag to stop script parsing
 	inline void Stop()	{	mgl_parser_stop(pr);	}
-	/// Set variant of argument(s) separated by '?' to be used in further commands
-	inline void SetVariant(int var=0)
-	{	mgl_parser_variant(pr, var);	}
 
 	/// Return result of formula evaluation
 	inline mglData Calc(const char *formula)

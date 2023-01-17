@@ -504,10 +504,8 @@ HMDT MGL_EXPORT mgl_triangulation_2d(HCDT x, HCDT y)
 	for(long i=0;i<n;i++)
 	{
 		mreal xx=x->vthr(i), yy = y->vthr(i);
-		if(xx<x1)	x1=xx;
-		if(xx>x2)	x2=xx;
-		if(yy<y1)	y1=yy;
-		if(yy>y2)	y2=yy;
+		if(xx<x1)	x1=xx;	if(xx>x2)	x2=xx;
+		if(yy<y1)	y1=yy;	if(yy>y2)	y2=yy;
 	}
 	const double dx=x2-x1, dy=y2-y1;
 	if(dx==0 || dy==0)	return nums;
@@ -554,9 +552,9 @@ HMDT MGL_EXPORT mgl_triangulation_2d(HCDT x, HCDT y)
 	}
 
 	if (triads.empty()) {
-		mgl_set_global_warn(_("Cannot triangulate this set!"));
+		mgl_set_global_warn("Cannot triangulate this set!");
 	} else if(original_size > pts.size()) {
-		mgl_set_global_warn(_("There are duplicated or indistinguishably adjacent points for triangulation."));
+		mgl_set_global_warn("There are duplicated or indistinguishably adjacent points for triangulation.");
 	}
 
 	long m = triads.size();
@@ -610,11 +608,12 @@ MGL_NO_EXPORT void *mgl_grid_t(void *par)
 		y1 = y1>0 ? y1:0; y2 = y2<ny ? y2:ny-1;
 		if((x1>x2) | (y1>y2)) continue;
 
-		mreal x0 = x[k1], y0 = y[k1];
-		for(long i=x1;i<=x2;i++) for(long j=y1;j<=y2;j++)
+		mreal u,v,xx,yy, x0 = x[k1], y0 = y[k1];
+		long i,j;
+		for(i=x1;i<=x2;i++) for(j=y1;j<=y2;j++)
 		{
-			mreal xx = (i-x0), yy = (j-y0);
-			mreal u = dxu*xx+dyu*yy, v = dxv*xx+dyv*yy;
+			xx = (i-x0); yy = (j-y0);
+			u = dxu*xx+dyu*yy; v = dxv*xx+dyv*yy;
 			if((u<0) | (v<0) | (u+v>1)) continue;
 			b[i+nx*j] = z1 + d1.z*u + d2.z*v;
 		}
@@ -632,7 +631,7 @@ void MGL_EXPORT mgl_data_grid_xy(HMDT d, HCDT xdat, HCDT ydat, HCDT zdat, mreal 
 	mglData *nums = mgl_triangulation_2d(xdat,ydat);
 	if(nums->nx<3)	{	delete nums;	return;	}
 	long nn = nums->ny, par[3]={d->nx,d->ny,d->nz};
-	mreal xx[4]={x1,(d->nx-1)/(x2-x1), y1,(d->ny-1)/(y2-y1)};
+	mreal xx[4]={x1,(d->nx-1.)/(x2-x1), y1,(d->ny-1.)/(y2-y1)};
 
 	mreal *xc=new mreal[n], *yc=new mreal[n];
 	if(x && y)
@@ -698,10 +697,11 @@ long MGL_NO_EXPORT mgl_insert_trig(long i1,long i2,long i3,long **n)
 		memset(*n+3*(Max-1024),0,3*1024*sizeof(long));
 	}
 	long *nn;
-	if(i1>i3)	{	long k1=i1;	i1=i3;	i3=k1;	}	// simple sorting
-	if(i1>i2)	{	long k1=i1;	i1=i2;	i2=k1;	}
-	if(i2>i3)	{	long k1=i2;	i2=i3;	i3=k1;	}
-	for(long i=0;i<Cur;i++)	// check if it is unique
+	long i,k1;
+	if(i1>i3)	{	k1=i1;	i1=i3;	i3=k1;	}	// simple sorting
+	if(i1>i2)	{	k1=i1;	i1=i2;	i2=k1;	}
+	if(i2>i3)	{	k1=i2;	i2=i3;	i3=k1;	}
+	for(i=0;i<Cur;i++)	// check if it is unique
 	{
 		nn = *n + 3*i;
 		if(nn[0]==i1 && nn[1]==i2 && nn[2]==i3)	return Cur;
@@ -726,40 +726,39 @@ long MGL_NO_EXPORT mgl_get_next(long k1,long n,long *,long *set,mglPoint *qq)
 //-----------------------------------------------------------------------------
 long MGL_NO_EXPORT mgl_crust(long n,mglPoint *pp,long **nn,mreal ff)
 {	// TODO: update to normal algorithm
-	mreal rs=0;
+	long i,j;
+	mreal r,rm,rs;
 	if(ff<=0)	ff=2;
-	for(long i=0;i<n;i++)
+	for(rs=0,i=0;i<n;i++)
 	{
-		mreal rm = FLT_MAX;
-		for(long j=0;j<n;j++)
+		for(rm = FLT_MAX,j=0;j<n;j++)
 		{
 			if(i==j)	continue;
-			mreal r = mgl_anorm(pp[i]-pp[j]);
+			r = mgl_anorm(pp[i]-pp[j]);
 			if(rm>r)	rm = r;
 		}
 		rs += sqrt(rm);
 	}
 	rs *= ff/n;	rs = rs*rs;		// "average" distance
 	const int nnum=100;
-	long *ind, *set;	// indexes of "close" points, flag that it was added and its number
+	long *ind, *set, ii;	// indexes of "close" points, flag that it was added and its number
 	mglPoint *qq;	// normalized point coordinates
 	ind = new long[nnum];	set = new long[nnum];	qq = new mglPoint[nnum];
 	long k1,k2,k3,m=0;
-	for(long i=0;i<n;i++)	// now the triangles will be found
+	for(i=0;i<n;i++)	// now the triangles will be found
 	{
 		memset(set,0,nnum*sizeof(long));
-		long ii=0;
-		for(long j=0;j<n;j++)	// find close vertexes
+		for(ii=0,j=0;j<n;j++)	// find close vertexes
 		{
-			mreal r = mgl_anorm(pp[i]-pp[j]);
+			r = mgl_anorm(pp[i]-pp[j]);
 			if(r<=rs && j!=i)	{	ind[ii] = j;	ii++;	if(ii==99)	break;}
 		}
 		if(ii<3)	continue;	// nothing to do
-		for(long j=0;j<ii;j++)
+		for(j=0;j<ii;j++)
 		{
 			k1 = j;	k2 = ind[j];	k3 = i;
-			qq[k1] = pp[k2] - pp[k3];
-			qq[k1] /= qq[k1].norm();
+			qq[k1] = pp[k2] - pp[k3];	r = qq[k1].norm();
+			qq[k1] /= r;
 		}
 		k1 = 0;
 		while((k2=mgl_get_next(k1,ii,ind,set,qq))>0)

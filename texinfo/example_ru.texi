@@ -134,9 +134,8 @@ int main(int argc,char **argv)
 @end verbatim
 Здесь используется callback функция @code{sample}, выполняющая собственно рисование. Функция @code{main} -- точка входа в программу -- создает окно (объект @var{gr} типа @code{mglQT}) и запускает цикл обработки сообщений (вызов @code{gr.Run()}). Для компиляции достаточно выполнить команду
 @verbatim
-gcc test.cpp -lmgl-qt5 -lmgl
+gcc test.cpp -lmgl-qt -lmgl
 @end verbatim
-Вы можете использовать "-lmgl-qt4" вместо "-lmgl-qt5", если установлен Qt4.
 
 Альтернативный способ состоит в использовании класса, производного от @code{mglDraw} с переопределенной функцией @code{Draw()}:
 @verbatim
@@ -1616,7 +1615,6 @@ void mgls_prepare1d(HMDT y, HMDT y1=0, HMDT y2=0, HMDT x1=0, HMDT x2=0)
 * TextMark sample::
 * Label sample::
 * Table sample::
-* Iris sample::
 * Tube sample::
 * Tape sample::
 * Torus sample::
@@ -2146,7 +2144,7 @@ int sample(mglGraph *gr)
 
 @c ------------------------------------------------------------------
 @external{}
-@node Table sample, Iris sample, Label sample, 1D samples
+@node Table sample, Tube sample, Label sample, 1D samples
 @subsection Table sample
 @nav{}
 
@@ -2172,24 +2170,7 @@ int sample(mglGraph *gr)
 
 @c ------------------------------------------------------------------
 @external{}
-@node Iris sample, Tube sample, Table sample, 1D samples
-@subsection Iris sample
-@nav{}
-
-Command @ref{iris} draw Iris plot for columns of data array. The sample code is:
-@verbatim
-  mglData a("iris.dat");  a.Crop(0,4,'x');  a.Rearrange(4,50);
-  gr->SubPlot(1,1,0,"");
-  if(big!=3)	gr->Title("Iris sample");
-  gr->Iris(a, "sepal\nlength;sepal\nwidth;petal\nlength;petal\nwidth", ". ", "value -1.5;size -2");
-@end verbatim
-
-@pfig{iris, Example of Iris()}
-
-
-@c ------------------------------------------------------------------
-@external{}
-@node Tube sample, Tape sample, Iris sample, 1D samples
+@node Tube sample, Tape sample, Table sample, 1D samples
 @subsection Tube sample
 @nav{}
 
@@ -2876,7 +2857,7 @@ void mgls_prepare3d(HMDT a, HMDT b=0)
 * ContF projection sample::
 * TriPlot and QuadPlot::
 * Dots sample::
-* Fractal sample::
+* IFS sample::
 @end menu
 
 @c ------------------------------------------------------------------
@@ -3157,7 +3138,7 @@ int sample(mglGraph *gr)
 
 @c ------------------------------------------------------------------
 @external{}
-@node Dots sample, Fractal sample, TriPlot and QuadPlot, 3D samples
+@node Dots sample, IFS sample, TriPlot and QuadPlot, 3D samples
 @subsection Dots sample
 @nav{}
 
@@ -3192,8 +3173,8 @@ int sample(mglGraph *gr)
 
 @c ------------------------------------------------------------------
 @external{}
-@node Fractal sample, , Dots sample, 3D samples
-@subsection Fractal sample
+@node IFS sample, , Dots sample, 3D samples
+@subsection IFS sample
 @nav{}
 
 Commands @ref{ifs2d} and @ref{ifs3d} generate points for fractals using iterated function system in 2d and 3d cases correspondingly. The sample codes are:
@@ -3230,28 +3211,6 @@ int sample(mglGraph *gr)
 @end verbatim
 
 @pfig{ifs3d, Example of IFS fractal (3d case).}
-
-Command @ref{flame2d} generate points for flame fractals in 2d case. The sample codes are:
-@verbatim
-int sample(mglGraph *gr)
-{
-  mglData A, B(2,3,5);
-  A.SetList(35, 0.33,0.,0.,0.33,0.,0.,0.2, 0.33,0.,0.,0.33,0.67,0.,0.2, 0.33,0.,0.,0.33,0.33,0.33,0.2,
-      0.33,0.,0.,0.33,0.,0.67,0.2, 0.33,0.,0.,0.33,0.67,0.67,0.2);
-  A.Rearrange(7);
-  for(long i=0;i<2*3*5;i++)	B.a[i] = 0.3;
-  for(long i=0;i<5;i++)	B.a[2*3*i] = B.a[2*3*i+1*2] = B.a[2*3*i+2*2] = 3;
-  mglData f(mglFlame2d(A,B,1000000));
-  gr->SubPlot(1,1,0,"<_");
-  if(big!=3)	gr->Title("Flame2d sample");
-  gr->SetRanges(f.SubData(0), f.SubData(1));
-  gr->Axis();	gr->Box();
-  gr->Plot(f.SubData(0), f.SubData(1),"r#o ","size 0.05");
-}
-@end verbatim
-
-@pfig{flame2d, Example of flame fractal (2d case).}
-
 
 
 @c ------------------------------------------------------------------
@@ -3529,7 +3488,6 @@ In this section I've included some small hints and advices for the improving of 
 * Stereo image::
 * Reduce memory usage::
 * Saving and scanning file::
-* Mixing bitmap and vector output::
 @end menu
 
 @c ------------------------------------------------------------------
@@ -4146,7 +4104,7 @@ int sample(mglGraph *gr)
 
 @pfig{pde, Example of PDE solving.}
 
-The next example is example of beam tracing. Beam tracing equation is special kind of PDE equation written in coordinates accompanied to a ray. Generally this is the same parameters and limitation as for PDE solving but the coordinates are defined by the ray and by parameter of grid width @var{w} in direction transverse the ray. So, you don't need to specify the range of coordinates. @strong{BUT} there is limitation. The accompanied coordinates are well defined only for smooth enough rays, i.e. then the ray curvature @math{K} (which is defined as @math{1/K^2 = (|r''|^2 |r'|^2 - (r'', r'')^2)/|r'|^6}) is much large then the grid width: @math{K>>w}. So, you may receive incorrect results if this condition will be broken.
+The last example is example of beam tracing. Beam tracing equation is special kind of PDE equation written in coordinates accompanied to a ray. Generally this is the same parameters and limitation as for PDE solving but the coordinates are defined by the ray and by parameter of grid width @var{w} in direction transverse the ray. So, you don't need to specify the range of coordinates. @strong{BUT} there is limitation. The accompanied coordinates are well defined only for smooth enough rays, i.e. then the ray curvature @math{K} (which is defined as @math{1/K^2 = (|r''|^2 |r'|^2 - (r'', r'')^2)/|r'|^6}) is much large then the grid width: @math{K>>w}. So, you may receive incorrect results if this condition will be broken.
 
 You may use following code for obtaining the same solution as in previous example:
 @verbatim
@@ -4172,31 +4130,6 @@ int sample(mglGraph *gr)
 @end verbatim
 
 @pfig{qo2d, Example of beam tracing.}
-
-Note, the @ref{pde} is fast enough and suitable for many cases routine. However, there is situations then media have both together: strong spatial dispersion and spatial inhomogeneity. In this, case the @ref{pde} will produce incorrect result and you need to use advanced PDE solver @ref{apde}. For example, a wave beam, propagated in plasma, described by Hamiltonian @math{exp(-x^2-p^2)}, will have different solution for using of simplification and advanced PDE solver:
-@verbatim
-int sample(mglGraph *gr)
-{
-  gr->SetRanges(-1,1,0,2,0,2);
-  mglData ar(256), ai(256);	gr->Fill(ar,"exp(-2*x^2)");
-
-  mglData res1(gr->APDE("exp(-x^2-p^2)",ar,ai,0.01));	res1.Transpose();
-  gr->SubPlot(1,2,0,"_");	gr->Title("Advanced PDE solver");
-  gr->SetRanges(0,2,-1,1);	gr->SetRange('c',res1);
-  gr->Dens(res1);	gr->Axis();	gr->Box();
-  gr->Label('x',"\\i z");	gr->Label('y',"\\i x");
-  gr->Puts(mglPoint(-0.5,0.2),"i\\partial_z\\i u = exp(-\\i x^2+\\partial_x^2)[\\i u]","y");
-
-  mglData res2(gr->PDE("exp(-x^2-p^2)",ar,ai,0.01));
-  gr->SubPlot(1,2,1,"_");	gr->Title("Simplified PDE solver");
-  gr->Dens(res2);	gr->Axis();	gr->Box();
-  gr->Label('x',"\\i z");	gr->Label('y',"\\i x");
-  gr->Puts(mglPoint(-0.5,0.2),"i\\partial_z\\i u \\approx\\ exp(-\\i x^2)\\i u+exp(\\partial_x^2)[\\i u]","y");
-  return 0;
-}
-@end verbatim
-
-@pfig{apde, Comparison of simplified and advanced PDE solvers.}
 
 
 @c ------------------------------------------------------------------
@@ -4444,7 +4377,7 @@ int sample(mglGraph *gr)
 
 @c ------------------------------------------------------------------
 @external{}
-@node Saving and scanning file, Mixing bitmap and vector output, Reduce memory usage, Hints
+@node Saving and scanning file, , Reduce memory usage, Hints
 @subsection Scanning file
 @nav{}
 
@@ -4475,32 +4408,6 @@ gr->Axis();	gr->Plot(a.SubData(0),a.SubData(1),"o");
 @end verbatim
 
 Note, I keep only the leading part of template (i.e. "This is test: %g -> %g" instead of "This is test: %g -> %g q\n"), because there is no important for us information after the second number in the line.
-
-
-@c ------------------------------------------------------------------
-@external{}
-@node Mixing bitmap and vector output, , Saving and scanning file, Hints
-@subsection Mixing bitmap and vector output
-@nav{}
-
-Sometimes output plots contain surfaces with a lot of points, and some vector primitives (like axis, text, curves, etc.). Using vector output formats (like EPS or SVG) will produce huge files with possible loss of smoothed lighting. Contrary, the bitmap output may cause the roughness of text and curves. Hopefully, MathGL have a possibility to combine bitmap output for surfaces and vector one for other primitives in the same EPS file, by using @ref{rasterize} command. 
-
-The idea is to prepare part of picture with surfaces or other "heavy" plots and produce the background image from them by help of @ref{rasterize} command. Next, we draw everything to be saved in vector form (text, curves, axis and etc.). Note, that you need to clear primitives (use @ref{clf} command) after @ref{rasterize} if you want to disable duplication of surfaces in output files (like EPS). Note, that some of output formats (like 3D ones, and TeX) don't support the background bitmap, and use @ref{clf} for them will cause the loss of part of picture.
-
-The sample code is:
-@verbatim
-// first draw everything to be in bitmap output
-gr->FSurf("x^2+y^2", "#", "value 10");
-
-gr->Rasterize();  // set above plots as bitmap background
-gr->Clf();        // clear primitives, to exclude them from file
-
-// now draw everything to be in vector output
-gr->Axis(); gr->Box();
-
-// and save file
-gr->WriteFrame("fname.eps");
-@end verbatim
 
 @c ==================================================================
 @external{}

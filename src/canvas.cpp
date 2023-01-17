@@ -30,7 +30,7 @@ mglCanvas::mglCanvas(int w, int h) : mglBase()
 	Z=0;	C=G=G4=GB=0;	OI=0;	gif=0;
 	CurFrameId=0;	Delay=0.5;
 	Width=Height=Depth=0;	ObjId=-1;
-	fscl=ftet=0;		PlotId = _("frame");
+	fscl=ftet=0;		PlotId = "frame";
 	pnt_col = 0;
 
 	ac.ch='c';
@@ -223,7 +223,7 @@ int Height;			///< Height of the image
 int Depth;			///< Depth of the image
 int CurFrameId;		///< Number of automaticle created frames
 GifFileType *gif;*/
-	SetDrawReg(1,1,0);		Perspective(0);	SetPenDelta(1);	SetBBox();
+	SetDrawReg(1,1,0);		Perspective(0);	SetPenDelta(1);
 	memcpy(mgl_mask_val, mgl_mask_def, 16*sizeof(uint64_t));	// should be > 16*8
 	ax.Clear();	ay.Clear();	az.Clear();	ac.Clear();
 	mgl_clear_fft();		DefMaskAn=0;	ResetMask();
@@ -354,15 +354,13 @@ mreal mglCanvas::GetOrgZ(char dir, bool inv) const
 void mglCanvas::mark_plot(long p, char type, mreal size)
 {
 	if(p<0 || mgl_isnan(Pnt[p].x) || mgl_isnan(size))	return;
-	if(type>128 || type<0)
-	{	smbl_plot(p,type-128,20*MarkSize*(size?fabs(size):1));	return;	}
 	long pp=p;
 	mreal pw = 0.15/sqrt(font_factor);
 	size = size?fabs(size):1;
 	size *= MarkSize*0.35*font_factor;
 	if(type=='.')	size = fabs(PenWidth)*sqrt(font_factor/400);
 	if(TernAxis&12) for(int i=0;i<4;i++)
-	{	p = ProjScale(i, pp);	if(p>=0)	{MGL_MARK_PLOT}	}
+	{	p = ProjScale(i, pp);	MGL_MARK_PLOT	}
 	else	{	MGL_MARK_PLOT	}
 }
 //-----------------------------------------------------------------------------
@@ -374,25 +372,16 @@ void mglCanvas::mark_plot(long p, char type, mreal size)
 void mglCanvas::line_plot(long p1, long p2)
 {
 	if(PDef==0)	return;
-	if(p1<0 || p2<0 || mgl_isnan(Pnt[p1].x) || mgl_isnan(Pnt[p2].x) || SamePnt(p1,p2))	return;
+	if(p1<0 || p2<0 || mgl_isnan(Pnt[p1].x) || mgl_isnan(Pnt[p2].x))	return;
 	if(p1>p2)	{	long kk=p1;	p1=p2;	p2=kk;	}	// rearrange start/end for proper dashing
 	long pp1=p1,pp2=p2;
-	mreal pw = fabs(PenWidth)*sqrt(font_factor/400), d=0;
+	mreal pw = fabs(PenWidth)*sqrt(font_factor/400);
 	if(TernAxis&12) for(int i=0;i<4;i++)
 	{	p1 = ProjScale(i, pp1);	p2 = ProjScale(i, pp2);
-		if(p1>=0&&p2>=0)
-		{
-			d += hypot(Pnt[p1].x-Pnt[p2].x, Pnt[p1].y-Pnt[p2].y);
-			MGL_LINE_PLOT
-			pPos = fmod(pPos+d/pw/1.5, 16);
-		}
-	}
-	else
-	{
-		d = hypot(Pnt[p1].x-Pnt[p2].x, Pnt[p1].y-Pnt[p2].y);
-		MGL_LINE_PLOT
-		pPos = fmod(pPos+d/pw/1.5, 16);
-	}
+		MGL_LINE_PLOT	}
+	else	{	MGL_LINE_PLOT	}
+	mreal d = hypot(Pnt[p1].x-Pnt[p2].x, Pnt[p1].y-Pnt[p2].y);
+	pPos = fmod(pPos+d/pw/1.5, 16);
 }
 //-----------------------------------------------------------------------------
 #define MGL_TRIG_PLOT	if(Quality&MGL_DRAW_LMEM)	\
@@ -403,12 +392,11 @@ void mglCanvas::line_plot(long p1, long p2)
 void mglCanvas::trig_plot(long p1, long p2, long p3)
 {
 	if(p1<0 || p2<0 || p3<0 || mgl_isnan(Pnt[p1].x) || mgl_isnan(Pnt[p2].x) || mgl_isnan(Pnt[p3].x))	return;
-	if(SamePnt(p1,p2) || SamePnt(p1,p3))	return;
 	long pp1=p1,pp2=p2,pp3=p3;
 	mreal pw = fabs(PenWidth)*sqrt(font_factor/400);
 	if(TernAxis&12) for(int i=0;i<4;i++)
 	{	p1 = ProjScale(i, pp1);	p2 = ProjScale(i, pp2);
-		p3 = ProjScale(i, pp3);	if(p1>=0&&p2>=0&&p3>=0)	{MGL_TRIG_PLOT}	}
+		p3 = ProjScale(i, pp3);	MGL_TRIG_PLOT	}
 	else	{	MGL_TRIG_PLOT	}
 }
 //-----------------------------------------------------------------------------
@@ -419,16 +407,16 @@ void mglCanvas::trig_plot(long p1, long p2, long p3)
 							a.m=mask;	a.angl=MaskAn;	a.w = pw;	add_prim(a);	}
 void mglCanvas::quad_plot(long p1, long p2, long p3, long p4)
 {
-	if(p1<0 || mgl_isnan(Pnt[p1].x) || SamePnt(p1,p2))	{	trig_plot(p4,p2,p3);	return;	}
-	if(p2<0 || mgl_isnan(Pnt[p2].x) || SamePnt(p2,p4))	{	trig_plot(p1,p4,p3);	return;	}
-	if(p3<0 || mgl_isnan(Pnt[p3].x) || SamePnt(p1,p3))	{	trig_plot(p1,p2,p4);	return;	}
-	if(p4<0 || mgl_isnan(Pnt[p4].x) || SamePnt(p3,p4))	{	trig_plot(p1,p2,p3);	return;	}
+	if(p1<0 || mgl_isnan(Pnt[p1].x))	{	trig_plot(p4,p2,p3);	return;	}
+	if(p2<0 || mgl_isnan(Pnt[p2].x))	{	trig_plot(p1,p4,p3);	return;	}
+	if(p3<0 || mgl_isnan(Pnt[p3].x))	{	trig_plot(p1,p2,p4);	return;	}
+	if(p4<0 || mgl_isnan(Pnt[p4].x))	{	trig_plot(p1,p2,p3);	return;	}
 	long pp1=p1,pp2=p2,pp3=p3,pp4=p4;
 	mreal pw = fabs(PenWidth)*sqrt(font_factor/400);
 	if(TernAxis&12) for(int i=0;i<4;i++)
 	{	p1 = ProjScale(i, pp1);	p2 = ProjScale(i, pp2);
 		p3 = ProjScale(i, pp3);	p4 = ProjScale(i, pp4);
-		if(p1>=0&&p2>=0&&p3>=0&&p4>=0)	{MGL_QUAD_PLOT}	}
+		MGL_QUAD_PLOT	}
 	else	{	MGL_QUAD_PLOT	}
 }
 //-----------------------------------------------------------------------------
@@ -580,32 +568,6 @@ void mglCanvas::Glyph(mreal x, mreal y, mreal f, int s, long j, mreal col)
 	else	add_prim(a);
 }
 //-----------------------------------------------------------------------------
-#define MGL_GLYPH_PLOT	if(Quality&MGL_DRAW_LMEM)	glyph_draw(a,&d);\
-						else	add_prim(a);
-void mglCanvas::smbl_plot(long p1, char id, double size)
-{
-	if(p1<0)	return;
-	mglPnt q=Pnt[p1];
-	mreal ftet=NAN, ll = q.u*q.u+q.v*q.v;
-	if(mgl_isnan(ll) || !get(MGL_ENABLE_RTEXT))	ftet = 0;
-	else if(ll)	ftet = -180*atan2(q.v,q.u)/M_PI;
-	long pk;	q.u=q.v=0;	q.w=NAN;
-#pragma omp critical(pnt)
-	{pk=Pnt.size();	MGL_PUSH(Pnt,q,mutexPnt);}
-
-	mglPrim a(4);
-	a.s = fabs(size)/6.5*font_factor/B.pf;
-	a.w = get(MGL_ENABLE_RTEXT)?ftet:1e5;
-	a.p = 1./(mgl_fact*mgl_fgen);
-	a.n1 = pk;	a.n2 = p1; 	a.n3 = size<0?4:0;	a.n4 = AddGlyph(id);
-	if(a.n4<0)	return;	// no symbol is defined by user
-	mglDrawReg d;	d.set(this,dr_x,dr_y,dr_p);
-	d.PDef = size<0?4:0;	d.pPos = a.s;	d.PenWidth=a.w;
-	if(TernAxis&12) for(int i=0;i<4;i++)
-	{	a.n1 = ProjScale(i, pk);	MGL_GLYPH_PLOT	}
-	else	{	MGL_GLYPH_PLOT	}
-}
-//-----------------------------------------------------------------------------
 //	Plot positioning functions
 //-----------------------------------------------------------------------------
 void mglCanvas::InPlot(mreal x1,mreal x2,mreal y1,mreal y2, const char *st)
@@ -746,13 +708,13 @@ void mglCanvas::RotateN(mreal Tet,mreal x,mreal y,mreal z)
 	size_t n = Sub.size();	if(n>0)	Sub[n-1].B = B;
 }
 //-----------------------------------------------------------------------------
-void mglMatrix::RotateN(mreal Tet,mreal vx,mreal vy,mreal vz)
+void mglMatrix::RotateN(mreal Tet,mreal x,mreal y,mreal z)
 {
-	mreal R[9],T[9],c=cos(Tet*M_PI/180),s=-sin(Tet*M_PI/180),r=1-c,n=sqrt(vx*vx+vy*vy+vz*vz);
-	vx/=n;	vy/=n;	vz/=n;
-	T[0] = vx*vx*r+c;		T[1] = vx*vy*r-vz*s;	T[2] = vx*vz*r+vy*s;
-	T[3] = vx*vy*r+vz*s;	T[4] = vy*vy*r+c;		T[5] = vy*vz*r-vx*s;
-	T[6] = vx*vz*r-vy*s;	T[7] = vy*vz*r+vx*s;	T[8] = vz*vz*r+c;
+	mreal R[9],T[9],c=cos(Tet*M_PI/180),s=-sin(Tet*M_PI/180),r=1-c,n=sqrt(x*x+y*y+z*z);
+	x/=n;	y/=n;	z/=n;
+	T[0] = x*x*r+c;		T[1] = x*y*r-z*s;	T[2] = x*z*r+y*s;
+	T[3] = x*y*r+z*s;	T[4] = y*y*r+c;		T[5] = y*z*r-x*s;
+	T[6] = x*z*r-y*s;	T[7] = y*z*r+x*s;	T[8] = z*z*r+c;
 	memcpy(R,b,9*sizeof(mreal));
 	b[0] = T[0]*R[0] + T[3]*R[1] + T[6]*R[2];
 	b[1] = T[1]*R[0] + T[4]*R[1] + T[7]*R[2];
@@ -797,11 +759,11 @@ void mglCanvas::Aspect(mreal Ax,mreal Ay,mreal Az)
 		if(mgl_islog(Min.x,Max.x) && fx)	dx = log10(Max.x/Min.x);
 		if(mgl_islog(Min.y,Max.y) && fy)	dy = log10(Max.y/Min.y);
 		if(mgl_islog(Min.z,Max.z) && fz)	dz = log10(Max.z/Min.z);
-		mreal gy=exp(M_LN10*floor(0.5+log10(fabs(dy/dx))));
-		mreal gz=exp(M_LN10*floor(0.5+log10(fabs(dz/dx))));
-		if(Ay>0)	gy*=Ay;
-		if(Az>0)	gz*=Az;
-		Ax = inH*dx;	Ay = inW*dy*gy;	Az = sqrt(inW*inH)*dz*gz;
+		mreal fy=exp(M_LN10*floor(0.5+log10(fabs(dy/dx))));
+		mreal fz=exp(M_LN10*floor(0.5+log10(fabs(dz/dx))));
+		if(Ay>0)	fy*=Ay;
+		if(Az>0)	fz*=Az;
+		Ax = inH*dx;	Ay = inW*dy*fy;	Az = sqrt(inW*inH)*dz*fz;
 	}
 	mreal a = fabs(Ax) > fabs(Ay) ? fabs(Ax) : fabs(Ay);
 	a = a > fabs(Az) ? a : fabs(Az);
@@ -874,7 +836,7 @@ void mglCanvas::arrow_plot(long n1, long n2, char st)
 //-----------------------------------------------------------------------------
 std::wstring MGL_EXPORT mgl_ftoa(double v, const char *fmt)
 {
-	char se[70], sf[70], ff[8]="%.3f", ee[8]="%.3e";
+	char se[64], sf[64], ff[8]="%.3f", ee[8]="%.3e";
 	int dig=3;
 	for(const char *s="0123456789";*s;s++)	if(mglchr(fmt,*s))	dig = *s-'0';
 	if(mglchr(fmt,'E'))	ee[3] = 'E';
@@ -888,8 +850,7 @@ std::wstring MGL_EXPORT mgl_ftoa(double v, const char *fmt)
 
 	// clear fix format
 	for(i=lf-1;i>=lf-fdig && sf[i]=='0';i--)	sf[i]=0;
-	if(sf[i]=='.')	sf[i]=0;
-	lf = strlen(sf);
+	if(sf[i]=='.')	sf[i]=0;	lf = strlen(sf);
 	// parse -nan numbers
 	if(!strcmp(sf,"-nan"))	memcpy(sf,"nan",4);
 
@@ -911,9 +872,9 @@ std::wstring MGL_EXPORT mgl_ftoa(double v, const char *fmt)
 	}
 	le=strlen(se);
 	// don't allow '+' at the end
-	if(le>0 && se[le-1]=='+')	se[--le]=0;
+	if(se[le-1]=='+')	se[--le]=0;
 	// remove single 'e'
-	if(le>0 && (se[le-1]=='e' || se[le-1]=='E'))	se[--le]=0;
+	if(se[le-1]=='e' || se[le-1]=='E')	se[--le]=0;
 	for(i=1+st+dig;i>st && se[i]=='0';i--);	// remove final '0'
 	if(se[i]=='.')	i--;
 	memmove(se+i+1,se+2+st+dig,le-dig);	le=strlen(se);
@@ -921,8 +882,7 @@ std::wstring MGL_EXPORT mgl_ftoa(double v, const char *fmt)
 	if(plus && !strchr("-0niNI",se[0]))
 	{	memmove(se+1,se,le+1);	se[0]='+';
 		memmove(sf+1,sf,lf+1);	sf[0]='+';	}
-	if((lf>le && !mglchr(fmt,'f')) || !strcmp(sf,"0") || !strcmp(sf,"-0"))	strcpy(sf,se);
-	lf = strlen(sf);
+	if((lf>le && !mglchr(fmt,'f')) || !strcmp(sf,"0") || !strcmp(sf,"-0"))	strcpy(sf,se);	lf = strlen(sf);
 	std::wstring res;	res.reserve(lf+8);
 
 	if(mglchr(fmt,'-') && !(plus||tex))		// replace '-' by "\minus"
@@ -970,14 +930,15 @@ void mglCanvas::Legend(const std::vector<mglText> &leg, mreal x, mreal y, const 
 	// find sizes
 	mreal h=TextHeight(font,size);
 	mreal dx = 0.03*iw, dy = 0.03*ih, w=0, t, sp=TextWidth(" ",font,size);
-	for(long i=0;i<n;i++)		// find text length
+	long i,j;
+	for(i=0;i<n;i++)		// find text length
 	{
 		t = TextWidth(leg[i].text.c_str(),font,size)+sp;
 		if(leg[i].stl.empty())	t -= ll;
 		w = w>t ? w:t;
 	}
 	w += ll+0.01*iw;	// add space for lines
-	long j = long((ih*0.95)/h);	if(j<1)	j=1;
+	j = long((ih*0.95)/h);	if(j<1)	j=1;
 	long ncol = 1+(n-1)/j, nrow = (n+ncol-1)/ncol;
 	if(strchr(font,'-'))	// horizontal legend
 	{
@@ -1025,7 +986,7 @@ void mglCanvas::Legend(const std::vector<mglText> &leg, mreal x, mreal y, const 
 		line_plot(k1,k2);	line_plot(k2,k4);
 		line_plot(k4,k3);	line_plot(k3,k1);
 	}
-	for(long i=0;i<n;i++)	// draw lines and legend
+	for(i=0;i<n;i++)	// draw lines and legend
 	{
 		long iy=nrow-(i%nrow)-1,ix=i/nrow;
 		char m=SetPenPal(leg[i].stl.c_str());
@@ -1053,7 +1014,7 @@ void mglCanvas::Table(mreal x, mreal y, HCDT val, const wchar_t *text, const cha
 	bool grid = mglchr(frm,'#'), eqd = mglchr(frm,'='), lim = mglchr(frm,'|');
 	if(mgl_isnan(vw))	vw=1;	else 	lim = true;
 	if(!text)	text=L"";
-	x=x<0?0:x; 	y=y<0?0:y; 	y=y>1?1:y;
+	if(x<0)	x=0; 	if(y<0)	y=0; 	if(y>1)	y=1;
 //	if(vw>1-x)	vw=1-x;
 
 	char fmt[8]="3",ss[2]=" ";
@@ -1118,11 +1079,11 @@ void mglCanvas::Table(mreal x, mreal y, HCDT val, const wchar_t *text, const cha
 	if(*text)
 	{
 		ww = TextWidth(text,frm,-1)+sp;
-		long k1=AddPnt(&B,mglPoint(x+ww*align/2.,y+h*(m-0.9),Depth),-1,q,-1,0);
+		long k1=AddPnt(&B,mglPoint(x+ww*align/2.,y+h*(m-0.99),Depth),-1,q,-1,0);
 		text_plot(k1,text,frm);
 	}
 	else 	ww = 0;
-	for(i=0,xx=x+ww,yy=y+h*(m-0.9);i<n;i++)	// draw lines and legend
+	for(i=0,xx=x+ww,yy=y+h*(m-0.99);i<n;i++)	// draw lines and legend
 	{
 		ww = eqd ? w1:(TextWidth(str[i].c_str(),frm,-1)+sp);
 		long k1=AddPnt(&B,mglPoint(xx+ww*align/2.,yy,Depth),-1,q,-1,0);
@@ -1178,7 +1139,7 @@ void mglCanvas::StartAutoGroup (const char *lbl)
 	if(grp_counter>1)	return;	// do nothing in "subgroups"
 	if(ObjId<0)	{	ObjId = -id;	id++;	}
 	size_t len = Grp.size();
-	if(ObjId>=0 && (len==0 || (len>0 && ObjId!=Grp[len-1].Id)))
+	if(ObjId>=0 && len>0 && ObjId!=Grp[len-1].Id)
 #pragma omp critical(grp)
 	{	MGL_PUSH(Grp,mglGroup(lbl,ObjId),mutexGrp);}
 	else if(ObjId<0)
@@ -1215,15 +1176,3 @@ void mglCanvas::Push()
 	{MGL_PUSH(stack,B,mutexStk);}
 }
 //-----------------------------------------------------------------------------
-void mglCanvas::Pop()
-{
-	B = stack.back(); 
-#if MGL_HAVE_PTHREAD
-	pthread_mutex_lock(&m);
-	stack.pop_back();
-	pthread_mutex_unlock(&m);
-#else
-#pragma omp critical(stk)
-	stack.pop_back();
-#endif
-}

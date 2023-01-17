@@ -19,7 +19,6 @@
  ***************************************************************************/
 #include <time.h>
 #include <ctype.h>
-#include <wchar.h>
 #include "mgl2/base.h"
 #include "mgl2/parser.h"
 #if MGL_HAVE_GSL
@@ -270,10 +269,10 @@ bool mglCheck(std::wstring str)
 	return (s==0) ? true : false;
 }
 //-----------------------------------------------------------------------------
-long mglFindInText(const std::wstring &str,const char *lst)
+int mglFindInText(std::wstring str,const char *lst)
 {
-	long l=0,r=0;
-	for(long i=str.length()-1;i>=0;i--)
+	long l=0,r=0,i;//,j,len=strlen(lst);
+	for(i=str.length()-1;i>=0;i--)
 	{
 		if(str[i]=='(') l++;
 		if(str[i]==')') r++;
@@ -326,28 +325,6 @@ void MGL_EXPORT mgl_wcslwr(wchar_t *str)
 		str[k] = (str[k]>='A' && str[k]<='Z') ? str[k]+'a'-'A' : str[k];
 }
 //-----------------------------------------------------------------------------
-mreal mgl_gettime(const std::wstring &s)
-{
-	mreal t=NAN;
-	tm a;	memset(&a,0,sizeof(tm));
-	if(swscanf(s.c_str(),L"%u-%u-%u_%u.%u.%d", &a.tm_hour,&a.tm_min,&a.tm_sec, &a.tm_mday,&a.tm_mon,&a.tm_year)==6)
-	{	a.tm_year-=1900;	a.tm_mon -= 1;
-		if(a.tm_hour<24 && a.tm_min<60 && a.tm_sec<60 && a.tm_mday>0 && a.tm_mday<32 && a.tm_mon<12)
-			t = mktime(&a);
-	}
-	else if(swscanf(s.c_str(),L"%d.%d.%d", &a.tm_mday,&a.tm_mon,&a.tm_year)==3)
-	{	a.tm_year-=1900;	a.tm_mon -= 1;
-		if(a.tm_mday>0 && a.tm_mday<32 && a.tm_mon<12)
-			t = mktime(&a);
-	}
-	else if(swscanf(s.c_str(),L"%d-%d-%d", &a.tm_hour,&a.tm_min,&a.tm_sec)==3)
-	{	a.tm_mday=1;	a.tm_mon=0;	a.tm_year=70;
-		if(a.tm_hour<24 && a.tm_min<60 && a.tm_sec<60)
-			t = mktime(&a);
-	}
-	return t;
-}
-//-----------------------------------------------------------------------------
 /// Parse string and substitute the script argument
 // All numbers are presented as mglData(1). Do boundary checking.
 // NOTE: In any case where number is required the mglData::a[0] is used.
@@ -359,10 +336,6 @@ HMDT MGL_NO_EXPORT mglFormulaCalc(std::wstring str, mglParser *arg, const std::v
 #endif
 	if(str.empty())	return new mglData;	// nothing to parse
 	str = mgl_trim_ws(str);
-	mreal tval = mgl_gettime(str);
-	if(mgl_isnum(tval))
-	{	mglData *r=new mglData;	r->a[0] = tval;	return r;	}
-
 	long n,len=str.length();
 	if(str[0]=='(' && mglCheck(str.substr(1,len-2)))	// remove braces
 	{	str = str.substr(1,len-2);	len-=2;	}
@@ -483,15 +456,9 @@ HMDT MGL_NO_EXPORT mglFormulaCalc(std::wstring str, mglParser *arg, const std::v
 		{
 			if(ch=='a' && p[2]=='x')	v = d->Maximal();
 			else if(ch=='i' && p[2]=='n')	v = d->Minimal();
-			else if(ch=='x' && p[2]=='f')	v = d->Maximal('x',0)/mreal(ns[0]);
-			else if(ch=='x' && p[2]=='l')	v = d->Maximal('x',-1)/mreal(ns[0]);
-			else if(ch=='x')	{	d->Maximal(x,y,z);	v = x/ns[0];	}
-			else if(ch=='y' && p[2]=='f')	v = d->Maximal('y',0)/mreal(ns[1]);
-			else if(ch=='y' && p[2]=='l')	v = d->Maximal('y',-1)/mreal(ns[1]);
-			else if(ch=='y')	{	d->Maximal(x,y,z);	v = y/ns[1];	}
-			else if(ch=='z' && p[2]=='f')	v = d->Maximal('z',0)/mreal(ns[2]);
-			else if(ch=='z' && p[2]=='l')	v = d->Maximal('z',-1)/mreal(ns[2]);
-			else if(ch=='z')	{	d->Maximal(x,y,z);	v = z/ns[2];	}
+			else if(ch=='x')	{	v = d->Maximal(x,y,z);	v = x/ns[0];	}
+			else if(ch=='y')	{	v = d->Maximal(x,y,z);	v = y/ns[1];	}
+			else if(ch=='z')	{	v = d->Maximal(x,y,z);	v = z/ns[2];	}
 		}
 		else if(c0=='s')
 		{
@@ -712,8 +679,7 @@ HMDT MGL_NO_EXPORT mglFormulaCalc(std::wstring str, mglParser *arg, const std::v
 		else if(!nm.compare(L"int"))	return mglApplyFunc(str, arg, head, floor);
 		else if(!nm.compare(L"random"))
 		{	HMDT res=mglFormulaCalc(str, arg, head);	mreal *a = res->a;
-			for(long i=0;i<res->GetNN();i++)	a[i] = mgl_rnd();
-			return res;	}
+			for(long i=0;i<res->GetNN();i++)	a[i] = mgl_rnd();	return res;	}
 		else if(!nm.compare(L"real"))
 		{
 			HADT a1 = mglFormulaCalcC(str, arg, head);
@@ -764,11 +730,9 @@ dual MGL_LOCAL_CONST cgtc(dual a,dual b);	//{return real(a-b)>0?1:0;}
 dual MGL_LOCAL_CONST ipwc(dual a,dual b);	//{return mgl_ipowc(a,int(b.real()));}
 dual MGL_LOCAL_CONST powc(dual a,dual b);	//{return exp(b*log(a));	}
 dual MGL_LOCAL_CONST llgc(dual a,dual b);	//{return log(a)/log(b);	}
-dual MGL_LOCAL_CONST cmplxc(dual a,dual b);	//{return a+dual(0,1)*b;	}
 dual MGL_LOCAL_CONST expi(dual a);	//{	return exp(dual(0,1)*a);	}
 dual MGL_LOCAL_CONST expi(double a);	//{	return dual(cos(a),sin(a));	}
 //-----------------------------------------------------------------------------
-dual MGL_LOCAL_CONST hypotc(dual x, dual y);	//{	return sqrt(x*x+y*y);	}
 dual MGL_LOCAL_CONST asinhc(dual x);	//{	return log(x+sqrt(x*x+mreal(1)));	}
 dual MGL_LOCAL_CONST acoshc(dual x);	//{	return log(x+sqrt(x*x-mreal(1)));	}
 dual MGL_LOCAL_CONST atanhc(dual x);	//{	return log((mreal(1)+x)/(mreal(1)-x))/mreal(2);	}
@@ -803,10 +767,6 @@ HADT MGL_NO_EXPORT mglFormulaCalcC(std::wstring str, mglParser *arg, const std::
 #endif
 	if(str.empty())	return new mglDataC;	// nothing to parse
 	str = mgl_trim_ws(str);
-	mreal tval = mgl_gettime(str);
-	if(mgl_isnum(tval))
-	{	mglDataC *r=new mglDataC;	r->a[0] = tval;	return r;	}
-	
 	long n,len=str.length();
 	if(str[0]=='(' && mglCheck(str.substr(1,len-2)))	// remove braces
 	{	str = str.substr(1,len-2);	len-=2;	}
@@ -832,9 +792,8 @@ HADT MGL_NO_EXPORT mglFormulaCalcC(std::wstring str, mglParser *arg, const std::
 					{	k = res->ny;	res->Insert('y',k);	mgl_datac_put_dat(res,a1,-1,k,-1);	}
 					else		// res 3d array
 					{	k = res->nz;	res->Insert('z',k);	mgl_datac_put_dat(res,a1,-1,-1,k);	}
-					mgl_delete_datac(a1);
 				}
-				j=i+1;
+				mgl_delete_datac(a1);	j=i+1;
 			}
 		}
 		HADT a1=mglFormulaCalcC(str.substr(j,i-j), arg, head);
@@ -848,9 +807,8 @@ HADT MGL_NO_EXPORT mglFormulaCalcC(std::wstring str, mglParser *arg, const std::
 			{	k = res->ny;	res->Insert('y',k);	mgl_datac_put_dat(res,a1,-1,k,-1);	}
 			else		// res 3d array
 			{	k = res->nz;	res->Insert('z',k);	mgl_datac_put_dat(res,a1,-1,-1,k);	}
-			mgl_delete_datac(a1);
 		}
-		return res;
+		mgl_delete_datac(a1);	return res;
 	}
 
 	n=mglFindInText(str,"<>=");	// low priority -- conditions
@@ -924,9 +882,9 @@ HADT MGL_NO_EXPORT mglFormulaCalcC(std::wstring str, mglParser *arg, const std::
 			mreal x,y,z;
 			if(ch=='a' && p[2]=='x')	v = d->Maximal();
 			else if(ch=='i' && p[2]=='n')	v = d->Minimal();
-			else if(ch=='x')	{	d->Maximal(x,y,z);	v = x/ns[0];	}
-			else if(ch=='y')	{	d->Maximal(x,y,z);	v = y/ns[1];	}
-			else if(ch=='z')	{	d->Maximal(x,y,z);	v = z/ns[2];	}
+			else if(ch=='x')	{	v = d->Maximal(x,y,z);	v = x/ns[0];	}
+			else if(ch=='y')	{	v = d->Maximal(x,y,z);	v = y/ns[1];	}
+			else if(ch=='z')	{	v = d->Maximal(x,y,z);	v = z/ns[2];	}
 		}
 		else if(c0=='s')
 		{
@@ -1032,8 +990,6 @@ HADT MGL_NO_EXPORT mglFormulaCalcC(std::wstring str, mglParser *arg, const std::
 			if(!nm.compare(L"cos"))	return mglApplyFuncC(str, arg, head, cosc);
 			else if(!nm.compare(L"cosh") || !nm.compare(L"ch"))	return mglApplyFuncC(str, arg, head, coshc);
 			else if(!nm.compare(L"conj"))	return mglApplyFuncC(str, arg, head, conjc);
-			else if(!nm.compare(L"cmplx") && n>0)
-				return mglApplyOperC(str.substr(0,n),str.substr(n+1),arg, head, cmplxc);
 		}
 		else if(!nm.compare(L"exp"))	return mglApplyFuncC(str, arg, head, expc);
 		else if(nm[0]=='l')
@@ -1056,10 +1012,7 @@ HADT MGL_NO_EXPORT mglFormulaCalcC(std::wstring str, mglParser *arg, const std::
 			return mglApplyOperC(str.substr(0,n),str.substr(n+1),arg, head, powc);
 		else if(!nm.compare(L"random"))
 		{	HADT res=mglFormulaCalcC(str, arg, head);	dual *a = res->a;
-			for(long i=0;i<res->GetNN();i++)	a[i] = dual(mgl_rnd(), mgl_rnd());
-			return res;	}
-		else if(!nm.compare(L"hypot"))
-			return mglApplyOperC(str.substr(0,n),str.substr(n+1),arg, head, hypotc);
+			for(long i=0;i<res->GetNN();i++)	a[i] = dual(mgl_rnd(), mgl_rnd());	return res;	}
 		else if(!nm.compare(L"real"))	return mglApplyFuncC(str, arg, head, realc);
 		else if(!nm.compare(L"imag"))	return mglApplyFuncC(str, arg, head, imagc);
 		else if(!nm.compare(L"norm"))	return mglApplyFuncC(str, arg, head, normc);

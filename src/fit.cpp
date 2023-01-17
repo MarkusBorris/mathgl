@@ -46,7 +46,7 @@ void MGL_EXPORT mgl_puts_fit(HMGL gr, double x, double y, double z, const char *
 	long n = strlen(mglFitRes)+(pre?strlen(pre):0)+1;
 	char *buf = new char[n];
 	if(pre)	snprintf(buf,n,"%s%s",pre,mglFitRes);
-	else	mgl_strncpy(buf,mglFitRes,n);
+	else	strncpy(buf,mglFitRes,n);
 	buf[n-1]=0;	mgl_puts(gr,x,y,z,buf,font,size);
 	delete []buf;
 }
@@ -169,11 +169,11 @@ int MGL_NO_EXPORT mgl_fit__fdf (const gsl_vector * x, void *data, gsl_vector * f
 mreal MGL_NO_EXPORT mgl_fit_base(mglFitData &fd, mreal *ini)
 {
 #if MGL_HAVE_GSL
-	long m=fd.m,n=fd.n,iter=0;
+	long i,m=fd.m,n=fd.n,iter=0;
 	if(n<1 || ini==0)	return -1;
 	// setup data
 	double *x_init = new double[fd.m];
-	for(long i=0;i<m;i++)	x_init[i] = ini[i];
+	for(i=0;i<m;i++)	x_init[i] = ini[i];
 	// setup fitting
 	gsl_vector_view vx = gsl_vector_view_array(x_init, m);
 	const gsl_multifit_fdfsolver_type *T = gsl_multifit_fdfsolver_lmsder;
@@ -206,7 +206,7 @@ mreal MGL_NO_EXPORT mgl_fit_base(mglFitData &fd, mreal *ini)
 	gsl_matrix_free(covar);
 
 	mreal res = gsl_blas_dnrm2(s->f);
-	for(long i=0;i<m;i++)	ini[i] = gsl_vector_get(s->x, i);
+	for(i=0;i<m;i++)	ini[i] = gsl_vector_get(s->x, i);
 	// free memory
 	gsl_multifit_fdfsolver_free(s);
 	delete []x_init;
@@ -336,12 +336,11 @@ HMDT MGL_EXPORT mgl_fit_xys(HMGL gr, HCDT xx, HCDT yy, HCDT ss, const char *eq, 
 	fd.eq = eq;	fd.var = var;	fd.m = strlen(var);
 	mglData in(fd.m), *fit=new mglData(nn, yy->GetNy(), yy->GetNz());
 	mreal res=-1;
-	mglDataR xc(x);
 	for(long i=0;i<yy->GetNy()*yy->GetNz();i++)
 	{
 		if(ini && ini->nx>=fd.m)	in.Set(ini->a,fd.m);
 		else in.Fill(0.,0);
-		xc.SetInd(i%x.ny, L"x");
+		mglDataR xc(x);	xc.SetInd(i%x.ny, L"x");
 		fd.a = y.a+i*m;		fd.x = &xc;	//x.a+(i%x.ny)*m;
 		fd.s = s.a+i*m;
 		res = mgl_fit_base(fd,in.a);
@@ -371,7 +370,7 @@ HMDT MGL_EXPORT mgl_fit_xyzs(HMGL gr, HCDT xx, HCDT yy, HCDT zz, HCDT ss, const 
 	mglData x(m, n), y(m, n), z(zz), s(ss);	x.s=L"x";	y.s=L"y";
 	long nz = zz->GetNz(), mm = n*m;
 #pragma omp parallel for collapse(2)
-	for(long j=0;j<n;j++)	for(long i=0;i<m;i++)
+	for(long i=0;i<m;i++)	for(long j=0;j<n;j++)
 	{
 		long i0 = i+m*j;
 		x.a[i0] = GetX(xx,i,j,0).x;
@@ -417,7 +416,7 @@ HMDT MGL_EXPORT mgl_fit_xyzas(HMGL gr, HCDT xx, HCDT yy, HCDT zz, HCDT aa, HCDT 
 	mglData x(m,n,l), y(m,n,l), z(m,n,l), a(aa), s(ss);
 	x.s=L"x";	y.s=L"y";	z.s=L"z";
 #pragma omp parallel for collapse(3)
-	for(long k=0;k<l;k++)	for(long j=0;j<n;j++)	for(long i=0;i<m;i++)
+	for(long i=0;i<m;i++)	for(long j=0;j<n;j++)	for(long k=0;k<l;k++)
 	{
 		long i0 = i+m*(j+n*k);
 		x.a[i0] = GetX(xx,i,j,k).x;
@@ -516,7 +515,7 @@ MGL_EXPORT const char *mgl_get_fit(HMGL )	{	return mglFitRes;	}
 int MGL_EXPORT mgl_get_fit_(uintptr_t *gr, char *out, int len)
 {
 	const char *res = mgl_get_fit(_GR_);
-	if(out)	mgl_strncpy(out,res,len);
+	if(out)	strncpy(out,res,len);
 	return strlen(res);
 }
 //-----------------------------------------------------------------------------

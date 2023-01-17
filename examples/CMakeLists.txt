@@ -1,5 +1,3 @@
-file(COPY ${CMAKE_SOURCE_DIR}/examples/iris.dat DESTINATION ${CMAKE_BINARY_DIR}/examples)
-file(COPY ${CMAKE_SOURCE_DIR}/examples/Equirectangular-projection.jpg DESTINATION ${CMAKE_BINARY_DIR}/examples)
 add_executable(mgl_example wnd_samples.cpp full_test.cpp samples.cpp)
 target_link_libraries(mgl_example mgl-static ${getopt_lib-static})
 
@@ -23,10 +21,10 @@ endif(MGL_HAVE_WX)
 if(QT_ENABLED)
 	add_executable(mgl_qt_example wnd_samples.cpp qt_example.cpp)
 	if(enable-qt5)
-		include(../scripts/qt5.cmake)
+		include(../cmake-qt5.txt)
 		target_link_libraries(mgl_qt_example mgl-qt5)
 	else(enable-qt5)
-		include(../scripts/qt4.cmake)
+		include(../cmake-qt4.txt)
 		target_link_libraries(mgl_qt_example mgl-qt4)
 	endif(enable-qt5)
 	

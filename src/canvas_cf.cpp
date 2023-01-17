@@ -123,24 +123,20 @@ void MGL_EXPORT mgl_subplot_d(HMGL gr, int nx,int ny,int m,const char *style,dou
 	mglCanvas *g = dynamic_cast<mglCanvas *>(gr);
 	if(g)	g->InPlot(x1,x2,y1,y2,style);
 }
+//-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_subplot(HMGL gr, int nx,int ny,int m,const char *style)
 {	mgl_subplot_d(gr,nx,ny,m,style,0,0);	}
 //-----------------------------------------------------------------------------
-void MGL_EXPORT mgl_multiplot_d(HMGL gr, int nx,int ny,int m,int dx,int dy,const char *style,double sx,double sy)
+void MGL_EXPORT mgl_multiplot(HMGL gr, int nx,int ny,int m,int dx,int dy,const char *style)
 {
 	double x1,x2,y1,y2;
 	int mx = m%nx, my = m/nx;
-	if(gr->get(MGL_AUTO_FACTOR))	{	sx /= 1.55;	sy /= 1.55;	}
-	else	{	sx /= 2;	sy /= 2;	}
 	dx = (dx<1 || dx+mx>nx) ? 1 : dx;
 	dy = (dy<1 || dy+my>ny) ? 1 : dy;
-	x1 = double(mx+sx)/nx;		x2 = double(mx+dx+sx)/nx;
-	y2 = 1-double(my+sy)/ny;	y1 = 1-double(my+dy+sy)/ny;
+	x1 = double(mx)/nx;		x2 = double(mx+dx)/nx;
+	y2 = 1-double(my)/ny;	y1 = 1-double(my+dy)/ny;
 	mglCanvas *g = dynamic_cast<mglCanvas *>(gr);	if(g)	g->InPlot(x1,x2,y1,y2,style);
 }
-void MGL_EXPORT mgl_multiplot(HMGL gr, int nx,int ny,int m,int dx,int dy,const char *style)
-{	mgl_multiplot_d(gr,nx,ny,m,dx,dy,style,0,0);	}
-//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_inplot(HMGL gr, double x1,double x2,double y1,double y2)
 {	mglCanvas *g = dynamic_cast<mglCanvas *>(gr);	if(g)	g->InPlot(x1,x2,y1,y2,false);	}
@@ -236,9 +232,6 @@ void MGL_EXPORT mgl_subplot_(uintptr_t *gr, int *nx,int *ny,int *m,const char *s
 void MGL_EXPORT mgl_multiplot_(uintptr_t *gr, int *nx,int *ny,int *m,int *dx,int *dy,const char *st,int l)
 {	char *s=new char[l+1];	memcpy(s,st,l);	s[l]=0;
 	mgl_multiplot(_GR_,*nx,*ny,*m,*dx,*dy,s);	delete []s;	}
-void MGL_EXPORT mgl_multiplot_d_(uintptr_t *gr, int *nx,int *ny,int *m,int *dx,int *dy,const char *st, mreal *sx, mreal *sy,int l)
-{	char *s=new char[l+1];	memcpy(s,st,l);	s[l]=0;
-	mgl_multiplot_d(_GR_,*nx,*ny,*m,*dx,*dy,s, *sx, *sy);	delete []s;	}
 void MGL_EXPORT mgl_inplot_(uintptr_t *gr, mreal *x1, mreal *x2, mreal *y1, mreal *y2)
 {	_GR_->InPlot(*x1,*x2,*y1,*y2,false);	}
 void MGL_EXPORT mgl_relplot_(uintptr_t *gr, mreal *x1, mreal *x2, mreal *y1, mreal *y2)
@@ -308,8 +301,6 @@ void MGL_EXPORT mgl_set_def_param(HMGL gr)
 void MGL_EXPORT mgl_combine_gr(HMGL gr, HMGL in)
 {	const mglCanvas *gg = dynamic_cast<const mglCanvas *>(in);
 	mglCanvas *g = dynamic_cast<mglCanvas *>(gr);	if(g && gg)	g->Combine(gg);	}
-void MGL_EXPORT mgl_set_bbox(HMGL gr, int x1, int y1, int x2, int y2)
-{	mglCanvas *g = dynamic_cast<mglCanvas *>(gr);	if(g)	g->SetBBox(x1,y1,x2,y2);	}
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_set_tick_len(HMGL gr, double len, double stt)
 {	mglCanvas *g = dynamic_cast<mglCanvas *>(gr);	if(g)	g->SetTickLen(len,stt);	}
@@ -392,8 +383,6 @@ void MGL_EXPORT mgl_scale_size_(uintptr_t *gr, int *width, int *height)
 void MGL_EXPORT mgl_set_def_param_(uintptr_t *gr)	{	_GR_->DefaultPlotParam();	}
 void MGL_EXPORT mgl_combine_gr_(uintptr_t *gr, uintptr_t *in)
 {	_GR_->Combine((mglCanvas *)in);	}
-void MGL_EXPORT mgl_set_bbox_(uintptr_t *gr, int *x1, int *y1, int *x2, int *y2)
-{	_GR_->SetBBox(*x1,*y1,*x2,*y2);	}
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_set_ticks_fact_(uintptr_t *gr, char *dir, double *d, int *ns, double *org, const char *fact,int,int l)
 {	char *s=new char[l+1];	memcpy(s,fact,l);	s[l]=0;
@@ -499,9 +488,9 @@ void MGL_EXPORT mgl_set_tick_shift_(uintptr_t *gr, mreal *sx, mreal *sy, mreal *
 //-----------------------------------------------------------------------------
 #if !MGL_HAVE_PNG
 void MGL_EXPORT mgl_write_prc(HMGL gr, const char *fname,const char *descr, int make_pdf)
-{	mgl_set_global_warn(_("PNG support was disabled. Please, enable it and rebuild MathGL."));	}
+{	mgl_set_global_warn("PNG support was disabled. Please, enable it and rebuild MathGL.");	}
 void MGL_EXPORT mgl_write_prc_(uintptr_t *graph, const char *fname,const char *descr, int *make_pdf,int lf,int ld)
-{	mgl_set_global_warn(_("PNG support was disabled. Please, enable it and rebuild MathGL."));	}
+{	mgl_set_global_warn("PNG support was disabled. Please, enable it and rebuild MathGL.");	}
 #endif
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_finish(HMGL gr)

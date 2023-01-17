@@ -95,7 +95,6 @@ void MGL_EXPORT mgl_fgetpar(FILE *fp, const char *str, ...)
 		}
 		if(str[i]<=' ')	t = mgl_fgetstr(fp);
 	}
-	va_end(lst);
 }
 //-----------------------------------------------------------------------------
 int MGL_EXPORT_CONST mgl_istrue(char ch)
@@ -108,7 +107,7 @@ void MGL_EXPORT mgl_test(const char *str, ...)
 	va_start(lst,str);
 	vsnprintf(buf,256,str,lst);	buf[255]=0;
 	va_end(lst);
-	printf(_("TEST: %s\n"),buf);
+	printf("TEST: %s\n",buf);
 	fflush(stdout);
 }
 //-----------------------------------------------------------------------------
@@ -134,8 +133,13 @@ MGL_EXPORT FILE *mgl_next_data(const char *fname,int p)
 
 	if(p>0)	pos = p;
 	if(fname==NULL)	return NULL;
-	if(pos==0)	{	if(!getcwd(path,256))	return 0;	}	// remember ini dyrectory
-	else		{	if(chdir(path)==-1)		return 0;	}
+#ifdef WIN32
+    if(pos==0)	{	if(!_getcwd(path,256))	return 0;	}	// remember ini dyrectory
+	else		{	if(_chdir(path)==-1)		return 0;	}
+#else
+    if(pos==0)	{	if(!getcwd(path,256))	return 0;	}	// remember ini dyrectory
+    else		{	if(chdir(path)==-1)		return 0;	}
+#endif
 
 	// read the initial (common) data
 	FILE *fp=fopen(fname,"rt");

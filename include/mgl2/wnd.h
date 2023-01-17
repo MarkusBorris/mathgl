@@ -33,7 +33,7 @@ public:
 	virtual void Reload(){}		///< Function for reloading data
 	virtual void Click() {}		///< Callback function on mouse click
 #if MGL_HAVE_PTHR_WIDGET
-	mglDraw()	{	running=false;	pthread_mutex_init(&mutex,NULL);	thr=0;	}
+	mglDraw()	{	running=false;	pthread_mutex_init(&mutex,NULL);	}
 	virtual ~mglDraw()	{	pthread_mutex_destroy(&mutex);	}
 
 	virtual void Calc()	{}		///< Function for calculations

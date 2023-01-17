@@ -2,6 +2,7 @@
 template <class Treal> Treal mglLineart(const Treal *a, long nx, long ny, long nz, mreal x, mreal y, mreal z)
 {
 	if(!a || nx<1 || ny<1 || nz<1)	return 0;
+	long i0;
 	Treal b=0,dx,dy,dz,b1,b0;
 	if(x<0 || y<0 || z<0 || x>nx-1 || y>ny-1 || z>nz-1)
 		return 0;
@@ -10,7 +11,7 @@ template <class Treal> Treal mglLineart(const Treal *a, long nx, long ny, long n
 		long kx=long(x), ky=long(y), kz=long(z);
 		dx = x-mreal(kx);	dy = y-mreal(ky);	dz = z-mreal(kz);
 
-		long i0 = kx+nx*(ky+ny*kz);
+		i0 = kx+nx*(ky+ny*kz);
 		b0 = a[i0]*(mreal(1)-dx-dy+dx*dy) + dx*(mreal(1)-dy)*a[i0+1] +
 			dy*(mreal(1)-dx)*a[i0+nx] + dx*dy*a[i0+nx+1];
 		i0 = kx+nx*(ky+ny*(kz+1));
@@ -22,7 +23,7 @@ template <class Treal> Treal mglLineart(const Treal *a, long nx, long ny, long n
 	{
 		long kx=long(x), ky=long(y);
 		dx = x-kx;	dy=y-ky;
-		long i0 = kx+nx*ky;
+		i0 = kx+nx*ky;
 		b = a[i0]*(mreal(1)-dx-dy+dx*dy) + dx*(mreal(1)-dy)*a[i0+1] +
 			dy*(mreal(1)-dx)*a[i0+nx] + dx*dy*a[i0+nx+1];
 	}
@@ -172,9 +173,7 @@ template <class Treal> Treal mglSpline3t(const Treal *a, long nx, long ny, long 
 	}
 	else	// 1d interpolation
 		b = mglSpline1t<Treal>(a,nx,x,&gx);
-	if(dx)	*dx=gx;
-	if(dy)	*dy=gy;
-	if(dz)	*dz=gz;
+	if(dx)	*dx=gx;	if(dy)	*dy=gy;	if(dz)	*dz=gz;
 	return b;
 }
 //-----------------------------------------------------------------------------

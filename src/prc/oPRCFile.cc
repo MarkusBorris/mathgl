@@ -1259,7 +1259,7 @@ uint32_t oPRCFile::addTransform(const double origin[3], const double x_axis[3], 
 {
   PRCCartesianTransformation3d* transform = new PRCCartesianTransformation3d(origin, x_axis, y_axis, scale);
   if(transform->behaviour==PRC_TRANSFORMATION_Identity)
-  { delete transform;  return m1; }
+    return m1;
   PRCCoordinateSystem *coordinateSystem = new PRCCoordinateSystem();
   coordinateSystem->axis_set = transform;
   const uint32_t coordinate_system_index = fileStructures[0]->addCoordinateSystem(coordinateSystem);

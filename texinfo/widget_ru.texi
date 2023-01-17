@@ -236,7 +236,7 @@ Checks if calculations should be paused and pause it. Function is present only i
 @cindex Fl_MathGL
 @cindex widgets
 
-Класс реализует элемент интерфейса FLTK для отображения графики MathGL. Он определен в @code{#include <mgl2/Fl_MathGL.h>}.
+Класс реализует элемент интерфейса FLTK для отображения графики MathGL. Он определен в @code{#include <mgl2/fltk.h>}.
 
 @fig{fltk, Пример окна FLTK с графикой MathGL.}
 
@@ -245,10 +245,6 @@ Checks if calculations should be paused and pause it. Function is present only i
 @deftypemethodx Fl_MathGL @code{void} set_draw (@code{mglDraw *}draw)
 Устанавливает функцию рисования как глобальную функцию или как функцию член класса, производного от @code{mglDraw}. Поддерживается список графиков (кадров), так что можно вначале их нарисовать (требует довольно много памяти), а потом достаточно быстро отображать. Функция должна возвращать положительное число создаваемых кадров или ноль для непосредственного рисования. Параметр @var{par} содержит указатель на данные пользователя, передаваемый функции рисования @var{draw}.
 @end deftypemethod
-@deftypemethod Fl_MathGL @code{mglDraw *}get_class ()
-Указатель на экземпляр класса @code{mglDraw} или @code{NULL} если отсутствует.
-@end deftypemethod
-
 @deftypemethod Fl_MathGL @code{void} update ()
 Обновляет (перерисовывает) график.
 @end deftypemethod
@@ -280,21 +276,8 @@ Checks if calculations should be paused and pause it. Function is present only i
 @deftypemethod Fl_MathGL @code{mglGraph *} get_graph ()
 Возвращает указатель на объект, строящий графики.
 @end deftypemethod
-
-@deftypemethod Fl_MathGL @code{void} set_show_warn (@code{bool} val)
-Флаг показа окна с сообщениями после выполнения скрипта.
-@end deftypemethod
-@deftypemethod Fl_MathGL @code{void} stop (@code{bool} stop=@code{true})
-Запрос на остановку рисования.
-@end deftypemethod
-@deftypemethod Fl_MathGL @code{void} set_handle_key (@code{bool} val)
-Вкл/выкл обработку нажатий клавиш (как в mglview, по умолчанию выкл).
-@end deftypemethod
-@deftypemethod Fl_MathGL @code{int} get_last_id ()
-Вернуть id последнего выделенного объекта.
-@end deftypemethod
-@deftypemethod Fl_MathGL @code{bool} running ()
-Проверяет выполняется ли сейчас скрипт или нет.
+@deftypemethod Fl_MathGL @code{void} adjust ()
+Подгоняет размер картинки под размер окна.
 @end deftypemethod
 
 @deftypecv {Widget option} Fl_MathGL @code{Fl_Valuator *} tet_val

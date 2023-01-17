@@ -40,7 +40,6 @@
 #include "mgl2/type.h"
 #include "mgl2/data.h"
 #include "mgl2/mgl.h"
-const double All = -1;
 const double Pi = M_PI;
 const double NaN = NAN;
 const double Inf = INFINITY;

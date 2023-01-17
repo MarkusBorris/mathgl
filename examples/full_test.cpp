@@ -21,7 +21,6 @@
 #include <locale.h>
 #include <time.h>
 #include <getopt.h>
-#include <unistd.h>
 
 #include "mgl2/mgl.h"
 #include "mgl2/font.h"
@@ -65,19 +64,10 @@ void mgls_prepare3v(mglData *ex, mglData *ey, mglData *ez);
 void save(mglGraph *gr,const char *name,const char *suf);
 void test(mglGraph *gr)
 {
-	mglParse par;
-	par.Execute(gr,"text 0 -0.2 'abcde'\ntext 0 0 'abcde'[2]\n"
-	"text 0 0.2 'abcde'+2\ntext 0 0.4 'abcde',2\ntext 0 0.6 'abcde',2,'k'"
-	"text 0 0.8 'abcde',2,'k'+1\ntext 0 1 'abcde',2,'k'[5]\ntext 0 1 'abcde''k'[5]");
-	return;
-
-	gr->SubPlot(2,2,0);	gr->Axis();
-	gr->SubPlot(2,2,1);	gr->Rotate(40,60);	gr->Axis();
-	gr->SetRotatedText(false);	gr->SubPlot(2,2,2);	gr->Axis();
-	gr->SubPlot(2,2,3);	gr->Rotate(40,60);	gr->Axis();	return;
 	mglData a;	a.SetList(5,0.,1.,0.,1.,-1.,2.);
 	gr->Plot(a);
 	return;
+	mglParse par;
 	par.Execute(gr,"call 'test' -1\n func 'test' 1\nline $1 0 1 1 'b'\nreturn\n");
 //	par.Execute(gr,"load '/home/balakin/mathgl-code/mathgl-2x/build/examples/libmgl_module.so':baxis\n");
 //	par.Execute(gr,"subplot 1 1 0:#rotate 40 60\nperspective 1.22:box:axis\n");
@@ -398,12 +388,6 @@ void smgl_fexport(mglGraph *gr)	// test file export
 //-----------------------------------------------------------------------------
 int main(int argc,char **argv)
 {
-// const char *f = strrchr(argv[0],'/');
-// std::string p(argv[0],f-argv[0]);
-// printf("getcwd = '%s', argv = '%s', path = '%s', inst = '%s'\n", getcwd(NULL,0), argv[0], p.c_str(), MGL_INSTALL_DIR);
-// fflush(stdout);
-
-	mgl_textdomain(argv?argv[0]:NULL,"");
 	mgl_suppress_warn(true);
 	const char *suf = "";
 	char name[256]="", *tmp;
@@ -418,7 +402,7 @@ int main(int argc,char **argv)
 			case 'w':	width =atoi(optarg);	break;
 			case 'h':	height=atoi(optarg);	break;
 			case 'q':	quality =atoi(optarg);	break;
-			case 'k':	mgl_strncpy(name, optarg,256);
+			case 'k':	strncpy(name, optarg,256);
 						tmp=strchr(name,'.');	if(tmp)	*tmp=0;
 						tmp=strchr(name,'-');	if(tmp)	*tmp=0;
 						break;
@@ -458,6 +442,7 @@ int main(int argc,char **argv)
 		delete gr;	return 0;
 	}
 	else if(dotest==2)	// NOTE mgl_gen_fnt[###][6] have to be updated if new glyphs will be added to built-in font
+
 	{	mgl_create_cpp_font(gr->Self(), L"!-~,¡-ÿ,̀-̏,Α-ω,ϑ,ϕ,ϖ,ϰ,ϱ,ϵ,А-я,ℏ,ℑ,ℓ,ℜ,←-↙,∀-∯,≠-≯,⟂");
 		delete gr;	return 0;	}
 	else if(dotest==3)
@@ -465,7 +450,7 @@ int main(int argc,char **argv)
 		int qual[7]={0,1,2,4,5,6,8};
 		size_t ll=strlen(mmgl_dat_prepare)+1;
 		mglParse par;
-		par.AllowSetSize(true);
+		par.AllowSetSize(true);	setlocale(LC_CTYPE, "");
 		FILE *fp = fopen(big?"time_big.texi":"time.texi","w");
 		fprintf(fp,"@multitable @columnfractions .16 .12 .12 .12 .12 .12 .12 .12\n");
 		fprintf(fp,"@headitem Name");
@@ -516,6 +501,7 @@ int main(int argc,char **argv)
 			{
 				mglParse par;
 				par.AllowSetSize(true);
+				setlocale(LC_CTYPE, "");
 				char *buf = new char[strlen(s->mgl)+strlen(mmgl_dat_prepare)+1];
 				strcpy(buf,s->mgl);		strcat(buf,mmgl_dat_prepare);
 				if(type!=7)	printf("\n-------\n%s\n-------\n",verbose?buf:s->mgl);
@@ -526,7 +512,6 @@ int main(int argc,char **argv)
 			else	s->func(gr);
 			save(gr, s->name, suf);
 			printf("%s ",s->name);	fflush(stdout);	s++;
-			gr->SetQuality(quality);
 		}
 		printf("\n");
 	}
@@ -543,6 +528,7 @@ int main(int argc,char **argv)
 			{
 				mglParse par;
 				par.AllowSetSize(true);
+				setlocale(LC_CTYPE, "");
 				char *buf = new char[strlen(s->mgl)+strlen(mmgl_dat_prepare)+1];
 				strcpy(buf,s->mgl);		strcat(buf,mmgl_dat_prepare);
 				if(type!=7)	printf("\n-------\n%s\n-------\n",verbose?buf:s->mgl);

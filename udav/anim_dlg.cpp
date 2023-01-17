@@ -27,61 +27,59 @@
 #include <QCheckBox>
 //-----------------------------------------------------------------------------
 #include "anim_dlg.h"
-#undef sprintf	// fix libintl bug of defining sprintf
 extern int animDelay;
 //-----------------------------------------------------------------------------
 AnimParam::AnimParam(QWidget *parent) : QDialog(parent)
 {
-	setWindowTitle(_("UDAV - Animation setup"));
+	setWindowTitle(tr("UDAV - Animation setup"));
 	QHBoxLayout *a;
 	QVBoxLayout *o, *g;
 	QLabel *lbl;
 	QPushButton *b;
 	o = new QVBoxLayout(this);
-	lbl = new QLabel(_("Redraw picture for $0 equal to"),this);
+	lbl = new QLabel(tr("Redraw picture for $0 equal to"),this);
 	o->addWidget(lbl);
 	a = new QHBoxLayout();		o->addLayout(a);
 	g = new QVBoxLayout();		a->addLayout(g);
-	rbt = new QRadioButton(_("strings"),this);
+	rbt = new QRadioButton(tr("strings"),this);
 	connect(rbt, SIGNAL(clicked()),this, SLOT(setRBT()));
 	g->addWidget(rbt);
 	text = new QTextEdit(this);	g->addWidget(text);
 	connect(text,SIGNAL(textChanged()),this,SLOT(setRBT()));
 
 	g = new QVBoxLayout();		a->addLayout(g);
-	rbf = new QRadioButton(_("values"),this);
+	rbf = new QRadioButton(tr("values"),this);
 	connect(rbf, SIGNAL(clicked()),this, SLOT(setRBF()));
 	g->addWidget(rbf);
-	lbl = new QLabel(_("from"),this);
+	lbl = new QLabel(tr("from"),this);
 	g->addWidget(lbl, Qt::AlignLeft);
 	p1 = new QLineEdit(this);	g->addWidget(p1);
 	connect(p1,SIGNAL(textChanged(QString)),this,SLOT(setRBF()));
-	lbl = new QLabel(_("to"),this);
+	lbl = new QLabel(tr("to"),this);
 	g->addWidget(lbl, Qt::AlignLeft);
 	p2 = new QLineEdit(this);	g->addWidget(p2);
 	connect(p2,SIGNAL(textChanged(QString)),this,SLOT(setRBF()));
-	lbl = new QLabel(_("with step"),this);
+	lbl = new QLabel(tr("with step"),this);
 	g->addWidget(lbl, Qt::AlignLeft);
 	dp = new QLineEdit(this);	g->addWidget(dp);	dp->setText("1");
 	connect(dp,SIGNAL(textChanged(QString)),this,SLOT(setRBF()));
-	b = new QPushButton(_("Cancel"), this);	g->addWidget(b);
+	b = new QPushButton(tr("Cancel"), this);	g->addWidget(b);
 	connect(b, SIGNAL(clicked()),this, SLOT(reject()));
-	b = new QPushButton(_("OK"), this);	g->addWidget(b);
+	b = new QPushButton(tr("OK"), this);	g->addWidget(b);
 	connect(b, SIGNAL(clicked()),this, SLOT(fillRes()));
 	b->setDefault(true);
 	// general
 	a = new QHBoxLayout();		o->addLayout(a);
-	b = new QPushButton(_("Put to script"), this);	a->addWidget(b);
+	b = new QPushButton(tr("Put to script"), this);	a->addWidget(b);
 	connect(b, SIGNAL(clicked()),this, SLOT(putTxt()));
-	lbl = new QLabel(_("Delay (in ms)"),this);	a->addWidget(lbl);
+	lbl = new QLabel(tr("Delay (in ms)"),this);	a->addWidget(lbl);
 	delay = new QLineEdit(this);	a->addWidget(delay);
 	QString s;	s.sprintf("%d",animDelay);	delay->setText(s);
 	// export to gif/jpeg
 	a = new QHBoxLayout();		o->addLayout(a);
 //	fname = new QLineEdit(this);	a->addWidget(fname);
-	gif = new QCheckBox(_("Export to GIF"), this);		a->addWidget(gif);
-	jpg = new QCheckBox(_("Save JPEG frames"), this);	a->addWidget(jpg);
-	gifOn = jpgOn = false;
+	gif = new QCheckBox(tr("Export to GIF"), this);		a->addWidget(gif);
+	jpg = new QCheckBox(tr("Save JPEG frames"), this);	a->addWidget(jpg);
 }
 //-----------------------------------------------------------------------------
 AnimParam::~AnimParam()	{}
@@ -102,8 +100,8 @@ void AnimParam::fillRes()
 			res = res+QString::number(x,'g',4)+"\n";
 		accept();
 	}
-	else	QMessageBox::warning(this,_("UDAV - animation"),
-								 _("You should select one of case"));
+	else	QMessageBox::warning(this,tr("UDAV - animation"),
+								 tr("You should select one of case"));
 }
 //-----------------------------------------------------------------------------
 void AnimParam::putTxt()

@@ -125,13 +125,6 @@ void MGL_EXPORT mgl_data_import_(uintptr_t *dat, const char *fname, const char *
 /// Scan textual file for template and fill data array
 int MGL_EXPORT mgl_data_scan_file(HMDT dat,const char *fname, const char *templ);
 int MGL_EXPORT mgl_data_scan_file_(uintptr_t *dat,const char *fname, const char *templ,int,int);
-/// Read data array from Tektronix WFM file
-/** Parse Tektronix TDS5000/B, TDS6000/B/C, TDS/CSA7000/B, MSO70000/C, DSA70000/B/C DPO70000/B/C DPO7000/ MSO/DPO5000. */
-int MGL_EXPORT mgl_data_read_wfm(HMDT d,const char *fname, long num, long step, long start);
-int MGL_EXPORT mgl_data_read_wfm_(uintptr_t *d, const char *fname, long *num, long *step, long *start,int l);
-/// Read data array from Matlab MAT file (parse versions 4 and 5)
-int MGL_EXPORT mgl_data_read_matlab(HMDT d,const char *fname,const char *data);
-int MGL_EXPORT mgl_data_read_matlab_(uintptr_t *d, const char *fname, const char *data,int l,int n);
 
 /// Create or recreate the array with specified size and fill it by zero
 void MGL_EXPORT mgl_data_create(HMDT dat, long nx,long ny,long nz);
@@ -157,15 +150,6 @@ uintptr_t MGL_EXPORT mgl_data_subdata_ext_(uintptr_t *dat, uintptr_t *xx,uintptr
 /// Get column (or slice) of the data filled by formulas of named columns
 HMDT MGL_EXPORT mgl_data_column(HCDT dat, const char *eq);
 uintptr_t MGL_EXPORT mgl_data_column_(uintptr_t *dat, const char *eq,int l);
-/// Get data from sections ids, separated by value val along specified direction.
-/** If section id is negative then reverse order is used (i.e. -1 give last section). */
-HMDT MGL_EXPORT mgl_data_section(HCDT dat, HCDT ids, char dir, mreal val);
-uintptr_t MGL_EXPORT mgl_data_section_(uintptr_t *d, uintptr_t *ids, const char *dir, mreal *val,int);
-/// Get data from section id, separated by value val along specified direction.
-/** If section id is negative then reverse order is used (i.e. -1 give last section). */
-HMDT MGL_EXPORT mgl_data_section_val(HCDT dat, long id, char dir, mreal val);
-uintptr_t MGL_EXPORT mgl_data_section_val_(uintptr_t *d, int *id, const char *dir, mreal *val,int);
-
 /// Set names for columns (slices)
 void MGL_EXPORT mgl_data_set_id(HMDT d, const char *id);
 void MGL_EXPORT mgl_data_set_id_(uintptr_t *dat, const char *id,int l);
@@ -225,26 +209,16 @@ HMDT MGL_EXPORT mgl_data_ifs_file(const char *fname, const char *name, long n, l
 uintptr_t mgl_data_ifs_file_(const char *fname, const char *name, long *n, long *skip,int l,int m);
 /// Codes for flame fractal functions
 enum {
-	mglFlame2d_linear=0,	mglFlame2d_sinusoidal,	mglFlame2d_spherical,	mglFlame2d_swirl,		mglFlame2d_horseshoe,
-	mglFlame2d_polar,		mglFlame2d_handkerchief,mglFlame2d_heart,		mglFlame2d_disc,		mglFlame2d_spiral,
-	mglFlame2d_hyperbolic,	mglFlame2d_diamond,		mglFlame2d_ex,			mglFlame2d_julia,		mglFlame2d_bent,
-	mglFlame2d_waves,		mglFlame2d_fisheye,		mglFlame2d_popcorn,		mglFlame2d_exponential,	mglFlame2d_power,
-	mglFlame2d_cosine,		mglFlame2d_rings,		mglFlame2d_fan,			mglFlame2d_blob,		mglFlame2d_pdj,
-	mglFlame2d_fan2,		mglFlame2d_rings2,		mglFlame2d_eyefish,		mglFlame2d_bubble,		mglFlame2d_cylinder,
-	mglFlame2d_perspective,	mglFlame2d_noise,		mglFlame2d_juliaN,		mglFlame2d_juliaScope,	mglFlame2d_blur,
-	mglFlame2d_gaussian,	mglFlame2d_radialBlur,	mglFlame2d_pie,			mglFlame2d_ngon,		mglFlame2d_curl,
-	mglFlame2d_rectangles,	mglFlame2d_arch,		mglFlame2d_tangent,		mglFlame2d_square,		mglFlame2d_blade,
-	mglFlame2d_secant,		mglFlame2d_rays,		mglFlame2d_twintrian,	mglFlame2d_cross,		mglFlame2d_disc2,
-	mglFlame2d_supershape,	mglFlame2d_flower,		mglFlame2d_conic,		mglFlame2d_parabola,	mglFlame2d_bent2,
-	mglFlame2d_bipolar,		mglFlame2d_boarders,	mglFlame2d_butterfly,	mglFlame2d_cell,		mglFlame2d_cpow,
-	mglFlame2d_curve,		mglFlame2d_edisc,		mglFlame2d_elliptic,	mglFlame2d_escher,		mglFlame2d_foci,
-	mglFlame2d_lazySusan,	mglFlame2d_loonie,		mglFlame2d_preBlur,		mglFlame2d_modulus,		mglFlame2d_oscope,
-	mglFlame2d_polar2,		mglFlame2d_popcorn2,	mglFlame2d_scry,		mglFlame2d_separation,	mglFlame2d_split,
-	mglFlame2d_splits,		mglFlame2d_stripes,		mglFlame2d_wedge,		mglFlame2d_wedgeJulia,	mglFlame2d_wedgeSph,
-	mglFlame2d_whorl,		mglFlame2d_waves2,		mglFlame2d_exp,			mglFlame2d_log,			mglFlame2d_sin,
-	mglFlame2d_cos,			mglFlame2d_tan,			mglFlame2d_sec,			mglFlame2d_csc,			mglFlame2d_cot,
-	mglFlame2d_sinh,		mglFlame2d_cosh,		mglFlame2d_tanh,		mglFlame2d_sech,		mglFlame2d_csch,
-	mglFlame2d_coth,		mglFlame2d_auger,		mglFlame2d_flux,		mglFlame2dLAST
+	mglFlameLinear=0,		mglFlameSin,			mglFlameSphere,		mglFlameSwirl,		mglFlameHorseshoe,
+	mglFlamePolar,			mglFlameHandkerchief,	mglFlameHeart,		mglFlameDisk,		mglFlameSpiral,
+	mglFlameHyperbolic,		mglFlameDiamond,		mglFlameEx,			mglFlameJulia,		mglFlameBent,
+	mglFlameWaves,			mglFlameFishEye,		mglFlamePopcorn,	mglFlameExponent,	mglFlamePower,
+	mglFlameCos,			mglFlameRings,			mglFlameFan,		mglFlameBlob,		mglFlamePdj,
+	mglFlameFan2,			mglFlameRings2,			mglFlameEyefish,	mglFlameBubble,		mglFlameCylinder,
+	mglFlamePerspective,	mglFlameNoise,			mglFlameJuliaN,		mglFlameJuliaScope,	mglFlameBlur,
+	mglFlameGaussian,		mglFlameRadialBlur,		mglFlamePie,		mglFlameNgon,		mglFlameCurl,
+	mglFlameRectangles,		mglFlameArch,			mglFlameTangent,	mglFlameSquare,		mglFlameRays,
+	mglFlameBlade,			mglFlameSecant,			mglFlameTwintrian,	mglFlameCross,		mglFlameLAST
 };
 /// Get array which is n-th pairs {x[i],y[i]} for Flame fractal generated by A with functions F
 /** NOTE: A.nx must be >= 7 and F.nx >= 2 and F.nz=A.ny.
@@ -253,11 +227,6 @@ enum {
 HMDT MGL_EXPORT mgl_data_flame_2d(HCDT A, HCDT F, long n, long skip);
 uintptr_t MGL_EXPORT mgl_data_flame_2d_(uintptr_t *A, uintptr_t *F, long *n, long *skip);
 
-/// Get curves, separated by NAN, for maximal values of array d as function of x coordinate.
-/** Noises below lvl amplitude are ignored.
-  * Parameter dy \in [0,ny] set the "attraction" distance of points to curve. */
-HMDT MGL_EXPORT mgl_data_detect(HCDT d, mreal lvl, mreal dj, mreal di, mreal min_len);
-uintptr_t MGL_EXPORT mgl_data_detect_(uintptr_t *d, mreal *lvl, mreal *dj, mreal *di, mreal *min_len);
 
 /// Get array as solution of tridiagonal matrix solution a[i]*x[i-1]+b[i]*x[i]+c[i]*x[i+1]=d[i]
 /** String \a how may contain:
@@ -345,12 +314,6 @@ void MGL_EXPORT mgl_data_mirror_(uintptr_t *dat, const char *dir,int);
 /// Sort rows (or slices) by values of specified column
 void MGL_EXPORT mgl_data_sort(HMDT dat, long idx, long idy);
 void MGL_EXPORT mgl_data_sort_(uintptr_t *dat, int *idx, int *idy);
-/// Return dilated array of 0 or 1 for data values larger val
-void MGL_EXPORT mgl_data_dilate(HMDT dat, mreal val, long step);
-void MGL_EXPORT mgl_data_dilate_(uintptr_t *dat, mreal *val, int *step);
-/// Return eroded array of 0 or 1 for data values larger val
-void MGL_EXPORT mgl_data_erode(HMDT dat, mreal val, long step);
-void MGL_EXPORT mgl_data_erode_(uintptr_t *dat, mreal *val, int *step);
 
 /// Apply Hankel transform
 void MGL_EXPORT mgl_data_hankel(HMDT dat, const char *dir);
@@ -361,12 +324,7 @@ void MGL_EXPORT mgl_data_sinfft_(uintptr_t *dat, const char *dir,int);
 /// Apply Cos-Fourier transform
 void MGL_EXPORT mgl_data_cosfft(HMDT dat, const char *dir);
 void MGL_EXPORT mgl_data_cosfft_(uintptr_t *dat, const char *dir,int);
-/// Fill data by coordinates/momenta samples for Hankel ('h') or Fourier ('f') transform
-/** Parameter \a how may contain:
- * ‘x‘,‘y‘,‘z‘ for direction (only one will be used),
- * ‘k‘ for momenta samples,
- * ‘h‘ for Hankel samples,
- * ‘f‘ for Cartesian/Fourier samples (default). */
+/// Fill data by 'x'/'k' samples for Hankel ('h') or Fourier ('f') transform
 void MGL_EXPORT mgl_data_fill_sample(HMDT dat, const char *how);
 void MGL_EXPORT mgl_data_fill_sample_(uintptr_t *dat, const char *how,int);
 /// Find correlation between 2 data arrays
@@ -445,9 +403,6 @@ void MGL_EXPORT mgl_data_sew_(uintptr_t *dat, const char *dirs, mreal *da, int);
 /// Crop the data
 void MGL_EXPORT mgl_data_crop(HMDT dat, long n1, long n2, char dir);
 void MGL_EXPORT mgl_data_crop_(uintptr_t *dat, int *n1, int *n2, const char *dir,int);
-/// Crop the data to be most optimal for FFT (i.e. to closest value of 2^n*3^m*5^l)
-void MGL_EXPORT mgl_data_crop_opt(HMDT dat, const char *how);
-void MGL_EXPORT mgl_data_crop_opt_(uintptr_t *dat, const char *how,int);
 /// Remove rows with duplicate values in column id
 void MGL_EXPORT mgl_data_clean(HMDT dat, long id);
 void MGL_EXPORT mgl_data_clean_(uintptr_t *dat, int *id);

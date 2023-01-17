@@ -46,12 +46,14 @@
 //-----------------------------------------------------------------------------
 void mglTexture::GetRGBAPRC(unsigned char *f) const
 {
-	for(size_t i=0;i<256;i++)
+	size_t i,j,i0;
+	mglColor c1,c2,c;
+	for(i=0;i<256;i++)
 	{
-		mglColor c1 = col[2*i], c2 = col[2*i+1], c;
-		for(size_t j=0;j<256;j++)
+		c1 = col[2*i];	c2 = col[2*i+1];
+		for(j=0;j<256;j++)
 		{
-			size_t i0 = 4*(j+256*(255-i));
+			i0 = 4*(j+256*(255-i));
 			c = c1 + (c2-c1)*(j/255.);
 			f[i0]   = int(255*c.r);
 			f[i0+1] = int(255*c.g);
@@ -244,8 +246,7 @@ void my_png_flush(png_structp /*png_ptr*/)
 //-----------------------------------------------------------------------------
 void MGL_EXPORT mgl_write_prc(HMGL gr, const char *fname,const char* /*descr*/, int make_pdf)
 {
-	mglCanvas *gg = dynamic_cast<mglCanvas *>(gr);
-	if(!gg || gr->GetPrmNum()==0)	return;	// nothing to do
+	if(gr->GetPrmNum()==0)	return;	// nothing to do
 	{
 		long mmin=0,mmax=0,m;
 		for(size_t i=0;i<gr->Grp.size();i++)	// prepare array of indirect indexing
@@ -317,7 +318,7 @@ void MGL_EXPORT mgl_write_prc(HMGL gr, const char *fname,const char* /*descr*/, 
 
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		delete []pbuf;	delete []buf;
-
+    
 		PRCtexture* t = new PRCtexture();
 		t->mapping = PRC_TEXTURE_MAPPING_DIFFUSE;
 		t->components = PRC_TEXTURE_MAPPING_COMPONENTS_RGBA;
@@ -356,8 +357,8 @@ void MGL_EXPORT mgl_write_prc(HMGL gr, const char *fname,const char* /*descr*/, 
 	// primitive definition in groups
 
 	mglPnt p0;
-	const double width  = gg->GetWidth();
-	const double height = gg->GetHeight();
+	const double width  = dynamic_cast<mglCanvas *>(gr)->GetWidth();
+	const double height = dynamic_cast<mglCanvas *>(gr)->GetHeight();
 	const double depth  = sqrt(width*height);
 
 	p0.x = width/2.;
@@ -750,12 +751,12 @@ void MGL_EXPORT mgl_write_prc(HMGL gr, const char *fname,const char* /*descr*/, 
 					case 4:
 					if (gr->GetPnt(q.n1).a > mgl_min_a) {
 						const mglPnt p = gr->GetPnt(q.n1) - p0;
-
+						
 						const mreal f = q.p/2, dx=p.u/2, dy=p.v/2;
 						const mreal c=q.s*cos(q.w*M_PI/180), s=-q.s*sin(q.w*M_PI/180);
 						const double b[4] = {c,-s, s,c};
 						long ik,il=0;
-
+						
 						const mglGlyph &g = gr->GetGlf(q.n4);
 						const mreal dd = 0.004;
 						if(q.n3&8)
@@ -767,7 +768,7 @@ void MGL_EXPORT mgl_write_prc(HMGL gr, const char *fname,const char* /*descr*/, 
 								const uint32_t p_3 = group.addPoint(p.x+b[0]*dx+b[1]*(dy+dd),p.y+b[2]*dx+b[3]*(dy+dd),p.z);
 								const uint32_t p_2 = group.addPoint(p.x+b[0]*(dx+f)+b[1]*(dy-dd),p.y+b[2]*dx+b[3]*(dy-dd),p.z);
 								const uint32_t p_1 = group.addPoint(p.x+b[0]*(dx+f)+b[1]*(dy+dd),p.y+b[2]*dx+b[3]*(dy+dd),p.z);
-
+								
 								group.addTriangle(ti, p_1, p_3, p_2);
 								group.addTriangle(ti, p_4, p_2, p_3);
 							}
@@ -778,7 +779,7 @@ void MGL_EXPORT mgl_write_prc(HMGL gr, const char *fname,const char* /*descr*/, 
 								const double p_3[3] = {p.x+b[0]*dx+b[1]*(dy+dd),p.y+b[2]*dx+b[3]*(dy+dd),p.z};
 								const double p_2[3] = {p.x+b[0]*(dx+f)+b[1]*(dy-dd),p.y+b[2]*dx+b[3]*(dy-dd),p.z};
 								const double p_1[3] = {p.x+b[0]*(dx+f)+b[1]*(dy+dd),p.y+b[2]*dx+b[3]*(dy+dd),p.z};
-
+								
 								file.addSegment(p_1, p_2, c, w);
 								file.addSegment(p_3, p_4, c, w);
 								file.addSegment(p_1, p_3, c, w);
@@ -799,7 +800,7 @@ void MGL_EXPORT mgl_write_prc(HMGL gr, const char *fname,const char* /*descr*/, 
 									const uint32_t p_2 = group.addPoint(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
 									x = dx+f*g.trig[6*ik+4];	y = dy+f*g.trig[6*ik+5];
 									const uint32_t p_1 = group.addPoint(p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z);
-
+									
 									group.addTriangle(ti, p_1, p_3, p_2);
 								}
 							}
@@ -828,11 +829,11 @@ void MGL_EXPORT mgl_write_prc(HMGL gr, const char *fname,const char* /*descr*/, 
 										const double p_1[3] = {p.x+b[0]*x+b[1]*y,p.y+b[2]*x+b[3]*y,p.z};
 										file.addSegment(p_1, p_2, c, w);
 									}
-
+									
 								}
 							}
 						}
-
+						
 					}
 						break;
 
@@ -967,7 +968,7 @@ void MGL_EXPORT mgl_write_prc(HMGL gr, const char *fname,const char* /*descr*/, 
 
 		/* save the document to a file */
 		const size_t tlen = strlen(tname);
-		tname[tlen-3]='p';	tname[tlen-2]='d';	tname[tlen-1]='f';
+		tname[tlen-2]='p';	tname[tlen-2]='d';	tname[tlen-1]='f';
 		HPDF_SaveToFile (pdf, tname);
 
 		/* clean up */
@@ -979,7 +980,7 @@ void MGL_EXPORT mgl_write_prc(HMGL gr, const char *fname,const char* /*descr*/, 
 		FILE *fp=fopen(tname,"wt");
 		fputs("Can not produce PDF file, MathGL compiled without PDF output support\n", fp);
 		fclose(fp);
-		mgl_set_global_warn(_("PDF support was disabled. Please, enable it and rebuild MathGL."));
+		mgl_set_global_warn("PDF support was disabled. Please, enable it and rebuild MathGL.");
 #endif // MGL_HAVE_PDF
 	}
 	delete []tname;

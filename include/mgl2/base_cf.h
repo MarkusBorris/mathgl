@@ -222,9 +222,6 @@ void MGL_EXPORT mgl_copy_font_(uintptr_t *gr, uintptr_t *gr_from);
 /// Restore font (load default font for new HMGL objects)
 void MGL_EXPORT mgl_restore_font(HMGL gr);
 void MGL_EXPORT mgl_restore_font_(uintptr_t *gr);
-/// Add user-defined glyph for symbol and set its optional id
-void MGL_EXPORT mgl_define_symbol(HMGL gr, char id, HCDT x, HCDT y);
-void MGL_EXPORT mgl_define_symbol_(uintptr_t *gr, char *id, uintptr_t *x, uintptr_t *y,int);
 
 #ifdef __cplusplus
 }

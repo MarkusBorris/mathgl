@@ -100,14 +100,19 @@ void _mgl_key_up(unsigned char ch,int ,int )
 
 	if(ch=='h')
 	{
-		printf(_("Use 'a', 'd', 'w', 's', 'q', 'e' for changing view angles\n"
-		"Use 'j', 'l', 'i', 'k' for changing light angles\n"
-		"Use 'u', 'o' for changing distance to light\n"
-		"Use 'r' for switching transparency\nUse 'f' for switching lightning\n"
-		"Use 'E' for exporting to EPS file\nUse 'S' for exporting to SVG file\n"
-		"Use 'J' for exporting to JPEG file\nUse 'P' for exporting to PNG file\n"
-		"Use ',', '.' for show other frames\nUse 'm' for view movie\n"
-		"Use 'h' for view this text\nUse 'x' for exit\n") );
+		printf("Use 'a', 'd', 'w', 's', 'q', 'e' for changing view angles\n");
+		printf("Use 'j', 'l', 'i', 'k' for changing light angles\n");
+		printf("Use 'u', 'o' for changing distance to light\n");
+		printf("Use 'r' for switching transparency\n");
+		printf("Use 'f' for switching lightning\n");
+		printf("Use 'E' for exporting to EPS file\n");
+		printf("Use 'S' for exporting to SVG file\n");
+		printf("Use 'J' for exporting to JPEG file\n");
+		printf("Use 'P' for exporting to PNG file\n");
+		printf("Use ',', '.' for show other frames\n");
+		printf("Use 'm' for view movie\n");
+		printf("Use 'h' for view this text\n");
+		printf("Use 'x' for exit\n");
 
 	}
 	if(ch=='w')	_mgl_glwnd->View(-10,0,0);

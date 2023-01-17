@@ -60,7 +60,7 @@ public:
 	{	np=16;	pb=Pbuf;	dat = (T**)malloc(np*sizeof(T*));
 		dat[0] = new T[(size_t)1<<pb];	n=0;	m=1;	mutex = 0;	}
 	~mglStack()	{	clear();	delete [](dat[0]);	free(dat);	}
-	inline void set_mutex(void *mtx)	{	mutex = mtx;	}
+	inline void set_mutex(void *m)	{	mutex = m;	}
 	void reserve(size_t num)
 	{
 		num+=n;
@@ -148,8 +148,6 @@ struct MGL_EXPORT mglLight
 {
 	mglLight():n(false),a(0),b(0)	{}
 	mglLight(const mglLight &aa) : n(aa.n),d(aa.d),r(aa.r),q(aa.q),p(aa.p),a(aa.a),b(aa.b),c(aa.c)	{}
-	const mglLight &operator=(const mglLight &aa)
-	{	memcpy(this,&aa,sizeof(mglLight));	return aa;	}
 
 	bool n;			///< Availability of light sources
 	mglPoint d;		///< Direction of light sources
@@ -221,7 +219,6 @@ struct MGL_EXPORT mglPnt	// NOTE: use float for reducing memory size
 	mglPnt():x(0),y(0),z(0),u(0),v(0),w(0),r(0),g(0),b(0),a(0),xx(0),yy(0),zz(0),c(0),t(0),ta(0),sub(0)	{}
 	mglPnt(const mglPnt &aa) : sub(aa.sub)	{	memcpy(dat,aa.dat,16*sizeof(float));	}
 	inline const mglPnt&operator=(const mglPnt &aa)	{ sub=aa.sub;	memcpy(dat,aa.dat,16*sizeof(float));	return aa;	}
-	inline bool same(const mglPnt &p, mreal d)	const {	return fabs(x-p.x)<d && fabs(y-p.y)<d;	}
 };
 inline mglPnt operator+(const mglPnt &a, const mglPnt &b)
 {	mglPnt p;	for(long i=0;i<10;i++)	p.dat[i] = a.dat[i]+b.dat[i];	p.sub=a.sub;	return p;	}
@@ -238,24 +235,24 @@ inline mglPnt operator*(float b, const mglPnt &a)
 //-----------------------------------------------------------------------------
 /// Structure for glyph representation
 struct MGL_EXPORT mglGlyph
-{	// NOTE nt<0 is used to set char id for user-defined glyphs
-	long nt, nl;		///< number of triangles and lines
+{
+	long nt, nl;			///< number of triangles and lines
 	short *trig, *line;	///< vertexes of triangles and lines
 
 	mglGlyph():nt(0),nl(0),trig(0),line(0)	{}
 	mglGlyph(const mglGlyph &a):nt(0),nl(0),trig(0),line(0)	{	*this=a;	}
 	mglGlyph(long Nt, long Nl):nt(0),nl(0),trig(0),line(0)	{	Create(Nt,Nl);	}
+#if MGL_HAVE_RVAL
+	mglGlyph(mglGlyph &&aa) : nt(aa.nt),nl(aa.nl),trig(aa.trig), line(aa.line)	{	aa.trig=aa.line=0;	}
+#endif
 	~mglGlyph()	{	if(trig)	delete []trig;	if(line)	delete []line;	}
 
 	void Create(long Nt, long Nl);
-	bool operator==(const mglGlyph &g) const MGL_FUNC_PURE;
-	inline bool operator!=(const mglGlyph &g) const MGL_FUNC_PURE
-	{	return !(*this==g);	}
+	bool operator==(const mglGlyph &g) MGL_FUNC_PURE;
+	inline bool operator!=(const mglGlyph &g)	{	return !(*this==g);	}
 	inline const mglGlyph &operator=(const mglGlyph &a)
-	{	Create(a.nt, a.nl);
-		if(a.trig)	memcpy(trig, a.trig, 6*nt*sizeof(short));
-		if(a.line)	memcpy(line, a.line, 2*nl*sizeof(short));
-		return a;	}
+	{	Create(a.nt, a.nl);	memcpy(trig, a.trig, 6*nt*sizeof(short));
+		memcpy(line, a.line, 2*nl*sizeof(short));	return a;	}
 };
 //-----------------------------------------------------------------------------
 #define MGL_TEXTURE_COLOURS 512
@@ -338,8 +335,6 @@ public:
 	std::vector<mglGroup> Grp;	///< List of groups with names -- need for export
 	mglStack<mglActivePos> Act;	///< Position of active points
 	std::string PlotId;	///< Id of plot for saving filename (in GLUT window for example)
-	int BBoxX1, BBoxY1, BBoxX2, BBoxY2;	///< BBox region for exporting 2d graphics
-	std::vector<mglGlyph> UserGlf;	///< User-defined glyphs data
 
 	mreal CDef;			///< Default (current) color in texture
 	mreal AlphaDef;		///< Default value of alpha channel (transparency)
@@ -425,7 +420,6 @@ public:
 	/// Set default palette
 	inline void SetPalette(const char *colors)
 	{	Txt[0].Set(mgl_have_color(colors)?colors:MGL_DEF_PAL,-1);	}
-	inline void ResetPal()	{	CurrPal=0;	}
 	inline long GetNumPal(long id) const	{	return Txt[labs(id)/256].n;	}
 	/// Set default color scheme
 	inline void SetDefScheme(const char *colors)
@@ -478,13 +472,11 @@ public:
 	virtual mreal GetRatio() const MGL_FUNC_CONST;
 	virtual int GetWidth() const MGL_FUNC_CONST;
 	virtual int GetHeight() const MGL_FUNC_CONST;
-	/// Add user-defined glyph
-	void DefineGlyph(HCDT x, HCDT y, unsigned char id=0);
 
 	/// Set to use or not text rotation
 	inline void SetRotatedText(bool val)	{	set(val,MGL_ENABLE_RTEXT);	}
 	/// Set default font style and color
-	inline void SetFontDef(const char *font){	mgl_strncpy(FontDef, font, 31);	}
+	void SetFontDef(const char *font);
 	/// Set to use or not text rotation
 	inline void SetTickRotate(bool val)	{	set(val,MGL_TICKS_ROTATE);	}
 	/// Set to use or not text rotation
@@ -509,14 +501,12 @@ public:
 	long CopyNtoC(long k, mreal c);
 	long CopyProj(long from, mglPoint p, mglPoint n, short sub=0);
 	void SetRGBA(long k, const mglColor &c)
-	{	if(k>=0)	{mglPnt &p=Pnt[k];	p.r = c.r;	p.g = c.g;	p.b = c.b;	p.a = c.a;}	}
-	virtual void Reserve(long n);	///< Allocate n-cells for Pnt and return current position
+	{	mglPnt &p=Pnt[k];	p.r = c.r;	p.g = c.g;	p.b = c.b;	p.a = c.a;	}
+	virtual void Reserve(long n);		///< Allocate n-cells for Pnt and return current position
 	/// Set to reduce accuracy of points (to reduce size of output files)
 	inline void SetReduceAcc(bool val)	{	set(val, MGL_REDUCEACC);	}
 	/// Add glyph of current font to the Glf and return its position
 	long AddGlyph(int s, long j);
-	/// Add glyph to the Glf and return its position
-	long AddGlyph(unsigned char id);
 	/// Add active point as k-th element of Pnt
 	void AddActive(long k,int n=0);
 	/// Clear unused points and primitives
@@ -536,13 +526,6 @@ public:
 	inline long GetGlfNum() const		{	return Glf.size();	}
 	inline const mglPnt &GetPnt(long i) const	{	return Pnt[i];		}
 	inline long GetPntNum() const		{	return Pnt.size();	}
-	inline bool SamePnt(long i, long j) const
-	{
-		if(i<0 || j<0)	return true;
-		const mglPnt &p=Pnt[i], &q=Pnt[j];
-//		return GetWidth()>1 ? (long(p.x)==long(q.x) && long(p.y)==long(q.y)): (p.x==q.x && p.y==q.y);
-		return p.x==q.x && p.y==q.y;	
-	}
 //	inline mglPrim &GetPrm(long i)		{	return Prm[i];		}
 	inline mglPrim &GetPrm(long i, bool sort=true)
 	{	return (sort && PrmInd) ? Prm[PrmInd[i]]:Prm[i];	}
@@ -583,20 +566,14 @@ public:
 	virtual void line_plot(long p1, long p2)=0;
 	virtual void trig_plot(long p1, long p2, long p3)=0;
 	virtual void quad_plot(long p1, long p2, long p3, long p4)=0;
-	virtual void smbl_plot(long p1, char id, double size)=0;
 	virtual void Glyph(mreal x, mreal y, mreal f, int style, long icode, mreal col)=0;
 	virtual float GetGlyphPhi(const mglPnt &q, float phi)=0;
 	virtual mreal text_plot(long p,const wchar_t *text,const char *fnt,mreal size=-1,mreal sh=0,mreal  col=-('k'),bool rot=true)=0;
 	void vect_plot(long p1, long p2, mreal s=1);
-	
-	// check if visible
-	virtual bool trig_vis(const mglPnt &p1, const mglPnt &p2, const mglPnt &p3) const =0;
-	virtual bool quad_vis(const mglPnt &p1, const mglPnt &p2, const mglPnt &p3, const mglPnt &p4) const =0;
-
 	inline mreal mark_size()	{	return MarkSize*font_factor;	}
 //	inline char last_color()	{	return last_style[1];	}
 	inline const char *last_line()	{	return last_style;	}
-	int PrmCmp(size_t i, size_t j) const MGL_FUNC_PURE;	// compare 2 primitives with indexes i,j
+	int PrmCmp(long i, long j) const MGL_FUNC_PURE;	// compare 2 primitives with indexes i,j
 	/// Check if plot termination is asked
 	bool NeedStop()	{	if(event_cb)	event_cb(event_par);	return Stop;	}
 	/// Ask to stop drawing
@@ -617,7 +594,7 @@ protected:
 	mglPoint FMax;		///< Actual upper edge after transformation formulas.
 	mglPoint Org;		///< Center of axis cross section.
 	int WarnCode;		///< Warning code
-	size_t *PrmInd;		///< Indexes of sorted primitives
+	long *PrmInd;		///< Indexes of sorted primitives
 	mglStack<mglPnt> Pnt; 	///< Internal points
 	mglStack<mglPrim> Prm;	///< Primitives (lines, triangles and so on) -- need for export
 	std::vector<mglBlock> Sub;	///< InPlot regions
@@ -636,8 +613,8 @@ protected:
 	mreal pPos;			///< Current position in pen mask
 	mreal PenWidth;		///< Pen width for further line plotting (must be >0 !!!)
 //	long numT;			///< Number of textures
-	mreal AmbBr;		///< Default ambient light brightness
-	mreal DifBr;		///< Default diffusive light brightness
+	mreal AmbBr;		///< Default ambient light brightness	// TODO move to mglBlock
+	mreal DifBr;		///< Default diffusive light brightness	// TODO move to mglBlock
 
 	mreal persp;		///< Original value for perspective
 	mglMatrix Bp;		///< Transformation matrix for View() and Zoom()
@@ -658,7 +635,7 @@ protected:
 	long CurrPal;		///< Current palette index
 	mreal MarkSize;		///< The size of marks for 1D plots.
 	mreal ArrowSize;	///< The size of arrows.
-	char last_style[64];///< Last pen style	TODO: replace by std::string
+	char last_style[64];///< Last pen style
 	mreal font_factor;	///< Font scaling factor
 
 	long dr_x, dr_y, dr_p;	///< default drawing region for quality&4 mode

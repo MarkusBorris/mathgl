@@ -46,13 +46,22 @@ struct mglCommand
 	const char *form;	///< Format of command arguments (can be NULL)
 	/// Function for executing (plotting)
 	int (*exec)(mglGraph *gr, long n, mglArg *a, const char *k, const char *opt);
-	/// Type of command: 0 - special plot, 1 - other plot,
+	/// Type of command: 0 - data plot, 1 - other plot,
 	///	2 - setup, 3 - data handle, 4 - data create, 5 - subplot, 6 - program
 	///	7 - 1d plot, 8 - 2d plot, 9 - 3d plot, 10 - dd plot, 11 - vector plot
 	///	12 - axis, 13 - primitives, 14 - axis setup, 15 - text/legend, 16 - data transform
 	int type;
 };
-extern mglCommand mgls_prg_cmd[], mgls_dat_cmd[], mgls_grf_cmd[], mgls_set_cmd[], mgls_prm_cmd[];
+extern mglCommand mgls_base_cmd[];
+//-----------------------------------------------------------------------------
+/// Structure for the number handling (see mglParse class).
+struct mglNum
+{
+	mreal d;		///< Number itself
+	dual c;
+	std::wstring s;	///< Number name
+	mglNum(mreal val=0):d(val),c(val)	{}
+};
 //-----------------------------------------------------------------------------
 /// Structure for function name and position.
 struct mglFunc
@@ -63,8 +72,6 @@ struct mglFunc
 	mglFunc(long p, const wchar_t *f);
 	mglFunc(const mglFunc &f):pos(f.pos),narg(f.narg),func(f.func)	{}
 	mglFunc():pos(-1),narg(-1)	{}
-	const mglFunc &operator=(const mglFunc &f)
-	{	pos=f.pos;	narg=f.narg;	func=f.func;	return f;	}
 };
 //-----------------------------------------------------------------------------
 /// Structure for stack of functions and its arguments.
@@ -95,7 +102,6 @@ public:
 	mglCommand *Cmd;	///< Table of MGL commands (can be changed by user). It MUST be sorted by 'name'!!!
 	long InUse;			///< Smart pointer (number of users)
 	const mglBase *curGr;	///< Current grapher
-	int StarObhID;		///< staring object id
 
 	mglParser(bool setsize=false);
 	virtual ~mglParser();
@@ -146,7 +152,7 @@ public:
 	void AddParam(int n, const char *str);
 	void AddParam(int n, const wchar_t *str);
 	/// Add new MGL command(s) (last command MUST HAVE name[0]=0 !!!)
-	void AddCommand(const mglCommand *cmd);
+	void AddCommand(mglCommand *cmd, int num=0);
 	/// Restore Once flag
 	inline void RestoreOnce()	{	Once = true;	}
 	/// Delete variable by its name
@@ -156,9 +162,6 @@ public:
 	void DeleteAll();
 	/// Set variant of argument(s) separated by '?' to be used
 	inline void SetVariant(int var=0)	{	Variant = var<=0?0:var;	}
-protected:
-	static mglCommand *BaseCmd;	///< Base table of MGL commands. It MUST be sorted by 'name'!!!
-	static void FillBaseCmd();	///< Fill BaseCmd at initialization stage
 private:
 //	long parlen;		///< Length of parameter strings
 	std::wstring par[40];	///< Parameter for substituting instead of $1, ..., $9
@@ -173,7 +176,7 @@ private:
 	mglData *fval;		///< Values for for-cycle. Note that nx - number of elements, ny - next element, nz - address (or string number) of first cycle command
 	int for_stack[40];	///< The order of for-variables
 	int for_addr;		///< Flag for saving address in variable (for_addr-1)
-	bool for_br;		///< Break is switched on (skip all commands until 'next')
+	bool for_br;		///< Break is switched on (skip all comands until 'next')
 	unsigned Variant;	///< Select variant of argument(s) separated by '?'
 
 	/// Parse command

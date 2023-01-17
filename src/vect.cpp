@@ -39,8 +39,7 @@ void MGL_EXPORT mgl_traj_xyz(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT ax, HCDT ay, 
 	long m = x->GetNy()>y->GetNy() ? x->GetNy():y->GetNy();
 	long i = ax->GetNy()>ay->GetNy() ? ax->GetNy():ay->GetNy();
 	long j = z->GetNy()>az->GetNy() ? z->GetNy():az->GetNy();
-	if(i>m)	m=i;
-	if(j>m)	m=j;
+	if(i>m)	m=i;	if(j>m)	m=j;
 	gr->SetPenPal(sch,&pal);	gr->Reserve(4*n*m);
 
 	mglPoint p1,p2;
@@ -119,8 +118,7 @@ void MGL_EXPORT mgl_vect_xy(HMGL gr, HCDT x, HCDT y, HCDT ax, HCDT ay, const cha
 
 	long tx=1,ty=1;
 	if(gr->MeshNum>1)	{	tx=(n-1)/(gr->MeshNum-1);	ty=(m-1)/(gr->MeshNum-1);	}
-	if(tx<1)	tx=1;
-	if(ty<1)	ty=1;
+	if(tx<1)	tx=1;	if(ty<1)	ty=1;
 
 	mreal xm=0,cm=0,ca=0;
 	mreal dm=(fabs(gr->Max.c)+fabs(gr->Min.c))*1e-5;
@@ -217,9 +215,7 @@ void MGL_EXPORT mgl_vect_xyz(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT ax, HCDT ay, 
 	long tx=1,ty=1,tz=1;
 	if(gr->MeshNum>1)
 	{	tx=(n-1)/(gr->MeshNum-1);	ty=(m-1)/(gr->MeshNum-1);	tz=(l-1)/(gr->MeshNum-1);}
-	if(tx<1)	tx=1;
-	if(ty<1)	ty=1;
-	if(tz<1)	tz=1;
+	if(tx<1)	tx=1;	if(ty<1)	ty=1;	if(tz<1)	tz=1;
 
 	mreal xm=0,cm=0,ca=0;
 	mreal dm=(fabs(gr->Max.c)+fabs(gr->Min.c))*1e-5;
@@ -247,7 +243,7 @@ void MGL_EXPORT mgl_vect_xyz(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT ax, HCDT ay, 
 #pragma omp critical(max_vec)
 		{cm = cm<cm1 ? cm1:cm;	xm = xm<xm1 ? xm1:xm;}
 	}
-	ca /= mreal(n*m*l)/mreal(tx*ty*tz);
+	ca /= (n*m*l)/(tx*ty*tz);
 	xm = xm?1./xm:0;	cm = cm?1./cm:0;
 
 	for(long k=0;k<l;k+=tz)
@@ -423,8 +419,7 @@ void MGL_EXPORT mgl_vect3_xyz(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT ax, HCDT ay,
 
 	long n=s.ax.nx,m=s.ax.ny, tx=1,ty=1;
 	if(gr->MeshNum>1)	{	tx=(n-1)/(gr->MeshNum-1);	ty=(m-1)/(gr->MeshNum-1);	}
-	if(tx<1)	tx=1;
-	if(ty<1)	ty=1;
+	if(tx<1)	tx=1;	if(ty<1)	ty=1;
 	mreal xm=0,cm=0,ca=0;
 	mreal dm=(fabs(gr->Max.c)+fabs(gr->Min.c))*1e-5;
 	// use whole array for determining maximal vectors length
@@ -452,7 +447,7 @@ void MGL_EXPORT mgl_vect3_xyz(HMGL gr, HCDT x, HCDT y, HCDT z, HCDT ax, HCDT ay,
 #pragma omp critical(max_vec)
 		{cm = cm<cm1 ? cm1:cm;	xm = xm<xm1 ? xm1:xm;}
 	}
-	ca /= mreal(n*m)/mreal(tx*ty);
+	ca /= (n*m)/(tx*ty);
 	xm = xm?1./xm:0;	cm = cm?1./cm:0;
 
 	for(long i=0;i<n;i+=tx)	for(long j=0;j<m;j+=ty)
@@ -689,11 +684,12 @@ void MGL_EXPORT mgl_flowp_xy(HMGL gr, double x0, double y0, double z0, HCDT x, H
 	long ss = gr->AddTexture(sch);
 	bool vv = mglchr(sch,'v');
 	// find coordinates u, v
-	mreal dm=INFINITY;
+	long i,j;
+	mreal d, dm=INFINITY;
 	long i0=0,j0=0;
-	for(long i=0;i<n;i++)	for(long j=0;j<m;j++)	// first find closest
+	for(i=0;i<n;i++)	for(j=0;j<m;j++)	// first find closest
 	{
-		mreal d = nboth ? hypot(x->v(i)-x0,y->v(j)-y0) : hypot(x->v(i,j)-x0,y->v(i,j)-y0);
+		d = nboth ? hypot(x->v(i)-x0,y->v(j)-y0) : hypot(x->v(i,j)-x0,y->v(i,j)-y0);
 		if(d<dm)	{	i0=i;	j0=j;	dm=d;	}
 	}
 	if(dm==0)	{	u = i0/mreal(n);	v = j0/mreal(m);	}	// we find it
@@ -711,7 +707,7 @@ void MGL_EXPORT mgl_flowp_xy(HMGL gr, double x0, double y0, double z0, HCDT x, H
 			dx = x->v(i0,j0)-x0;	dy = y->v(i0,j0)-y0;
 			dxu= x->dvx(i0,j0);		dyu= y->dvx(i0,j0);
 			dxv= x->dvy(i0,j0);		dyv= y->dvy(i0,j0);
-			mreal d = dxv*dyu-dxu*dyv;
+			d = dxv*dyu-dxu*dyv;
 			u = (i0+(dxv*dy-dx*dyv)/d)/n;
 			v = (j0-(dxu*dy-dx*dyu)/d)/m;
 		}
@@ -966,16 +962,17 @@ void MGL_EXPORT mgl_flowp_xyz(HMGL gr, double x0, double y0, double z0, HCDT x, 
 	bool vv = mglchr(sch,'v'), xo = mglchr(sch,'x'), zo = mglchr(sch,'z');
 
 	// find coordinates u, v, w
-	mreal dm=INFINITY;
+	long i,j,k;
+	mreal d, dm=INFINITY;
 	long i0=0,j0=0,k0=0;
 	mreal dx,dy,dz;
-	for(long i=0;i<n;i++)	for(long j=0;j<m;j++)	for(long k=0;k<l;k++)	// first find closest
+	for(i=0;i<n;i++)	for(j=0;j<m;j++)	for(k=0;k<l;k++)	// first find closest
 	{
 		if(nboth)
 		{	dx = x->v(i)-p.x;	dy = y->v(j)-p.y;	dz = x->v(k)-p.z;	}
 		else
 		{	dx = x->v(i,j,k)-p.x;	dy = y->v(i,j,k)-p.y;	dz = x->v(i,j,k)-p.z;	}
-		mreal d = sqrt(dx*dx+dy*dy+dz*dz);
+		d = sqrt(dx*dx+dy*dy+dz*dz);
 		if(d<dm)	{	i0=i;	j0=j;	k0=k;	dm=d;	}
 	}
 	if(dm==0)	// we find it
@@ -995,7 +992,7 @@ void MGL_EXPORT mgl_flowp_xyz(HMGL gr, double x0, double y0, double z0, HCDT x, 
 			dxu= x->dvx(i0,j0,k0);		dyu= y->dvx(i0,j0,k0);		dzu= z->dvx(i0,j0,k0);
 			dxv= x->dvy(i0,j0,k0);		dyv= y->dvy(i0,j0,k0);		dzv= z->dvy(i0,j0,k0);
 			dxw= x->dvz(i0,j0,k0);		dyw= y->dvz(i0,j0,k0);		dzw= z->dvz(i0,j0,k0);
-			mreal d = dxu*(dyw*dzv-dyv*dzw)+dxv*(dyu*dzw-dyw*dzu)+dxw*(dyv*dzu-dyu*dzv);
+			d = dxu*(dyw*dzv-dyv*dzw)+dxv*(dyu*dzw-dyw*dzu)+dxw*(dyv*dzu-dyu*dzv);
 			u = (i0+(dx*(dyw*dzv-dyv*dzw)+dxv*(dy*dzw-dyw*dz)+dxw*(dyv*dz-dy*dzv))/d)/n;
 			v = (j0-(dx*(dyw*dzu-dyu*dzw)+dxu*(dy*dzw-dyw*dz)+dxw*(dyu*dz-dy*dzu))/d)/m;
 			w = (i0+(dx*(dyv*dzu-dyu*dzv)+dxu*(dy*dzv-dyv*dz)+dxv*(dyu*dz-dy*dzu))/d)/l;

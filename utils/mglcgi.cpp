@@ -38,8 +38,8 @@ void mgl_get_value(const char *buf, const char *name, char *val)
 	if(pos && (pos==buf || pos[-1]=='&'))
 	{
 		pos+=4;	// shift for "mgl="
-		size_t l=strlen(pos);
-		for(size_t i=0, j=0;i<l;i++,j++)
+		size_t i,j,l=strlen(pos);
+		for(i=j=0;i<l;i++,j++)
 		{
 			char ch=pos[i];
 			if(ch=='&')	break;
@@ -51,15 +51,16 @@ void mgl_get_value(const char *buf, const char *name, char *val)
 	}
 }
 //-----------------------------------------------------------------------------
-int main(int argc, char **argv)
+int main()
 {
-	mgl_textdomain(argv?argv[0]:NULL,"");
 	mgl_suppress_warn(true);
 	mglGraph gr;
 	mglParse p(true);
 
 	mgl_ask_func = 0;
 	// read script
+	setlocale(LC_CTYPE, "");
+
 	char *str, *buf;
 	const char *method = getenv("REQUEST_METHOD");
 	bool alloc=false;
@@ -67,11 +68,11 @@ int main(int argc, char **argv)
 	{
 		long len=atol(getenv("CONTENT_LENGTH"));
 		buf = new char[len+1];
-		len = fread(buf,len,1,stdin);
+		if(!fread(buf,len,1,stdin))	len=0;
 		buf[len]=0;	alloc=true;
 	}
 	else		buf = getenv("QUERY_STRING");
-	if(buf==0)	{	printf(_("There is no query. Exit.\n"));	return 0;	}
+	if(buf==0)	{	printf("There is no query. Exit.\n");	return 0;	}
 	str = new char[strlen(buf)+1];
 	mgl_get_value(buf,"mgl",str);
 
