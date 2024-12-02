@@ -8,5 +8,5 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-Wno-extra -Wno-format -Wno-format-extra-args -Wno-unused-but-set-variable
             -Wno-unused-parameter -Wno-unused-result)
     # further additions for gcc
-    add_compile_options(-Wno-misleading-indentation -Wno-conversion -Wno-volatile)
+    add_compile_options(-Wno-misleading-indentation -Wno-conversion -Wno-volatile -Wno-implicit-fallthrough)
 endif ()
